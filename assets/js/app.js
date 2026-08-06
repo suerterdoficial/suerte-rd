@@ -179,20 +179,20 @@
   const DEFAULT_CONFIGS = {
     celular: {
       id: "celular",
-      title: "Rifa Especial del Celular",
-      prize: "iPhone 16 Pro Max",
-      price: "RD$500",
+      title: "Rifa Especial de Números",
+      prize: "RD$5,000 c/u",
+      price: "RD$100",
       total: 10000,
-      image: "./005.jpeg",
+      image: "./suerte_rd_plus.jpg",
       active: true,
-      brand: "Apple",
-      model: "iPhone 16 Pro Max",
+      brand: "Sorteo",
+      model: "De Números",
       year: "",
-      details: "Capacidad 256GB, Color Titanio Desierto, Cámara de 48MP.",
-      blessedPct: 0.1,
+      details: "Sorteo especial de números premiados. 5 números bendecidos de RD$5,000 cada uno.",
+      blessedPct: 0.05,
       blessedPrize: "RD$5,000",
       saleStatus: "active",
-      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"]
+      blessedNumbers: ["01196", "02061", "03628", "04527", "10452"]
     },
     carro: {
       id: "carro",
@@ -770,7 +770,7 @@
       if (configs[rId].blessedPrize === undefined) configs[rId].blessedPrize = DEFAULT_CONFIGS[rId]?.blessedPrize ?? "RD$5,000";
       if (configs[rId].saleStatus === undefined) configs[rId].saleStatus = DEFAULT_CONFIGS[rId]?.saleStatus ?? "active";
       if (configs[rId].blessedNumbers === undefined || !Array.isArray(configs[rId].blessedNumbers)) {
-        configs[rId].blessedNumbers = DEFAULT_CONFIGS[rId]?.blessedNumbers ?? ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"];
+        configs[rId].blessedNumbers = DEFAULT_CONFIGS[rId]?.blessedNumbers ?? ["01196", "02061", "03628", "04527", "10452"];
       }
     }
 
