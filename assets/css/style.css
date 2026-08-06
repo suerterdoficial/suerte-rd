@@ -3297,4 +3297,158 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   text-decoration: line-through;
 }
 
+/* Packages Grid on Main Page */
+.packages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.package-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 24px 20px;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.package-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, var(--glow-color) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+
+.package-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--theme-color);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(var(--theme-rgb), 0.2);
+}
+
+.package-card:hover::before {
+  opacity: 0.15;
+}
+
+.package-card * {
+  position: relative;
+  z-index: 1;
+}
+
+.package-badge {
+  position: absolute;
+  top: 12px;
+  right: -30px;
+  background: var(--theme-color);
+  color: #000;
+  font-weight: 900;
+  font-size: 0.6rem;
+  padding: 4px 30px;
+  transform: rotate(45deg);
+  letter-spacing: 0.5px;
+}
+
+.package-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.4s ease;
+}
+
+.package-card:hover .package-icon {
+  transform: scale(1.1) rotate(15deg);
+}
+
+.package-title {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #FFF;
+  margin-bottom: 8px;
+}
+
+.package-price {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--theme-color);
+  margin-bottom: 5px;
+  text-shadow: 0 0 10px rgba(var(--theme-rgb), 0.2);
+}
+
+.package-discount {
+  font-size: 0.75rem;
+  color: var(--green);
+  font-weight: 700;
+  margin-bottom: 20px;
+  background: rgba(0, 230, 118, 0.1);
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.package-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--theme-color);
+  color: var(--theme-color);
+  padding: 8px 15px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.package-card:hover .package-btn {
+  background: var(--theme-color);
+  color: #000;
+}
+
+/* Package Color Variables */
+.package-bronce {
+  --theme-color: #cd7f32;
+  --theme-rgb: 205, 127, 50;
+  --glow-color: rgba(205, 127, 50, 0.3);
+}
+.package-plata {
+  --theme-color: #c0c0c0;
+  --theme-rgb: 192, 192, 192;
+  --glow-color: rgba(192, 192, 192, 0.3);
+}
+.package-oro {
+  --theme-color: #ffd700;
+  --theme-rgb: 255, 215, 0;
+  --glow-color: rgba(255, 215, 0, 0.3);
+}
+.package-diamante {
+  --theme-color: #00e676;
+  --theme-rgb: 0, 230, 118;
+  --glow-color: rgba(0, 230, 118, 0.3);
+}
+
+/* Second Screen Carousel Glow */
+.carousel-package-card:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
 

@@ -106,6 +106,53 @@
     <!-- Active Raffle Cards will load here dynamically -->
   </section>
 
+  <!-- Sección de Paquetes de Boletos en Portada -->
+  <div class="packages-section-container" style="max-width: 1200px; margin: 40px auto 60px auto; padding: 0 20px;">
+    <h2 class="raffle-selector-title" style="margin-bottom: 8px;">¡Ahorra en Grande con Paquetes de Números!</h2>
+    <p style="text-align: center; color: var(--text-grey); font-size: 0.9rem; margin-bottom: 30px; font-weight: 500;">Selecciona un paquete y el algoritmo elegirá números al azar para ti con un descuento de <strong>3 pesos por boleto</strong>.</p>
+    <div class="packages-grid">
+      <!-- Paquete 1: Bronce -->
+      <div class="package-card package-bronce" onclick="window.srd.addPackageToCart(50)">
+        <div class="package-badge">BRONCE</div>
+        <div class="package-icon"><i data-lucide="award" style="color:#cd7f32"></i></div>
+        <div class="package-title">50 Números</div>
+        <div class="package-price">RD$ 150</div>
+        <div class="package-discount">¡Ahorras 97%!</div>
+        <button class="package-btn">Comprar Paquete</button>
+      </div>
+
+      <!-- Paquete 2: Plata -->
+      <div class="package-card package-plata" onclick="window.srd.addPackageToCart(150)">
+        <div class="package-badge">PLATA</div>
+        <div class="package-icon"><i data-lucide="award" style="color:#c0c0c0"></i></div>
+        <div class="package-title">150 Números</div>
+        <div class="package-price">RD$ 450</div>
+        <div class="package-discount">¡Ahorras 97%!</div>
+        <button class="package-btn">Comprar Paquete</button>
+      </div>
+
+      <!-- Paquete 3: Oro -->
+      <div class="package-card package-oro" onclick="window.srd.addPackageToCart(250)">
+        <div class="package-badge">ORO</div>
+        <div class="package-icon"><i data-lucide="award" style="color:#ffd700"></i></div>
+        <div class="package-title">250 Números</div>
+        <div class="package-price">RD$ 750</div>
+        <div class="package-discount">¡Ahorras 97%!</div>
+        <button class="package-btn">Comprar Paquete</button>
+      </div>
+
+      <!-- Paquete 4: Diamante -->
+      <div class="package-card package-diamante" onclick="window.srd.addPackageToCart(500)">
+        <div class="package-badge">DIAMANTE</div>
+        <div class="package-icon"><i data-lucide="gem" style="color:#00e676"></i></div>
+        <div class="package-title">500 Números</div>
+        <div class="package-price">RD$ 1,500</div>
+        <div class="package-discount">¡Ahorras 97%!</div>
+        <button class="package-btn">Comprar Paquete</button>
+      </div>
+    </div>
+  </div>
+
   <!-- STEP-BY-STEP BUYING FLOW -->
   <div id="btnBackToHomeContainer">
     <button class="btn-back-home" id="btnBackToHome">
@@ -113,6 +160,53 @@
     </button>
   </div>
   <section class="buying-flow-wrapper" id="buyingFlowSection">
+    <!-- Carrucel Largo y Estrecho de Paquetes -->
+    <div class="packages-carousel-container" style="width: 100%; margin-bottom: 25px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-cyan); border-radius: 18px; padding: 12px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow: hidden;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="color: var(--cyan); font-family: var(--font-title); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="zap" style="width: 16px; height: 16px; color:var(--gold);"></i> COMPRA RÁPIDA EN PAQUETE
+        </span>
+        <span style="font-size: 0.75rem; color: var(--text-grey); font-weight: 600;">Tarifa fija de 3 pesos por boleto</span>
+      </div>
+      <div class="packages-carousel-track" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: thin; scrollbar-color: var(--cyan) transparent;">
+        <!-- Card 1 -->
+        <div class="carousel-package-card" onclick="window.srd.addPackageToCart(50)" style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; background: rgba(205, 127, 50, 0.08); border: 1px solid rgba(205, 127, 50, 0.3); border-radius: 12px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease;">
+          <i data-lucide="award" style="color:#cd7f32; width: 20px; height: 20px;"></i>
+          <div style="text-align: left;">
+            <div style="font-size:0.85rem; font-weight: 800; color:#FFF;">Pack 50 Números</div>
+            <div style="font-size:0.75rem; color:var(--text-grey); font-weight: 600;">RD$ 150 <span style="color:#cd7f32; font-weight: 700; margin-left: 6px;">-97%</span></div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="carousel-package-card" onclick="window.srd.addPackageToCart(150)" style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; background: rgba(192, 192, 192, 0.08); border: 1px solid rgba(192, 192, 192, 0.3); border-radius: 12px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease;">
+          <i data-lucide="award" style="color:#c0c0c0; width: 20px; height: 20px;"></i>
+          <div style="text-align: left;">
+            <div style="font-size:0.85rem; font-weight: 800; color:#FFF;">Pack 150 Números</div>
+            <div style="font-size:0.75rem; color:var(--text-grey); font-weight: 600;">RD$ 450 <span style="color:#c0c0c0; font-weight: 700; margin-left: 6px;">-97%</span></div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="carousel-package-card" onclick="window.srd.addPackageToCart(250)" style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; background: rgba(255, 215, 0, 0.08); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 12px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease;">
+          <i data-lucide="award" style="color:#ffd700; width: 20px; height: 20px;"></i>
+          <div style="text-align: left;">
+            <div style="font-size:0.85rem; font-weight: 800; color:#FFF;">Pack 250 Números</div>
+            <div style="font-size:0.75rem; color:var(--text-grey); font-weight: 600;">RD$ 750 <span style="color:#ffd700; font-weight: 700; margin-left: 6px;">-97%</span></div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="carousel-package-card" onclick="window.srd.addPackageToCart(500)" style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease;">
+          <i data-lucide="gem" style="color:#00e676; width: 20px; height: 20px;"></i>
+          <div style="text-align: left;">
+            <div style="font-size:0.85rem; font-weight: 800; color:#FFF;">Pack 500 Números</div>
+            <div style="font-size:0.75rem; color:var(--text-grey); font-weight: 600;">RD$ 1,500 <span style="color:#00e676; font-weight: 700; margin-left: 6px;">-97%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="purchaseCountdownContainer" style="display:none; width: 100%; margin-bottom: 25px; background: linear-gradient(135deg, rgba(255, 77, 94, 0.12) 0%, rgba(255, 77, 94, 0.02) 100%); border: 1px solid rgba(255, 77, 94, 0.4); border-radius: 18px; padding: 15px 25px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); backdrop-filter: blur(10px);">
       <span style="color: var(--red); font-family: var(--font-title); font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; justify-content: center;">
         <i data-lucide="clock" style="width: 18px; height: 18px;"></i> ¡TIEMPO LÍMITE ACTIVADO! LAS VENTAS CIERRAN EN:

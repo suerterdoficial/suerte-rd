@@ -688,8 +688,33 @@
     updateStep3Badge();
 
     const conf = configs[activeRaffleId];
-    const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 500;
-    const totalAmount = ticketPrice * cart.length;
+    const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 100;
+    
+    let remaining = cart.length;
+    let totalAmount = 0;
+    
+    if (remaining >= 500) {
+      const packs = Math.floor(remaining / 500);
+      totalAmount += packs * 1500;
+      remaining = remaining % 500;
+    }
+    if (remaining >= 250) {
+      const packs = Math.floor(remaining / 250);
+      totalAmount += packs * 750;
+      remaining = remaining % 250;
+    }
+    if (remaining >= 150) {
+      const packs = Math.floor(remaining / 150);
+      totalAmount += packs * 450;
+      remaining = remaining % 150;
+    }
+    if (remaining >= 50) {
+      const packs = Math.floor(remaining / 50);
+      totalAmount += packs * 150;
+      remaining = remaining % 50;
+    }
+    totalAmount += remaining * ticketPrice;
+
     totalDisplay.textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
 
     list.innerHTML = cart.map(num => `
@@ -2138,6 +2163,41 @@
     showScreen('purchase');
   }
 
+  function addPackageToCart(count) {
+    const conf = configs[activeRaffleId];
+    if (!conf) return;
+    const tickets = allTickets[activeRaffleId] || {};
+    const totalCount = Math.max(1, Number(conf.total) || 10000);
+    
+    const available = [];
+    for (let i = 0; i < totalCount; i++) {
+      const num = pad5(i);
+      if (!tickets[num] && !cart.includes(num)) {
+        available.push(num);
+      }
+    }
+
+    if (available.length < count) {
+      showToast(`No hay suficientes boletos disponibles para este paquete. Solo quedan ${available.length}.`, "bad");
+      return;
+    }
+
+    const selected = [];
+    const tempAvailable = [...available];
+    for (let i = 0; i < count; i++) {
+      const randIdx = Math.floor(Math.random() * tempAvailable.length);
+      selected.push(tempAvailable[randIdx]);
+      tempAvailable.splice(randIdx, 1);
+    }
+
+    cart.push(...selected);
+    renderCart();
+    playSound("success");
+    showToast(`¡Se agregaron ${count} boletos al carrito con tarifa de paquete!`, "ok");
+    
+    showScreen('purchase');
+  }
+
   function playStoryVideo(videoName) {
     playSound("draw");
     $("storyVideoText").textContent = `[Reproduciendo Video Ganador: ${videoName}]`;
@@ -2939,7 +2999,8 @@
     deleteReservation,
     playStoryVideo,
     removeFromCart,
-    deleteSupportMessage
+    deleteSupportMessage,
+    addPackageToCart
   };
 
   init();
