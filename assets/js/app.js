@@ -182,17 +182,17 @@
       title: "Rifa Especial de Números",
       prize: "RD$5,000 c/u",
       price: "RD$100",
-      total: 10000,
+      total: 50000,
       image: "./suerte_rd_plus.jpg",
       active: true,
       brand: "Sorteo",
       model: "De Números",
       year: "",
-      details: "Sorteo especial de números premiados. 5 números bendecidos de RD$5,000 cada uno.",
+      details: "Sorteo especial de números premiados al instante. Rifa automática de RD$5,000 cada 5% de ventas.",
       blessedPct: 0.05,
       blessedPrize: "RD$5,000",
       saleStatus: "active",
-      blessedNumbers: ["01196", "02061", "03628", "04527", "10452"]
+      blessedNumbers: []
     },
     carro: {
       id: "carro",
@@ -770,7 +770,7 @@
       if (configs[rId].blessedPrize === undefined) configs[rId].blessedPrize = DEFAULT_CONFIGS[rId]?.blessedPrize ?? "RD$5,000";
       if (configs[rId].saleStatus === undefined) configs[rId].saleStatus = DEFAULT_CONFIGS[rId]?.saleStatus ?? "active";
       if (configs[rId].blessedNumbers === undefined || !Array.isArray(configs[rId].blessedNumbers)) {
-        configs[rId].blessedNumbers = DEFAULT_CONFIGS[rId]?.blessedNumbers ?? ["01196", "02061", "03628", "04527", "10452"];
+        configs[rId].blessedNumbers = DEFAULT_CONFIGS[rId]?.blessedNumbers ?? [];
       }
     }
 

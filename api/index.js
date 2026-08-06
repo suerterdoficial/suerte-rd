@@ -107,7 +107,7 @@ async function detectAndLogNotifications(key, oldValStr, newValStr) {
       const newSoldCount = Object.keys(newTickets).length;
       const currentPct = (newSoldCount / totalCount) * 100;
 
-      // Hitos de números bendecidos (notificación al administrador)
+      // Hitos de números bendecidos (automatizado)
       if (newSoldCount > oldSoldCount && interval > 0) {
         const oldPct = (oldSoldCount / totalCount) * 100;
         const oldIndex = Math.floor(oldPct / interval);
@@ -115,7 +115,24 @@ async function detectAndLogNotifications(key, oldValStr, newValStr) {
 
         if (newIndex > oldIndex) {
           const milestonePct = newIndex * interval;
-          messages.push(`🚨 ALERTA ADMIN: El sorteo (${raffleId}) alcanzó el ${milestonePct.toFixed(0)}% de ventas. Favor realizar el sorteo del número bendecido.`);
+          const soldList = Object.keys(newTickets).filter(num => newTickets[num].estado === 'reservado' || newTickets[num].estado === 'pagado');
+          const blessedNumbersSet = new Set(config.blessedNumbers || []);
+          const availableTickets = soldList.filter(num => !blessedNumbersSet.has(num));
+
+          if (availableTickets.length > 0) {
+            const winnerIndex = Math.floor(Math.random() * availableTickets.length);
+            const winningTicket = availableTickets[winnerIndex];
+
+            if (!config.blessedNumbers) {
+              config.blessedNumbers = [];
+            }
+            config.blessedNumbers.push(winningTicket);
+            config.blessedNumbers.sort();
+            db[cfgKey] = JSON.stringify(config);
+
+            const buyerName = newTickets[winningTicket].nombre || "Cliente";
+            messages.push(`🎉 ¡Sorteo al instante! El boleto #${winningTicket} de ${buyerName} es un nuevo Número Bendecido de ${config.blessedPrize || 'RD$5,000'} por alcanzar el ${milestonePct.toFixed(0)}% de ventas!`);
+          }
         }
       }
 

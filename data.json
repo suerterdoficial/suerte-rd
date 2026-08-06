@@ -127,5 +127,5 @@
       "timestamp": 1784865902917
     }
   ],
-  "suerterd:config:v2:celular": "{\"id\":\"celular\",\"title\":\"Rifa Especial de Números\",\"prize\":\"RD$5,000 c/u\",\"price\":\"RD$100\",\"total\":10000,\"image\":\"./suerte_rd_plus.jpg\",\"active\":true,\"brand\":\"Sorteo\",\"model\":\"De Números\",\"year\":\"\",\"details\":\"Sorteo especial de números premiados. 5 números bendecidos de RD$5,000 cada uno.\",\"blessedPct\":0.05,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedNumbers\":[\"01196\",\"02061\",\"03628\",\"04527\",\"10452\"]}"
+  "suerterd:config:v2:celular": "{\"id\":\"celular\",\"title\":\"Rifa Especial de Números\",\"prize\":\"RD$5,000 c/u\",\"price\":\"RD$100\",\"total\":50000,\"image\":\"./suerte_rd_plus.jpg\",\"active\":true,\"brand\":\"Sorteo\",\"model\":\"De Números\",\"year\":\"\",\"details\":\"Sorteo especial de números premiados al instante. Rifa automática de RD$5,000 cada 5% de ventas.\",\"blessedPct\":0.05,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedNumbers\":[]}"
 }
