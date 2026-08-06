@@ -3306,8 +3306,8 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
 }
 
 .package-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.05) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 20px;
   padding: 24px 20px;
   text-align: center;
@@ -3333,11 +3333,11 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
 .package-card:hover {
   transform: translateY(-8px);
   border-color: var(--theme-color);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(var(--theme-rgb), 0.2);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15), 0 0 15px rgba(var(--theme-rgb), 0.2);
 }
 
 .package-card:hover::before {
-  opacity: 0.15;
+  opacity: 0.1;
 }
 
 .package-card * {
@@ -3350,7 +3350,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   top: 12px;
   right: -30px;
   background: var(--theme-color);
-  color: #000;
+  color: #fff !important;
   font-weight: 900;
   font-size: 0.6rem;
   padding: 4px 30px;
@@ -3362,14 +3362,14 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.03);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 15px;
   font-size: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   transition: transform 0.4s ease;
 }
 
@@ -3381,7 +3381,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   font-family: var(--font-title);
   font-weight: 800;
   font-size: 1.15rem;
-  color: #FFF;
+  color: #111 !important;
   margin-bottom: 8px;
 }
 
@@ -3391,35 +3391,38 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   font-weight: 900;
   color: var(--theme-color);
   margin-bottom: 5px;
-  text-shadow: 0 0 10px rgba(var(--theme-rgb), 0.2);
+  text-shadow: 0 0 1px rgba(var(--theme-rgb), 0.1);
 }
 
 .package-discount {
   font-size: 0.75rem;
-  color: var(--green);
+  color: #009624 !important;
   font-weight: 700;
   margin-bottom: 20px;
-  background: rgba(0, 230, 118, 0.1);
+  background: rgba(0, 150, 36, 0.08) !important;
   padding: 3px 8px;
   border-radius: 10px;
 }
 
 .package-btn {
   width: 100%;
-  background: transparent;
-  border: 1px solid var(--theme-color);
-  color: var(--theme-color);
+  background: var(--theme-color);
+  border: none;
+  color: #fff !important;
   padding: 8px 15px;
   border-radius: 12px;
   font-weight: 800;
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(var(--theme-rgb), 0.15);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .package-card:hover .package-btn {
-  background: var(--theme-color);
-  color: #000;
+  background: #111;
+  color: #fff !important;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
 
 /* Package Color Variables */
@@ -3445,10 +3448,16 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
 }
 
 /* Second Screen Carousel Glow */
+.carousel-package-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
 .carousel-package-card:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
 }
 
 
