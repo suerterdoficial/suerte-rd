@@ -2392,6 +2392,7 @@
 
   function updateAdminForm(rId) {
     const conf = configs[rId];
+    if (!$("cfgTitle")) return;
     $("cfgTitle").value = conf.title || "";
     $("cfgPrize").value = conf.prize || "";
     $("cfgPrice").value = conf.price || "";
