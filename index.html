@@ -331,7 +331,7 @@
   </section>
 
   <!-- Countdown timer and draw results -->
-  <section class="stats-grid">
+  <section class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
     <!-- Cuenta Regresiva -->
     <div class="glass-card stat-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-height: 185px;">
       <div style="width: 100%;">
@@ -344,6 +344,19 @@
         </div>
         <div id="countdownPlaceholderMessage" style="display: none; color: var(--text-grey); font-size: 0.8rem; line-height: 1.45; padding: 12px; margin-top: 12px; background: rgba(0,0,0,0.15); border-radius: 10px; border: 1px dashed rgba(0, 229, 255, 0.15); font-family: var(--font-mono); font-weight: 500;">
           La cuenta regresiva de 7 días se activará al alcanzar el 80% de los boletos vendidos.
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Acumulado -->
+    <div class="glass-card stat-card" id="accumulatedCard" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-height: 185px; border-color: var(--gold);">
+      <div>
+        <div class="stat-card-title" style="justify-content: center; color: var(--gold);"><i data-lucide="dollar-sign" style="color:var(--gold)"></i> Acumulado</div>
+        <div style="font-size: 2.2rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(255, 215, 0, 0.4); margin: 15px 0; font-family: var(--font-mono);" id="accumulatedDisplay">
+          RD$ 0
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-grey); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+          Incrementa con las ventas
         </div>
       </div>
     </div>

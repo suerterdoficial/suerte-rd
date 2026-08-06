@@ -179,16 +179,16 @@
   const DEFAULT_CONFIGS = {
     celular: {
       id: "celular",
-      title: "Rifa Especial de Números",
-      prize: "RD$5,000 c/u",
+      title: "Rifa Especial del Celular",
+      prize: "iPhone 17 Pro Max",
       price: "RD$100",
       total: 50000,
-      image: "./suerte_rd_plus.jpg",
+      image: "./005.jpeg",
       active: true,
-      brand: "Sorteo",
-      model: "De Números",
+      brand: "Apple",
+      model: "iPhone 17 Pro Max Mamey",
       year: "",
-      details: "Sorteo especial de números premiados al instante. Rifa automática de RD$5,000 cada 5% de ventas.",
+      details: "iPhone 17 Pro Max Mamey de 512 GB. Rifa automática de RD$5,000 cada 5% de ventas.",
       blessedPct: 0.05,
       blessedPrize: "RD$5,000",
       saleStatus: "active",
@@ -1393,6 +1393,14 @@
       const bEl = cardEl.querySelector(".progress-bar");
       if (pEl) pEl.textContent = `${pct.toFixed(1)}% vendido`;
       if (bEl) bEl.style.width = `${pct}%`;
+    }
+
+    // Calculate accumulated revenue: price * sold tickets
+    const priceNum = parseFloat(conf.price.replace(/[^\d.]/g, "")) || 0;
+    const accumulated = priceNum * sold;
+    const accDisplay = $("accumulatedDisplay");
+    if (accDisplay) {
+      accDisplay.textContent = `RD$ ${accumulated.toLocaleString("es-DO")}`;
     }
     renderBlessedNumbers();
     updateCountdown();
