@@ -822,8 +822,7 @@
     renderRaffleSelector();
     loadRaffleState(activeRaffleId);
     renderWinnersCarousel();
-    tickCountdown();
-    setInterval(tickCountdown, 1000);
+    updateStatsCountdown();
     
     initHeroCarousel();
     initParticlesCanvas();
@@ -980,6 +979,7 @@
     renderProgress();
     renderDrawResults();
     renderBlessedNumbers();
+    updateStatsCountdown();
     updateAdminForm(rId);
     updatePrizeShowcase(rId);
     
@@ -1464,29 +1464,64 @@
     playSound("click");
   });
 
-  function getNextDrawDate() {
-    const now = new Date();
-    const target = new Date(now);
-    target.setHours(20, 0, 0, 0);
-    const WED = 3;
-    let diff = (WED - now.getDay() + 7) % 7;
-    if (diff === 0 && now >= target) diff = 7;
-    target.setDate(now.getDate() + diff);
-    return target;
-  }
+  let statsCountdownIntervalId = null;
 
-  function tickCountdown() {
-    const target = getNextDrawDate();
-    const diff = Math.max(0, target - new Date());
-    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const m = Math.floor((diff / (1000 * 60)) % 60);
-    const s = Math.floor((diff / 1000) % 60);
+  function updateStatsCountdown() {
+    if (statsCountdownIntervalId) {
+      clearInterval(statsCountdownIntervalId);
+      statsCountdownIntervalId = null;
+    }
 
-    $("cdDays").textContent = String(d).padStart(2, "0");
-    $("cdHours").textContent = String(h).padStart(2, "0");
-    $("cdMins").textContent = String(m).padStart(2, "0");
-    $("cdSecs").textContent = String(s).padStart(2, "0");
+    const conf = configs[activeRaffleId];
+    const timerRow = $("mainCountdownTimerRow");
+    const placeholderMsg = $("countdownPlaceholderMessage");
+
+    if (!conf || !timerRow) return;
+
+    if (conf.countdownStartedAt) {
+      timerRow.style.display = "flex";
+      if (placeholderMsg) placeholderMsg.style.display = "none";
+
+      const durationDays = conf.countdownDurationDays !== undefined ? parseFloat(conf.countdownDurationDays) : 7;
+      const durationMs = durationDays * 24 * 60 * 60 * 1000;
+      const targetTime = Number(conf.countdownStartedAt) + durationMs;
+
+      const tick = () => {
+        const now = Date.now();
+        const diff = targetTime - now;
+
+        if (diff <= 0) {
+          clearInterval(statsCountdownIntervalId);
+          statsCountdownIntervalId = null;
+          $("cdDays").textContent = "00";
+          $("cdHours").textContent = "00";
+          $("cdMins").textContent = "00";
+          $("cdSecs").textContent = "00";
+          return;
+        }
+
+        const totalSeconds = Math.floor(diff / 1000);
+        const days = Math.floor(totalSeconds / (24 * 60 * 60));
+        const remSecsAfterDays = totalSeconds % (24 * 60 * 60);
+        const hours = Math.floor(remSecsAfterDays / (60 * 60));
+        const remSecsAfterHours = remSecsAfterDays % (60 * 60);
+        const minutes = Math.floor(remSecsAfterHours / 60);
+        const seconds = remSecsAfterHours % 60;
+
+        const pad = (n) => String(n).padStart(2, "0");
+
+        $("cdDays").textContent = pad(days);
+        $("cdHours").textContent = pad(hours);
+        $("cdMins").textContent = pad(minutes);
+        $("cdSecs").textContent = pad(seconds);
+      };
+
+      statsCountdownIntervalId = setInterval(tick, 1000);
+      tick();
+    } else {
+      timerRow.style.display = "none";
+      if (placeholderMsg) placeholderMsg.style.display = "block";
+    }
   }
 
   function runSlotAnimation(finalNumber, onDone) {
