@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Suerte RD</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #030a0d;
+      --bg-card: rgba(6, 20, 26, 0.7);
+      --bg-sidebar: #05141b;
+      --cyan: #00e5ff;
+      --cyan-glow: rgba(0, 229, 255, 0.4);
+      --border-cyan: rgba(0, 229, 255, 0.15);
+      --text-main: #f0f6f8;
+      --text-grey: #8fa7b2;
+      --text-muted: #57707c;
+      --green: #00e676;
+      --green-glow: rgba(0, 230, 118, 0.3);
+      --red: #ff4d5e;
+      --red-glow: rgba(255, 77, 94, 0.3);
+      --gold: #ffd700;
+      --gold-glow: rgba(255, 215, 0, 0.3);
+      --font-sans: 'Inter', sans-serif;
+      --font-title: 'Outfit', sans-serif;
+      --font-mono: 'Roboto Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 230, 118, 0.03) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    /* Main Grid Layout */
+    .admin-container {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-cyan);
+      display: flex;
+      flex-direction: column;
+      padding: 25px 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+      padding: 0 5px;
+    }
+
+    .brand img {
+      height: 32px;
+    }
+
+    .brand-title {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, #FFF 0%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-grey);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      color: var(--cyan);
+      background: rgba(0, 229, 255, 0.03);
+    }
+
+    .nav-btn.active {
+      color: #FFF;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.1) 0%, rgba(0, 229, 255, 0.02) 100%);
+      border-color: var(--border-cyan);
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.05);
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 20px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .btn-exit {
+      background: transparent;
+      border: 1px solid rgba(255, 77, 94, 0.2);
+      color: var(--red);
+      font-size: 0.85rem;
+      font-weight: 600;
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-exit:hover {
+      background: rgba(255, 77, 94, 0.1);
+      box-shadow: 0 0 15px var(--red-glow);
+    }
+
+    /* Content Area */
+    .content-area {
+      padding: 40px;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .header-info h1 {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 2rem;
+      color: #FFF;
+      margin-bottom: 5px;
+    }
+
+    .header-info p {
+      color: var(--text-grey);
+      font-size: 0.9rem;
+    }
+
+    /* Stats Grid */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-cyan);
+      border-radius: 18px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .stat-label {
+      color: var(--text-grey);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-family: var(--font-title);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #FFF;
+    }
+
+    /* Pane Control */
+    .pane {
+      display: none;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    .pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards and Containers */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-cyan);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      backdrop-filter: blur(12px);
+      margin-bottom: 25px;
+    }
+
+    .card-title {
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #FFF;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .field.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: var(--cyan);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, textarea {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-cyan);
+      color: #FFF;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+      background: rgba(0,0,0,0.6);
+    }
+
+    /* Buttons */
+    .btn {
+      background: transparent;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: var(--cyan);
+      color: #000;
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan) 0%, #00b0ff 100%);
+      color: #000;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #00ffff 0%, var(--cyan) 100%);
+      box-shadow: 0 0 25px var(--cyan-glow);
+    }
+
+    .btn-red {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .btn-red:hover {
+      background: var(--red);
+      color: #FFF;
+      box-shadow: 0 0 20px var(--red-glow);
+    }
+
+    .btn-green {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .btn-green:hover {
+      background: var(--green);
+      color: #000;
+      box-shadow: 0 0 20px var(--green-glow);
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border-cyan);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.3);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: rgba(0, 229, 255, 0.05);
+      color: var(--cyan);
+      font-weight: 700;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-cyan);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background: rgba(0, 229, 255, 0.02);
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .badge-paid {
+      background: rgba(0, 230, 118, 0.1);
+      color: var(--green);
+      border: 1px solid var(--green);
+    }
+
+    .badge-reserved {
+      background: rgba(255, 215, 0, 0.1);
+      color: var(--gold);
+      border: 1px solid var(--gold);
+    }
+
+    .badge-blocked {
+      background: rgba(255, 77, 94, 0.1);
+      color: var(--red);
+      border: 1px solid var(--red);
+    }
+
+    /* Tombola Reels */
+    .tombola-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      background: radial-gradient(circle, rgba(6, 25, 33, 0.8) 0%, rgba(2, 8, 10, 0.9) 100%);
+      border-radius: 24px;
+      border: 1px solid var(--border-cyan);
+      max-width: 500px;
+      margin: 20px auto;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
+
+    .reels-row {
+      display: flex;
+      gap: 12px;
+      margin: 25px 0;
+    }
+
+    .reel {
+      background: #020a0d;
+      border: 2px solid var(--cyan);
+      border-radius: 16px;
+      width: 60px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: #FFF;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.2), inset 0 0 15px rgba(0, 229, 255, 0.3);
+      text-shadow: 0 0 10px var(--cyan);
+      transition: all 0.3s ease;
+    }
+
+    .reel.spinning {
+      animation: pulseReel 0.1s infinite alternate;
+    }
+
+    @keyframes pulseReel {
+      from { transform: scale(0.98); opacity: 0.8; }
+      to { transform: scale(1.02); opacity: 1; }
+    }
+
+    /* Notification message */
+    .status-msg {
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .status-msg.info {
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+    }
+
+    .status-msg.success {
+      background: rgba(0, 230, 118, 0.1);
+      color: var(--green);
+      border: 1px solid var(--green);
+    }
+
+    .status-msg.error {
+      background: rgba(255, 77, 94, 0.1);
+      color: var(--red);
+      border: 1px solid var(--red);
+    }
+
+    /* Charts UI */
+    .chart-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border-cyan);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+      height: 250px;
+      position: relative;
+    }
+
+    /* Modals / Overlays */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 8, 11, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border-cyan);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 500px;
+      padding: 30px;
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      animation: modalSlide 0.3s ease forwards;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: transparent;
+      border: none;
+      color: var(--text-grey);
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+    }
+
+    .modal-close:hover {
+      color: var(--red);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="brand">
+        <img src="./suerte_rd_logo.png" alt="Logo">
+        <span class="brand-title">Suerte RD Admin</span>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-btn active" data-target="paneStats">
+          <i data-lucide="bar-chart-3"></i> Estadísticas
+        </button>
+        <button class="nav-btn" data-target="paneTickets">
+          <i data-lucide="list-checks"></i> Gestionar Ventas
+        </button>
+        <button class="nav-btn" data-target="paneConfigs">
+          <i data-lucide="cog"></i> Configurar Sorteos
+        </button>
+        <button class="nav-btn" data-target="paneDraw">
+          <i data-lucide="play" style="color: var(--gold);"></i> Sorteador Oficial
+        </button>
+        <button class="nav-btn" data-target="paneSupport">
+          <i data-lucide="mail"></i> Quejas de Soporte
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-exit" onclick="window.location.href='/'">
+          <i data-lucide="arrow-left"></i> Volver a la Web
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <header>
+        <div class="header-info">
+          <h1 id="headerTitle">Cargando Sorteo...</h1>
+          <p id="headerSubtitle">Cargando estadísticas y estado de ventas.</p>
+        </div>
+        <div>
+          <select id="globalRaffleSelect" style="width: 250px; background:#05141b; font-weight:700;">
+            <!-- Loaded dynamically -->
+          </select>
+        </div>
+      </header>
+
+      <!-- Stats Grid -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Recaudado (Est.)</div>
+          <div class="stat-value" id="statIncome" style="color: var(--green);">RD$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Boletos Vendidos</div>
+          <div class="stat-value" id="statSold">0 / 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Reservados vs Pagados</div>
+          <div class="stat-value" id="statRatio" style="font-size: 1.4rem;">0 Res. / 0 Pag.</div>
+        </div>
+      </div>
+
+      <!-- PANE 1: STATS -->
+      <div class="pane active" id="paneStats">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="trending-up" style="color:var(--cyan)"></i> Gráfico de Distribución
+          </div>
+          <div class="chart-box">
+            <canvas id="statsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANE 2: MANAGE TICKETS -->
+      <div class="pane" id="paneTickets">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="users" style="color:var(--cyan)"></i> Historial de Boletos
+          </div>
+          
+          <div style="display:flex; gap:12px; margin-bottom: 20px; align-items:center;">
+            <input type="text" id="ticketSearchInput" placeholder="Buscar por número de boleto, nombre o WhatsApp..." style="flex:1;">
+            <button class="btn btn-red" id="btnReleaseExpired" style="white-space:nowrap;">
+              <i data-lucide="clock"></i> Liberar Expirados
+            </button>
+          </div>
+
+          <!-- Manual Blocking -->
+          <div style="background: rgba(255, 77, 94, 0.04); border: 1px solid rgba(255, 77, 94, 0.2); padding: 15px; border-radius: 14px; margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
+            <span style="color: var(--red); font-weight:700; font-size:0.9rem;"><i data-lucide="slash" style="width:16px; vertical-align:middle;"></i> Bloquear Boleto Manualmente:</span>
+            <input type="text" id="blockTicketInput" placeholder="Ej: 07234" maxlength="5" style="width: 120px; text-align:center; font-family:var(--font-mono); font-weight:700;">
+            <button class="btn btn-red" id="btnBlockSubmit" style="padding: 10px 20px;">Bloquear Boleto</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Boleto</th>
+                  <th>Cliente</th>
+                  <th>WhatsApp</th>
+                  <th>Lotería</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="ticketsTableBody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANE 3: CONFIGURATIONS -->
+      <div class="pane" id="paneConfigs">
+        <div class="card">
+          <div class="card-title" style="justify-content: space-between;">
+            <span style="display:flex; align-items:center; gap:10px;">
+              <i data-lucide="settings" style="color:var(--cyan)"></i> Parámetros de la Rifa
+            </span>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-green" id="btnCreateNewRaffle" style="padding: 8px 16px; font-size:0.85rem;"><i data-lucide="plus"></i> Crear Nuevo</button>
+              <button class="btn btn-red" id="btnDeleteCurrentRaffle" style="padding: 8px 16px; font-size:0.85rem;"><i data-lucide="trash-2"></i> Eliminar Rifa</button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="cfgTitle">Título del Sorteo</label>
+              <input type="text" id="cfgTitle" placeholder="Ej: Rifa Especial del Celular">
+            </div>
+            <div class="field">
+              <label for="cfgPrize">Premio Principal</label>
+              <input type="text" id="cfgPrize" placeholder="Ej: iPhone 16 Pro Max">
+            </div>
+
+            <div class="field">
+              <label for="cfgPrice">Precio Boleto (RD$)</label>
+              <input type="text" id="cfgPrice" placeholder="Ej: RD$500">
+            </div>
+            <div class="field">
+              <label for="cfgTotal">Cantidad de Boletos a Vender</label>
+              <input type="number" id="cfgTotal" min="10" max="100000" placeholder="10000">
+            </div>
+
+            <div class="field">
+              <label for="cfgBlessedPct">Porcentaje Números Bendecidos (%)</label>
+              <input type="number" id="cfgBlessedPct" min="0.01" max="10" step="0.01" placeholder="Ej: 0.1">
+            </div>
+            <div class="field">
+              <label for="cfgBlessedPrize">Monto Premio Bendecidos (RD$)</label>
+              <input type="text" id="cfgBlessedPrize" placeholder="Ej: RD$5,000">
+            </div>
+
+            <div class="field">
+              <label for="cfgBlessedDrawInterval">Intervalo Notificación de Sorteo Bendecido (%)</label>
+              <input type="number" id="cfgBlessedDrawInterval" min="1" max="50" step="1" placeholder="Ej: 5">
+            </div>
+            <div class="field">
+              <label for="cfgCountdownTriggerPct">Hito Activación Cuenta Regresiva (%)</label>
+              <input type="number" id="cfgCountdownTriggerPct" min="10" max="100" step="1" placeholder="Ej: 80">
+            </div>
+            <div class="field">
+              <label for="cfgCountdownDurationDays">Duración Cuenta Regresiva (Días)</label>
+              <input type="number" id="cfgCountdownDurationDays" min="1" max="30" step="1" placeholder="Ej: 7">
+            </div>
+
+            <div class="field">
+              <label for="cfgSaleStatus">Estado de Venta</label>
+              <select id="cfgSaleStatus">
+                <option value="active">Venta de Números Activa</option>
+                <option value="locked">Solo Exhibición / Próximamente (Bloqueado)</option>
+              </select>
+            </div>
+
+            <div class="field" style="display:flex; flex-direction:row; align-items:center; gap:10px; margin-top:28px;">
+              <input type="checkbox" id="cfgActive" style="width:20px; height:20px; accent-color:var(--cyan); width:auto;">
+              <label for="cfgActive" style="cursor:pointer; margin-bottom:0; font-weight:700;">🟢 Sorteo Activo (Mostrar en Catálogo)</label>
+            </div>
+
+            <div class="field">
+              <label for="cfgBrand">Marca del Vehículo / Artículo</label>
+              <input type="text" id="cfgBrand" placeholder="Ej: Toyota / Apple">
+            </div>
+            <div class="field">
+              <label for="cfgModel">Modelo</label>
+              <input type="text" id="cfgModel" placeholder="Ej: Hilux / iPhone 16">
+            </div>
+
+            <div class="field">
+              <label for="cfgYear">Año / Versión</label>
+              <input type="text" id="cfgYear" placeholder="Ej: 2026">
+            </div>
+            <div class="field">
+              <label>Imagen del Sorteo</label>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <div style="width:45px; height:45px; border-radius:8px; border:1px solid var(--border-cyan); overflow:hidden; background:#000; display:flex; align-items:center; justify-content:center;">
+                  <img id="cfgImgPreview" style="width:100%; height:100%; object-fit:cover; display:none;">
+                  <i id="cfgImgPlaceholder" data-lucide="image" style="width:18px; color:var(--text-muted);"></i>
+                </div>
+                <label for="cfgImageUpload" class="btn" style="padding: 8px 12px; font-size:0.8rem; border-color:var(--cyan); color:var(--cyan); cursor:pointer;">
+                  <i data-lucide="upload" style="width:12px; margin-right:4px;"></i> Subir Foto
+                </label>
+                <input type="file" id="cfgImageUpload" accept="image/*" style="display:none;">
+              </div>
+            </div>
+
+            <div class="field full-width">
+              <label for="cfgDetails">Detalles Técnicos / Especificaciones</label>
+              <textarea id="cfgDetails" rows="2" placeholder="Capacidad, color, detalles del premio..."></textarea>
+            </div>
+
+            <div class="field full-width">
+              <label for="cfgPaymentInstructions">Instrucciones de Pago (Cuentas Bancarias)</label>
+              <textarea id="cfgPaymentInstructions" rows="3" placeholder="Ingresa los datos para transferencia bancaria..."></textarea>
+            </div>
+
+            <div class="field full-width" style="margin-top: 10px;">
+              <button class="btn btn-primary" id="btnSaveConfig" style="width:100%;">
+                <i data-lucide="save"></i> Guardar Configuración de la Rifa
+              </button>
+            </div>
+
+            <div class="field full-width" style="border-top:1px solid var(--border-cyan); padding-top:20px; margin-top:10px;">
+              <span style="color:var(--red); font-weight:700; font-size:0.85rem; text-transform:uppercase;">Acciones de Reseteo y Datos</span>
+              <div style="display:flex; gap:12px; margin-top:12px;">
+                <button class="btn" id="btnExportCSV" style="flex:1;"><i data-lucide="download"></i> Exportar CSV de Ventas</button>
+                <button class="btn btn-red" id="btnResetSales" style="flex:1;"><i data-lucide="trash-2"></i> Limpiar Ventas de este Sorteo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANE 4: TOMBOLA -->
+      <div class="pane" id="paneDraw">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="play-circle" style="color:var(--cyan)"></i> Tómbola Oficial del Sorteo
+          </div>
+          
+          <div class="tombola-wrap">
+            <h3 style="font-family: var(--font-title); font-size: 1.4rem; color: #FFF; margin-bottom: 5px;">Tómbola en Vivo</h3>
+            <p style="color: var(--text-grey); font-size: 0.85rem; text-align:center; max-width: 320px; margin-bottom: 10px;">
+              Selecciona aleatoriamente un ganador de entre los boletos que han sido marcados como **PAGADOS**.
+            </p>
+
+            <div class="reels-row">
+              <div class="reel" id="reel0">0</div>
+              <div class="reel" id="reel1">0</div>
+              <div class="reel" id="reel2">0</div>
+              <div class="reel" id="reel3">0</div>
+              <div class="reel" id="reel4">0</div>
+            </div>
+
+            <button class="btn btn-primary" id="btnStartDraw" style="background:var(--gold); color:#000; font-weight:800; width: 100%; max-width: 300px;">
+              <i data-lucide="sparkles"></i> Iniciar Sorteo Oficial
+            </button>
+
+            <p id="drawStatusText" style="margin-top: 15px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-grey);">Listo para sortear</p>
+          </div>
+
+          <!-- External Winners Integration -->
+          <div style="border-top: 1px solid var(--border-cyan); padding-top: 25px; margin-top: 25px;">
+            <span style="color: var(--cyan); font-weight: 700; font-size: 0.85rem; text-transform:uppercase;">Registrar Ganador Externo</span>
+            <div class="form-grid" style="margin-top:15px;">
+              <div class="field">
+                <label for="winName">Nombre del Ganador</label>
+                <input type="text" id="winName" placeholder="Ej: Juan Pérez">
+              </div>
+              <div class="field">
+                <label for="winNumber">Número de Boleto (5 dígitos)</label>
+                <input type="text" id="winNumber" placeholder="Ej: 03412" maxlength="5">
+              </div>
+              <div class="field full-width">
+                <label for="winPhoto">URL de la Foto de Entrega (Opcional)</label>
+                <input type="text" id="winPhoto" placeholder="https://...">
+              </div>
+              <div class="field full-width">
+                <button class="btn" id="btnAddWinner"><i data-lucide="plus-circle"></i> Registrar Ganador</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANE 5: SUPPORT MESSAGES -->
+      <div class="pane" id="paneSupport">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="message-square" style="color:var(--cyan)"></i> Bandeja de Soporte
+          </div>
+          
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>WhatsApp</th>
+                  <th>Categoría</th>
+                  <th>Mensaje</th>
+                  <th>Fecha</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="supportTableBody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-msg" id="statusMessage"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR NUEVA RIFA -->
+  <div class="overlay" id="createRaffleOverlay">
+    <div class="modal">
+      <button class="modal-close" id="closeCreateModal"><i data-lucide="x"></i></button>
+      <h3 style="font-family: var(--font-title); font-size: 1.3rem; margin-bottom: 20px; color: var(--cyan);"><i data-lucide="plus-circle" style="vertical-align:middle; margin-right:5px;"></i> Crear Nuevo Sorteo</h3>
+      
+      <div class="field">
+        <label for="newRaffleId">Código Único (minúsculas, sin espacios)</label>
+        <input type="text" id="newRaffleId" placeholder="Ej: moto, reloj, viaje">
+      </div>
+      <div class="field">
+        <label for="newRaffleTitle">Título del Sorteo</label>
+        <input type="text" id="newRaffleTitle" placeholder="Ej: Gran Sorteo Moto Honda">
+      </div>
+      <div class="field">
+        <label for="newRafflePrize">Premio Principal</label>
+        <input type="text" id="newRafflePrize" placeholder="Ej: Honda Civic 2026">
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <div class="field" style="flex:1;">
+          <label for="newRafflePrice">Precio (RD$)</label>
+          <input type="text" id="newRafflePrice" value="RD$500">
+        </div>
+        <div class="field" style="flex:1;">
+          <label for="newRaffleTotal">Total Boletos</label>
+          <input type="number" id="newRaffleTotal" value="10000">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <div class="field" style="flex:1;">
+          <label for="newRaffleBlessedPct">Bendecidos (%)</label>
+          <input type="number" id="newRaffleBlessedPct" value="0.1" step="0.01">
+        </div>
+        <div class="field" style="flex:1;">
+          <label for="newRaffleBlessedPrize">Premio Bendecidos</label>
+          <input type="text" id="newRaffleBlessedPrize" value="RD$5,000">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <div class="field" style="flex:1;">
+          <label for="newRaffleBlessedDrawInterval">Hito Bendecido (%)</label>
+          <input type="number" id="newRaffleBlessedDrawInterval" value="5">
+        </div>
+        <div class="field" style="flex:1;">
+          <label for="newRaffleCountdownTriggerPct">Hito Cuenta Regresiva (%)</label>
+          <input type="number" id="newRaffleCountdownTriggerPct" value="80">
+        </div>
+        <div class="field" style="flex:1;">
+          <label for="newRaffleCountdownDurationDays">Duración (Días)</label>
+          <input type="number" id="newRaffleCountdownDurationDays" value="7">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 10px;">
+        <button class="btn btn-primary" id="btnCreateSubmit" style="width: 100%;">Crear y Guardar Sorteo</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/admin.js"></script>
+  <script>
+    // Initialize lucide icons on load
+    lucide.createIcons();
+  </script>
+</body>
+</html>

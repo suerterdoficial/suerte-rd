@@ -1,0 +1,14 @@
+{
+  "name": "suerte-rd",
+  "version": "1.0.0",
+  "description": "Plataforma Profesional de Sorteos Suerte RD",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "node api/index.js"
+  },
+  "dependencies": {
+    "@vercel/kv": "^1.0.1",
+    "express": "^4.19.2"
+  }
+}

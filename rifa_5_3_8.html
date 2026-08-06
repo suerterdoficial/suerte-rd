@@ -1,0 +1,5235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suerte RD - Plataforma Profesional de Sorteos</title>
+<meta name="description" content="Suerte RD es la plataforma profesional de sorteos y rifas en la República Dominicana. Participa en tómbolas oficiales y gana increíbles premios con total transparencia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Canvas Confetti -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root {
+    --bg-deep: #5BC2E7; /* Pantone 2985 */
+    --bg-turquoise: #054C54;
+    --bg-turquoise-dark: #022327;
+    --bg-turquoise-light: #0d8390;
+    --bg-turquoise-glow: rgba(0, 229, 255, 0.15);
+    
+    --card-bg: rgba(5, 22, 25, 0.75);
+    --card-bg-solid: #031719;
+    
+    --gold: #FFD700;
+    --gold-glow: rgba(255, 215, 0, 0.25);
+    --cyan: #00E5FF;
+    --cyan-glow: rgba(0, 229, 255, 0.35);
+    
+    --red: #FF4D5E;
+    --red-glow: rgba(255, 77, 94, 0.2);
+    --green: #00E676;
+    --green-glow: rgba(0, 230, 118, 0.2);
+    
+    --text-white: #FFFFFF;
+    --text-grey: #B2C4C6;
+    --text-muted: rgba(255, 255, 255, 0.35);
+    --border-cyan: rgba(0, 229, 255, 0.18);
+    --border-white: rgba(255, 255, 255, 0.08);
+    
+    --font-sans: 'Inter', sans-serif;
+    --font-title: 'Outfit', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    
+    --shadow-glow: 0 0 25px rgba(0, 229, 255, 0.3);
+    --shadow-gold: 0 0 25px rgba(255, 215, 0, 0.3);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    background: var(--bg-deep);
+    color: #022327; /* Dark blue/teal for readability on PMS 2985 background */
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image: 
+      radial-gradient(circle at 5% 15%, rgba(255, 255, 255, 0.4) 0%, transparent 40%),
+      radial-gradient(circle at 95% 85%, rgba(2, 35, 39, 0.12) 0%, transparent 50%),
+      linear-gradient(135deg, var(--bg-deep) 0%, #30A2CE 100%);
+    background-attachment: fixed;
+  }
+
+  /* Background Floating Aura */
+  .bg-aura-1 {
+    position: fixed;
+    top: 15%;
+    left: -10%;
+    width: 50vw;
+    height: 50vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+    animation: floatAura1 25s infinite alternate ease-in-out;
+  }
+
+  .bg-aura-2 {
+    position: fixed;
+    bottom: 5%;
+    right: -10%;
+    width: 45vw;
+    height: 45vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+    animation: floatAura2 30s infinite alternate ease-in-out;
+  }
+
+  @keyframes floatAura1 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(8vw, 5vh) scale(1.15); }
+  }
+
+  @keyframes floatAura2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-6vw, -10vh) scale(1.1); }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-title);
+    letter-spacing: -0.01em;
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background: none;
+  }
+
+  /* Scanline scan effect */
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
+    background-size: 100% 6px;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0.05;
+  }
+
+  /* Navbar navigation */
+  .navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 8vw;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(1, 10, 12, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-cyan);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-title);
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #FFF 60%, var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .brand-logo {
+    height: 40px;
+    width: auto;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+  }
+
+  .nav-links-desktop {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  @media (max-width: 900px) {
+    .nav-links-desktop {
+      display: none; /* Hide on mobile/tablet */
+    }
+  }
+
+  .nav-link-btn {
+    color: var(--text-grey);
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    transition: all 0.3s;
+  }
+
+  .nav-link-btn:hover {
+    color: var(--cyan);
+    background: rgba(0, 229, 255, 0.06);
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .sound-btn, .admin-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-white);
+    color: var(--text-grey);
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sound-btn:hover, .admin-btn:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+    background: rgba(0, 229, 255, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .admin-btn:hover {
+    transform: translateY(-2px) rotate(45deg);
+  }
+
+  /* Main Container */
+  .container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+  }
+
+  /* Hero Banner */
+  .hero {
+    text-align: center;
+    padding: 40px 0 20px;
+  }
+
+  .hero-banner-frame {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    border-radius: 28px;
+    overflow: hidden;
+    margin-bottom: 30px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65);
+    border: 1px solid var(--border-cyan);
+    background: #000;
+  }
+
+  .carousel-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    z-index: 1;
+  }
+
+  .carousel-slide.active {
+    opacity: 1;
+    z-index: 2;
+  }
+
+  .hero-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 8s ease;
+  }
+
+  .carousel-slide.active .hero-banner-img {
+    transform: scale(1.04);
+  }
+
+  .hero-banner-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(1, 10, 12, 0) 40%, rgba(1, 10, 12, 0.95) 100%);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #022327;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(2, 35, 39, 0.25);
+    padding: 6px 18px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    color: #022327;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(90deg, #010a0c, #0d8390);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+  }
+
+  .hero p.sub {
+    color: #2b565a;
+    font-size: 1.2rem;
+    max-width: 650px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Glass Card System */
+  .glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-cyan);
+    border-radius: 28px;
+    padding: 35px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    color: var(--text-white);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(0, 229, 255, 0.3);
+    box-shadow: 0 25px 60px rgba(0, 229, 255, 0.05);
+  }
+
+  /* STEP indicator layout */
+  .step-card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-cyan);
+    padding-bottom: 15px;
+  }
+
+  .step-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--bg-turquoise-light));
+    color: #031719;
+    font-family: var(--font-title);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+  }
+
+  .step-card-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #FFF;
+  }
+
+  /* Multi-Raffle Selector Panel */
+  .raffle-selector-title {
+    text-align: center;
+    margin: 50px 0 20px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #022327;
+  }
+
+  .raffle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+  }
+
+  .raffle-card {
+    background: var(--card-bg-solid);
+    border: 2px solid var(--border-cyan);
+    border-radius: 24px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    position: relative;
+    color: var(--text-white);
+  }
+
+  .raffle-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    padding: 2px;
+    background: linear-gradient(135deg, transparent 50%, rgba(0, 229, 255, 0.3) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .raffle-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--cyan);
+    box-shadow: 0 20px 45px rgba(0, 229, 255, 0.15);
+  }
+
+  .raffle-card:hover::before, .raffle-card.active::before {
+    opacity: 1;
+  }
+
+  .raffle-card.active {
+    border-color: var(--cyan);
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.25);
+  }
+
+  .raffle-img-box {
+    width: 100%;
+    height: 180px;
+    position: relative;
+    background: #020c0e;
+    overflow: hidden;
+  }
+
+  .raffle-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .raffle-card:hover .raffle-img {
+    transform: scale(1.05);
+  }
+
+  .raffle-card-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-between;
+    background: linear-gradient(180deg, transparent 0%, rgba(1, 10, 12, 0.95) 100%);
+  }
+
+  .raffle-card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-white);
+  }
+
+  .raffle-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+  }
+
+  .raffle-card-price {
+    font-weight: 800;
+    color: var(--gold);
+    font-size: 1.1rem;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+  }
+
+  .raffle-card-percent {
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  /* Dynamic purchase steps container */
+  .buying-flow-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 750px;
+    margin: 0 auto 50px;
+  }
+
+  .form-unlock-warning {
+    background: rgba(255, 77, 94, 0.08);
+    border: 1px solid rgba(255, 77, 94, 0.25);
+    color: var(--red);
+    padding: 12px 18px;
+    border-radius: 14px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  .form-locked-state {
+    opacity: 0.45;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  /* Ticket Selection Box */
+  .tab-header {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 25px;
+    background: rgba(1, 10, 12, 0.5);
+    padding: 6px;
+    border-radius: 100px;
+    border: 1px solid var(--border-cyan);
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-grey);
+    padding: 10px 18px;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .tab-btn.active {
+    background: var(--text-white);
+    color: var(--bg-deep);
+    font-weight: 700;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+  }
+
+  .ticket-box {
+    background: var(--card-bg-solid);
+    border: 1px solid var(--border-cyan);
+    border-radius: 24px;
+    padding: 30px;
+    position: relative;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+  }
+
+  .ticket-deco-line {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 25px;
+  }
+
+  .ticket-deco-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 229, 255, 0.15);
+  }
+
+  .ticket-deco-dot.glow {
+    background: var(--cyan);
+    box-shadow: var(--shadow-glow);
+    animation: blip 1.5s infinite;
+  }
+
+  @keyframes blip {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .digits-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 25px;
+  }
+
+  .digit-cell {
+    width: 52px;
+    height: 72px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid var(--border-cyan);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-white);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+  }
+
+  .digit-cell.filled {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.2), inset 0 2px 8px rgba(0,0,0,0.5);
+  }
+
+  .digit-cell.ok {
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 18px rgba(0, 230, 118, 0.3);
+  }
+
+  .digit-cell.taken {
+    border-color: var(--red);
+    color: var(--red);
+    box-shadow: 0 0 18px rgba(255, 77, 94, 0.3);
+  }
+
+  #secretInput {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .status-lbl {
+    min-height: 24px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    text-align: center;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .status-lbl.ok { color: var(--green); }
+  .status-lbl.bad { color: var(--red); }
+  .status-lbl.info { color: var(--text-grey); }
+
+  .ticket-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px 28px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: none;
+    outline: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #FFF 0%, #E2E8F0 100%);
+    color: #031719;
+    box-shadow: 0 10px 20px rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(255, 255, 255, 0.25);
+  }
+
+  .btn-primary:disabled {
+    background: rgba(255,255,255,0.03);
+    color: var(--text-muted);
+    border: 1px solid var(--border-white);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-cyan);
+    color: var(--text-white);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: rgba(0, 229, 255, 0.06);
+    transform: translateY(-2px);
+  }
+
+  /* Manual entry layout digits keyboard helper */
+  .manual-keypad {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .keypad-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-white);
+    color: #FFF;
+    border-radius: 10px;
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 1.15rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .keypad-btn:hover {
+    background: rgba(0, 229, 255, 0.1);
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  .keypad-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Visual Ticket Explorer Grid */
+  .explorer-panel {
+    animation: fadeIn 0.4s ease;
+  }
+
+  .explorer-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+
+  .filter-input {
+    flex: 1;
+    min-width: 140px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-cyan);
+    color: #FFF;
+    padding: 10px 14px;
+    border-radius: 10px;
+    outline: none;
+    font-size: 0.85rem;
+  }
+
+  .filter-input:focus {
+    border-color: var(--cyan);
+  }
+
+  .filter-select {
+    background: #020f11;
+    border: 1px solid var(--border-cyan);
+    color: #FFF;
+    padding: 10px 14px;
+    border-radius: 10px;
+    outline: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    gap: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 10px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 16px;
+    border: 1px solid var(--border-white);
+    margin-bottom: 15px;
+  }
+
+  .grid-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .grid-container::-webkit-scrollbar-thumb {
+    background: var(--border-cyan);
+    border-radius: 10px;
+  }
+
+  .grid-ticket {
+    background: rgba(0, 230, 118, 0.05);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+    color: var(--green);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 4px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .grid-ticket:hover {
+    background: var(--green);
+    color: #000;
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+  }
+
+  .grid-ticket.sold {
+    background: rgba(255, 77, 94, 0.05);
+    border: 1px solid rgba(255, 77, 94, 0.2);
+    color: var(--red);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .grid-ticket.selected {
+    background: var(--cyan);
+    border-color: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 12px var(--cyan);
+  }
+
+  .explorer-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-grey);
+    padding: 0 5px;
+  }
+
+  .page-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-white);
+    color: #FFF;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+  }
+
+  .page-btn:hover:not(:disabled) {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  .page-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Progress Track */
+  .progress-wrap {
+    margin-top: 25px;
+  }
+
+  .progress-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-grey);
+    margin-bottom: 10px;
+  }
+
+  .progress-track {
+    height: 12px;
+    background: #010809;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-cyan);
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    border-radius: 10px;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+  }
+
+  /* Grid Panel: Countdown and Sorteo Tiers */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+    margin-bottom: 50px;
+  }
+
+  .stat-card {
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .stat-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-grey);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Timer */
+  .countdown-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+  }
+
+  .countdown-box {
+    background: #000;
+    border: 1px solid var(--border-cyan);
+    border-radius: 14px;
+    padding: 12px;
+    min-width: 62px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  }
+
+  .countdown-val {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--cyan);
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+  }
+
+  .countdown-lbl {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  /* Lotto Balls style for draw */
+  .lotto-balls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+  }
+
+  .lotto-ball {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #FFFFFF 0%, #B2C4C6 60%, #4A5D5F 100%);
+    color: #020d0f;
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.4), inset -2px -2px 6px rgba(0,0,0,0.4);
+    animation: bounceBall 0.8s ease;
+  }
+
+  @keyframes bounceBall {
+    0% { transform: translateY(-15px) scaleY(0.9); opacity: 0; }
+    50% { transform: translateY(0) scaleY(1); }
+    70% { transform: translateY(-5px); }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  .bottom-info-lbl {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .bottom-info-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--cyan);
+    margin-top: 6px;
+  }
+
+  /* Dynamic Winners Carousel Section */
+  .carousel-section {
+    padding: 30px 0;
+    margin-bottom: 50px;
+  }
+
+  .section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 25px;
+  }
+
+  .section-title h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #022327;
+  }
+
+  .section-title p {
+    color: #2b565a;
+    font-size: 0.95rem;
+    margin-top: 4px;
+  }
+
+  .carousel-arrows {
+    display: flex;
+    gap: 8px;
+  }
+
+  .arrow-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-white);
+    color: #FFF;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .arrow-btn:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: rgba(0,229,255,0.05);
+  }
+
+  .carousel-wrapper {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .carousel-container {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 10px 0 20px;
+    scrollbar-width: none;
+    flex: 1;
+    scroll-behavior: smooth;
+  }
+
+  .carousel-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .winner-card {
+    scroll-snap-align: start;
+    flex: 0 0 280px;
+    background: var(--card-bg-solid);
+    border: 1px solid var(--border-cyan);
+    border-radius: 24px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
+  }
+
+  .winner-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .winner-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 15px;
+    border: 2px solid var(--cyan);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.25);
+  }
+
+  .winner-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+    color: var(--text-white);
+  }
+
+  .winner-ticket-num {
+    font-family: var(--font-mono);
+    color: var(--gold);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+  }
+
+  .winner-prize-desc {
+    font-size: 0.85rem;
+    color: var(--text-grey);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px 12px;
+    border-radius: 100px;
+    display: inline-block;
+  }
+
+  /* Vertical Winner Stories feed (Specific request) */
+  .stories-section {
+    margin-bottom: 60px;
+  }
+
+  .stories-vertical-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .story-card-vertical {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    padding: 24px;
+    border: 1px solid var(--border-cyan);
+    border-radius: 24px;
+    background: var(--card-bg-solid);
+    transition: all 0.3s ease;
+  }
+
+  .story-card-vertical:hover {
+    border-color: var(--cyan);
+    transform: translateX(5px);
+  }
+
+  .story-video-container {
+    flex: 0 0 150px;
+    height: 220px;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+    border: 1px solid var(--border-cyan);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+
+  .story-video-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.75;
+    transition: transform 0.5s;
+  }
+
+  .story-card-vertical:hover .story-video-poster {
+    transform: scale(1.05);
+  }
+
+  .story-play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(1, 10, 12, 0.35);
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .story-play-overlay:hover {
+    background: rgba(1, 10, 12, 0.15);
+  }
+
+  .story-play-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--text-white);
+    color: #031719;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.35);
+    transition: all 0.3s;
+  }
+
+  .story-play-overlay:hover .story-play-icon {
+    transform: scale(1.1);
+    background: var(--cyan);
+    box-shadow: 0 0 20px var(--cyan);
+  }
+
+  .story-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .story-details h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #FFF;
+  }
+
+  .story-details p {
+    color: var(--text-grey);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .story-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  @media (max-width: 550px) {
+    .story-card-vertical {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 15px;
+    }
+    .story-video-container {
+      width: 100%;
+      flex: initial;
+      height: 250px;
+    }
+  }
+
+  /* Ads and Videos Grid Area */
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+    margin-bottom: 50px;
+  }
+
+  .ad-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #021a1b, #000);
+    border: 2px dashed rgba(0, 229, 255, 0.2);
+    text-align: center;
+    padding: 35px;
+    border-radius: 28px;
+    min-height: 280px;
+    transition: border-color 0.3s;
+    color: var(--text-white);
+  }
+
+  .ad-panel:hover {
+    border-color: var(--cyan);
+  }
+
+  .ad-badge {
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    color: var(--cyan);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .video-panel {
+    position: relative;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid var(--border-cyan);
+    min-height: 280px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    color: var(--text-white);
+  }
+
+  .video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(1, 10, 12, 0.9);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .video-placeholder:hover {
+    background: rgba(1, 10, 12, 0.75);
+  }
+
+  .play-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--text-white);
+    color: #031719;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin-bottom: 15px;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .video-placeholder:hover .play-btn {
+    transform: scale(1.1);
+    box-shadow: 0 0 35px rgba(0, 229, 255, 0.4);
+    background: var(--cyan);
+  }
+
+  /* Ticket Verification Box */
+  .search-section {
+    max-width: 650px;
+    margin: 0 auto 50px;
+  }
+
+  .search-input-box {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-cyan);
+    border-radius: 18px;
+    padding: 6px;
+    align-items: center;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+  }
+
+  .search-input-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #FFF;
+    padding: 12px 18px;
+    font-size: 1rem;
+  }
+
+  .search-results {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .result-item-card {
+    background: var(--card-bg-solid);
+    border: 1px solid var(--border-white);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideUp 0.3s ease;
+  }
+
+  .result-item-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .result-status-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+  }
+
+  .result-item-card.available .result-status-dot { background: rgba(0, 230, 118, 0.12); color: var(--green); border: 1px solid rgba(0, 230, 118, 0.25); }
+  .result-item-card.sold .result-status-dot { background: rgba(255, 77, 94, 0.12); color: var(--red); border: 1px solid rgba(255, 77, 94, 0.25); }
+  .result-item-card.paid .result-status-dot { background: rgba(0, 229, 255, 0.12); color: var(--cyan); border: 1px solid rgba(0, 229, 255, 0.25); }
+
+  /* Accordion FAQ */
+  .faq-section {
+    max-width: 800px;
+    margin: 50px auto;
+  }
+
+  .faq-accordion {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .faq-item {
+    background: var(--card-bg-solid);
+    border: 1px solid var(--border-cyan);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .faq-question {
+    width: 100%;
+    padding: 18px 24px;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-white);
+    transition: background-color 0.2s;
+  }
+
+  .faq-question:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(0,0,0,0.2);
+    border-top: 0px solid transparent;
+  }
+
+  .faq-answer-content {
+    padding: 20px 24px;
+    color: var(--text-grey);
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
+  .faq-item.active .faq-answer {
+    max-height: 200px;
+    border-top: 1px solid var(--border-white);
+  }
+
+  .faq-item.active .chevron-icon {
+    transform: rotate(180deg);
+  }
+
+  .chevron-icon {
+    transition: transform 0.3s;
+  }
+
+  /* Modals and Overlays */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal {
+    background: #010c0e;
+    border: 1px solid var(--border-cyan);
+    border-radius: 28px;
+    width: 100%;
+    max-width: 500px;
+    padding: 35px;
+    position: relative;
+    box-shadow: 0 25px 60px rgba(0, 229, 255, 0.15);
+    transform: translateY(30px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 90vh;
+    overflow-y: auto;
+    color: var(--text-white);
+  }
+
+  .modal::-webkit-scrollbar {
+    width: 6px;
+  }
+  .modal::-webkit-scrollbar-thumb {
+    background: var(--border-cyan);
+    border-radius: 10px;
+  }
+
+  .overlay.active .modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-close-btn {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    transition: color 0.2s;
+  }
+
+  .modal-close-btn:hover {
+    color: #FFF;
+  }
+
+  /* Form Fields */
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-grey);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .field input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-cyan);
+    color: #FFF;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s ease;
+    font-family: var(--font-sans);
+  }
+
+  .field input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+  }
+
+  .field select {
+    width: 100%;
+    background: #020f11;
+    border: 1px solid var(--border-cyan);
+    color: #FFF;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    outline: none;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Digital Receipt Pass (Apple Wallet Design) */
+  .receipt {
+    background: #FFFFFF;
+    color: #000;
+    border-radius: 24px;
+    padding: 30px;
+    margin: 20px 0;
+    position: relative;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    background-image: 
+      radial-gradient(circle at 0% 50%, transparent 12px, #FFFFFF 12px),
+      radial-gradient(circle at 100% 50%, transparent 12px, #FFFFFF 12px);
+  }
+
+  .receipt-header {
+    text-align: center;
+    border-bottom: 2px dashed #E2E8F0;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+  }
+
+  .receipt-title {
+    font-family: var(--font-title);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #032A2F;
+    letter-spacing: -0.01em;
+  }
+
+  .receipt-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+  }
+
+  .receipt-lbl {
+    color: #718096;
+    font-weight: 500;
+  }
+
+  .receipt-val {
+    font-weight: 700;
+    color: #1A202C;
+  }
+
+  .receipt-ticket-display {
+    background: #F7FAFC;
+    padding: 15px;
+    border-radius: 14px;
+    text-align: center;
+    margin: 20px 0;
+    border: 1px solid #EDF2F7;
+  }
+
+  .receipt-ticket-num {
+    font-family: var(--font-mono);
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #054C54;
+  }
+
+  /* simulated barcode */
+  .barcode-wrapper {
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .barcode-stripes {
+    width: 85%;
+    height: 38px;
+    background: linear-gradient(90deg, 
+      #000 2px, transparent 2px, #000 5px, transparent 5px,
+      #000 8px, transparent 8px, #000 12px, transparent 12px,
+      #000 18px, transparent 18px, #000 22px, transparent 22px,
+      #000 26px, transparent 26px, #000 32px, transparent 32px,
+      #000 35px, transparent 35px, #000 42px, transparent 42px
+    );
+    background-size: 48px 38px;
+  }
+
+  .barcode-lbl {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.3em;
+    margin-top: 6px;
+    color: #718096;
+  }
+
+  .receipt-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  /* Admin Dashboard Layout */
+  .admin-modal {
+    max-width: 850px;
+    width: 95%;
+  }
+
+  .admin-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 30px;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 768px) {
+    .admin-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .admin-sidebar {
+    border-right: 1px solid var(--border-cyan);
+    padding-right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  @media (max-width: 768px) {
+    .admin-sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--border-cyan);
+      padding-right: 0;
+      padding-bottom: 20px;
+      flex-direction: row;
+      overflow-x: auto;
+    }
+  }
+
+  .admin-tab-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-grey);
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-align: left;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .admin-tab-btn {
+      width: auto;
+      white-space: nowrap;
+    }
+  }
+
+  .admin-tab-btn.active {
+    background: rgba(0, 229, 255, 0.08);
+    border-color: var(--border-cyan);
+    color: var(--cyan);
+  }
+
+  .admin-content {
+    min-height: 400px;
+  }
+
+  .admin-pane {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .admin-pane.active {
+    display: block;
+  }
+
+  /* Admin Dashboard Quick Stats */
+  .admin-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+
+  .admin-stat-box {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-white);
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .admin-stat-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--cyan);
+    margin-top: 5px;
+    font-family: var(--font-title);
+  }
+
+  /* Admin Reservations Table */
+  .table-wrap {
+    overflow-x: auto;
+    background: rgba(0,0,0,0.4);
+    border-radius: 16px;
+    border: 1px solid var(--border-white);
+    margin-top: 15px;
+    max-height: 350px;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  .admin-table th, .admin-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-white);
+  }
+
+  .admin-table th {
+    background: #020f11;
+    font-weight: 700;
+    color: var(--text-white);
+    position: sticky;
+    top: 0;
+  }
+
+  .admin-table tr:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-pending {
+    background: rgba(255, 215, 0, 0.12);
+    color: var(--gold);
+    border: 1px solid rgba(255, 215, 0, 0.25);
+  }
+
+  .badge-paid {
+    background: rgba(0, 230, 118, 0.12);
+    color: var(--green);
+    border: 1px solid rgba(0, 230, 118, 0.25);
+  }
+
+  /* Live Draw Spinner Module */
+  .live-draw-box {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(180deg, #021417 0%, #000 100%);
+    border: 2px solid var(--border-cyan);
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 229, 255, 0.1);
+  }
+
+  .draw-spinner-reels {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 30px 0;
+  }
+
+  .draw-spinner-reel {
+    width: 60px;
+    height: 80px;
+    background: #000;
+    border: 3px solid var(--border-cyan);
+    border-radius: 16px;
+    font-family: var(--font-mono);
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.2), inset 0 2px 10px rgba(0,0,0,0.8);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .draw-spinner-reel.spinning {
+    animation: drawReelSpin 0.1s linear infinite;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  @keyframes drawReelSpin {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0); }
+  }
+
+  /* Giga-Jackpot Screen Overlay (Specific request) */
+  .jackpot-modal {
+    max-width: 600px;
+    width: 95%;
+    text-align: center;
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.35);
+    background: radial-gradient(circle at 50% 30%, #02262d 0%, #000405 100%);
+  }
+
+  .jackpot-stars {
+    font-size: 2.5rem;
+    animation: bounce 1s infinite alternate;
+  }
+
+  @keyframes bounce {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-10px); }
+  }
+
+  .jackpot-winner-box {
+    background: rgba(255, 215, 0, 0.05);
+    border: 2px dashed var(--gold);
+    border-radius: 20px;
+    padding: 25px;
+    margin: 20px 0;
+  }
+
+  /* Chart Canvas wrapper */
+  .chart-wrapper {
+    height: 220px;
+    position: relative;
+    margin-top: 15px;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Footer */
+  footer {
+    padding: 50px 0;
+    text-align: center;
+    border-top: 1px solid var(--border-cyan);
+    margin-top: 100px;
+    background: rgba(1, 10, 12, 0.9);
+  }
+
+  .footer-brand {
+    font-family: var(--font-title);
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #FFF 60%, var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    font-size: 0.9rem;
+    color: var(--text-grey);
+    margin-bottom: 20px;
+  }
+
+  .footer-links a:hover {
+    color: var(--cyan);
+  }
+
+  .footer-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Responsive layout updates */
+  @media (max-width: 768px) {
+    .navbar { padding: 15px 5vw; }
+    .hero-banner-frame { height: 240px; }
+    .digits-row { gap: 6px; }
+    .digit-cell { width: 44px; height: 60px; font-size: 1.8rem; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .content-grid { grid-template-columns: 1fr; }
+    .tab-btn { font-size: 0.75rem; padding: 10px 10px; }
+    .keypad-btn { padding: 8px; font-size: 1rem; }
+  }
+
+  /* Canvas Particles Background */
+  #particlesCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -2;
+    pointer-events: none;
+  }
+
+  /* Toast Notification System */
+  .toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  .toast {
+    pointer-events: auto;
+    background: rgba(1, 10, 12, 0.95);
+    border: 1px solid var(--border-cyan);
+    border-radius: 12px;
+    padding: 14px 20px;
+    min-width: 280px;
+    max-width: 380px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #FFF;
+    box-shadow: 0 10px 30px rgba(0, 229, 255, 0.15);
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+    opacity: 0;
+  }
+
+  .toast.show {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .toast-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+  }
+
+  .toast-icon.ok { color: var(--green); }
+  .toast-icon.bad { color: var(--red); }
+  .toast-icon.info { color: var(--cyan); }
+
+  .toast-content {
+    flex: 1;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  /* Live Purchase Ticker Feed */
+  .live-activity-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 9998;
+    pointer-events: none;
+  }
+
+  .activity-card {
+    pointer-events: auto;
+    background: rgba(5, 22, 25, 0.9);
+    border: 1px solid var(--border-cyan);
+    border-radius: 16px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    max-width: 320px;
+    transform: translateY(120%);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
+    color: var(--text-white);
+    margin-top: 10px;
+  }
+
+  .activity-card.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .activity-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--cyan);
+  }
+
+  .activity-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .activity-user {
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .activity-desc {
+    font-size: 0.75rem;
+    color: var(--text-grey);
+  }
+
+  .activity-time {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    align-self: flex-start;
+  }
+
+  /* Virtual Tombola Reel Styles */
+  .reel-box {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 25px 0;
+    perspective: 1000px;
+  }
+
+  .reel-cell {
+    width: 54px;
+    height: 76px;
+    background: #000;
+    border: 2px solid var(--border-cyan);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15), inset 0 2px 10px rgba(0, 0, 0, 0.9);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .reel-cell.spinning {
+    animation: slotSpin 0.08s linear infinite;
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.25), inset 0 2px 10px rgba(0, 0, 0, 0.9);
+    filter: blur(1px);
+  }
+
+  .reel-cell.locked {
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 25px rgba(0, 230, 118, 0.35), inset 0 2px 10px rgba(0, 0, 0, 0.9);
+    animation: lockPulse 0.4s ease-out;
+  }
+
+  @keyframes slotSpin {
+    0% { transform: translateY(0) scaleY(1); }
+    50% { transform: translateY(-8px) scaleY(0.9); }
+    100% { transform: translateY(0) scaleY(1); }
+  }
+
+  @keyframes lockPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  /* Estilos para Transición de Pantallas */
+  .btn-giga-cta {
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--bg-turquoise-light) 100%);
+    color: #010a0c;
+    font-size: 1.25rem;
+    padding: 16px 36px;
+    border-radius: 20px;
+    font-weight: 800;
+    margin: 20px auto 0;
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+  }
+  .btn-giga-cta:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 0 35px rgba(0, 229, 255, 0.6);
+    background: linear-gradient(135deg, #FFF 0%, var(--cyan) 100%);
+  }
+  .btn-giga-cta:active {
+    transform: translateY(-1px) scale(0.98);
+  }
+  .btn-back-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-white);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 20px;
+    border-radius: 12px;
+    background: rgba(5, 22, 25, 0.75);
+    border: 1px solid var(--border-cyan);
+    margin-bottom: 20px;
+    transition: all 0.3s;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+  }
+  .btn-back-home:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+    background: rgba(0, 229, 255, 0.08);
+    transform: translateX(-4px);
+    box-shadow: var(--shadow-glow);
+  }
+  /* Highlight nav action button */
+  .nav-buy-highlight {
+    background: rgba(0, 229, 255, 0.12) !important;
+    border: 1px solid var(--border-cyan) !important;
+    color: var(--cyan) !important;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+  }
+  .nav-buy-highlight:hover {
+    background: rgba(0, 229, 255, 0.25) !important;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+    color: #FFF !important;
+  }
+
+  /* Manejo de Vistas (Pantalla Principal vs Pantalla de Compra) */
+  #btnBackToHomeContainer {
+    display: none;
+    margin-bottom: 20px;
+    justify-content: flex-start;
+  }
+  #buyingFlowSection {
+    display: none;
+  }
+  
+  body.purchase-mode-active #btnBackToHomeContainer {
+    display: flex;
+  }
+  body.purchase-mode-active #buyingFlowSection {
+    display: flex;
+  }
+  
+  body.purchase-mode-active .hero,
+  body.purchase-mode-active .raffle-selector-title,
+  body.purchase-mode-active #raffleGrid,
+  body.purchase-mode-active .stats-grid,
+  body.purchase-mode-active .content-grid,
+  body.purchase-mode-active #winnersSection,
+  body.purchase-mode-active #storiesSection,
+  body.purchase-mode-active #searchSection,
+  body.purchase-mode-active .faq-section {
+    display: none !important;
+  }
+
+  /* Animación Buena Suerte */
+  .good-luck-anim {
+    font-family: var(--font-title);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3);
+    margin-top: 15px;
+    animation: goodLuckPulse 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
+  }
+  @keyframes goodLuckPulse {
+    0% { transform: scale(0.9); opacity: 0.8; filter: drop-shadow(0 0 5px var(--gold)); }
+    105% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 15px var(--gold)); }
+  }
+
+  /* ==========================================
+     ANIMATED BUTTONS HOVER & ACTIVE STATE
+     ========================================== */
+  button, .btn, .keypad-btn, .sound-btn, .admin-btn, .tab-btn, .arrow-btn, .page-btn, .btn-back-home, .notification-btn, .modal-close-btn, .btn-primary, .btn-secondary {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background-color 0.25s ease, border-color 0.25s ease !important;
+  }
+
+  button:hover:not(:disabled), .btn:hover:not(:disabled), .keypad-btn:hover, .sound-btn:hover, .admin-btn:hover, .tab-btn:hover, .arrow-btn:hover, .page-btn:hover, .btn-back-home:hover, .notification-btn:hover, .modal-close-btn:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 10px 20px rgba(0, 229, 255, 0.18), 0 0 15px rgba(0, 229, 255, 0.1) !important;
+  }
+
+  button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .sound-btn:active, .admin-btn:active, .tab-btn:active, .arrow-btn:active, .page-btn:active, .btn-back-home:active, .notification-btn:active, .modal-close-btn:active {
+    transform: translateY(0) scale(0.95) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* ==========================================
+     BLESSED NUMBERS (10 NUMEROS BENDECIDOS) STYLES
+     ========================================== */
+  .bendecidos-card {
+    background: #E2E8F0;
+    border: 4px double #054C54;
+    border-radius: 28px;
+    padding: 25px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.6);
+    color: #022327;
+    max-width: 100%;
+    margin: 0 auto 20px;
+  }
+
+  .bendecidos-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    background: #f1f5f9;
+    border: 2px solid #054C54;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+  }
+
+  .bendecidos-title {
+    font-family: var(--font-title);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 800;
+    color: #000;
+    text-align: center;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .bendecidos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px 25px;
+    width: 100%;
+    max-width: 680px;
+    justify-content: center;
+    align-content: center;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 580px) {
+    .bendecidos-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 15px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .bendecidos-grid {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+  }
+
+  .bendecido-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 100%;
+  }
+
+  .bendecido-btn {
+    width: 100%;
+    max-width: 180px;
+    height: 54px;
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    position: relative;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  /* 3D bevel and reflection gloss for Black button */
+  .bendecido-btn.btn-black {
+    background: linear-gradient(180deg, #3a3a3a 0%, #1e1e1e 50%, #000000 100%) !important;
+    color: #FFF !important;
+    border: 2px solid #555 !important;
+    border-bottom: 5px solid #000 !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
+  }
+
+  .bendecido-btn.btn-black::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
+  }
+
+  /* 3D bevel and reflection gloss for Teal button */
+  .bendecido-btn.btn-teal {
+    background: linear-gradient(180deg, #0d8390 0%, #054C54 50%, #022327 100%) !important;
+    color: #FFF !important;
+    border: 2px solid #0d8390 !important;
+    border-bottom: 5px solid #011618 !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
+  }
+
+  .bendecido-btn.btn-teal::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
+  }
+
+  /* Hover effect */
+  .bendecido-btn:hover {
+    transform: translateY(-5px) scale(1.06) !important;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important;
+  }
+
+  .bendecido-btn:active {
+    transform: translateY(2px) scale(0.97) !important;
+    border-bottom-width: 2px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+  }
+
+  /* Ya Salió sticker label styled nicely */
+  .badge-status-red {
+    background: linear-gradient(135deg, #FF4D5E 0%, #D32F2F 100%);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-top: -6px;
+    z-index: 10;
+    position: relative;
+    border: 1px solid #FF8F00;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+    transform: rotate(-3deg);
+    letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+
+  .bendecidos-footer {
+    background: #E2E8F0;
+    color: #334155;
+    border: 1px solid #CBD5E1;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+    max-width: 680px;
+    margin-top: 15px;
+    line-height: 1.4;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="bg-aura-1"></div>
+<div class="bg-aura-2"></div>
+<canvas id="particlesCanvas"></canvas>
+
+<!-- System Toast Notifications -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Live Simulated Activity Feed -->
+<div class="live-activity-container" id="liveActivityContainer"></div>
+
+<!-- Navbar Top -->
+<nav class="navbar">
+  <div class="brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="cursor:pointer;">
+    <img class="brand-logo" src="./suerte_rd_logo.png" alt="Suerte RD Logo">
+    <span>Suerte RD</span>
+  </div>
+  <div class="nav-links-desktop">
+    <a href="#" id="navHome" class="nav-link-btn"><i data-lucide="home" style="width:16px;"></i> Inicio</a>
+    <a href="#" id="navRaffles" class="nav-link-btn"><i data-lucide="award" style="width:16px;"></i> Sorteos</a>
+    <a href="#" id="navBuyTickets" class="nav-link-btn nav-buy-highlight"><i data-lucide="shopping-cart" style="width:16px;"></i> Comprar Tickets</a>
+    <a href="#" id="navStories" class="nav-link-btn"><i data-lucide="video" style="width:16px;"></i> Historias</a>
+  </div>
+  <div class="nav-actions">
+    <button class="sound-btn" id="toggleSoundBtn" title="Activar/Silenciar Sonido">
+      <i data-lucide="volume-2"></i>
+    </button>
+    <button class="admin-btn" id="openAdminBtn" title="Panel Administrador">
+      <i data-lucide="settings"></i>
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Dynamic Hero info -->
+  <section class="hero">
+    <div class="hero-banner-frame">
+      <div class="carousel-slide active"><img class="hero-banner-img" src="./listo_patron_ad.png" alt="Publicidad Listo Patrón"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./001.jpeg" alt="Ganador 1"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./008.png" alt="Ganador 2"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./003.jpeg" alt="Ganador 3"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./004.jpeg" alt="Ganador 4"></div>
+    </div>
+    <div class="eyebrow" id="heroEyebrow"><i data-lucide="sparkles" style="width: 14px; height: 14px;"></i> Sorteo Especial Activo</div>
+    <h1 id="heroTitle">Sorteo Especial</h1>
+    <p class="sub" id="heroSubtitle">Participa en nuestra tómbola y reserva tu boleto de la suerte.</p>
+    <div style="margin-top: 25px;">
+      <button class="btn btn-giga-cta" id="heroBuyTicketsBtn">
+        <i data-lucide="ticket" style="width: 22px; height: 22px;"></i> Comprar Tickets
+      </button>
+    </div>
+  </section>
+
+  <!-- Multi-Raffle Selector catalog -->
+  <h2 class="raffle-selector-title" id="raffleSection">Elige tu Rifa Activa</h2>
+  <section class="raffle-grid" id="raffleGrid">
+    <!-- Active Raffle Cards will load here dynamically -->
+  </section>
+
+  <!-- STEP-BY-STEP BUYING FLOW (Specific Request) -->
+  <div id="btnBackToHomeContainer">
+    <button class="btn-back-home" id="btnBackToHome">
+      <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> Volver al Inicio
+    </button>
+  </div>
+  <section class="buying-flow-wrapper" id="buyingFlowSection">
+    
+    <!-- 10 Números Bendecidos Interactivos -->
+    <div class="bendecidos-card">
+      <div class="bendecidos-container">
+        <h3 class="bendecidos-title">10 NUMEROS BENDECIDOS DE $5,000 PESOS CADA UNO</h3>
+        
+        <div class="bendecidos-grid">
+          <!-- 29402 - YA SALIO -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-black has-confetti" data-number="29402">
+              29402
+            </button>
+            <span class="badge-status-red">YA SALIÓ</span>
+          </div>
+          
+          <!-- 18442 -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-teal" data-number="18442">
+              18442
+            </button>
+          </div>
+
+          <!-- 04527 -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-teal" data-number="04527">
+              04527
+            </button>
+          </div>
+
+          <!-- 32947 -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-teal" data-number="32947">
+              32947
+            </button>
+          </div>
+
+          <!-- 10452 - YA SALIO -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-black has-confetti" data-number="10452">
+              10452
+            </button>
+            <span class="badge-status-red">YA SALIÓ</span>
+          </div>
+
+          <!-- 03628 - YA SALIO -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-black has-confetti" data-number="03628">
+              03628
+            </button>
+            <span class="badge-status-red">YA SALIÓ</span>
+          </div>
+
+          <!-- 11946 -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-teal" data-number="11946">
+              11946
+            </button>
+          </div>
+
+          <!-- 80312 -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-teal" data-number="80312">
+              80312
+            </button>
+          </div>
+
+          <!-- 19068 -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-teal" data-number="19068">
+              19068
+            </button>
+          </div>
+
+          <!-- 69819 - YA SALIO -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-black has-confetti" data-number="69819">
+              69819
+            </button>
+            <span class="badge-status-red">YA SALIÓ</span>
+          </div>
+
+          <!-- 01196 - YA SALIO -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-black has-confetti" data-number="01196">
+              01196
+            </button>
+            <span class="badge-status-red">YA SALIÓ</span>
+          </div>
+
+          <!-- 02061 -->
+          <div class="bendecido-item">
+            <button class="bendecido-btn btn-teal" data-number="02061">
+              02061
+            </button>
+          </div>
+        </div>
+        
+        <div class="bendecidos-footer">
+          Si en tu paquete uno de tus tickets coincide con alguno de estos números, te ganas $5,000 pesos
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: SELECTED RAFFE INFO (Syncs with cards) -->
+    <div class="glass-card">
+      <div class="step-card-header">
+        <div class="step-badge">1</div>
+        <h3>Rifa Seleccionada</h3>
+      </div>
+      
+      <div class="field" style="margin-bottom:0;">
+        <label for="ticketRaffleSelect" style="color:var(--text-white); font-weight:600; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="ticket" style="width:18px; color:var(--cyan)"></i> Estás comprando boleto para:
+        </label>
+        <select id="ticketRaffleSelect">
+          <!-- Loaded dynamically -->
+        </select>
+      </div>
+    </div>
+
+    <!-- STEP 2: USER PROFILE REGISTRATION (Specific request) -->
+    <div class="glass-card" id="step2Card">
+      <div class="step-card-header">
+        <div class="step-badge">2</div>
+        <h3>Registra tus datos de contacto</h3>
+      </div>
+      <p style="color:var(--text-grey); font-size:0.85rem; margin-bottom: 20px; line-height: 1.5;">
+        Introduce tu nombre y WhatsApp. Esto nos permite mantener un registro seguro de quién compra cada boleto para certificar al ganador del sorteo.
+      </p>
+      
+      <div style="display:flex; flex-direction:column; gap:15px;">
+        <div class="field" style="margin-bottom:0;">
+          <label for="buyerNameInput"><i data-lucide="user" style="width:14px; vertical-align:middle; margin-right:4px;"></i> Nombre Completo</label>
+          <input type="text" id="buyerNameInput" placeholder="Ej. Carlos Mendoza">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="buyerWhatsappInput"><i data-lucide="message-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i> WhatsApp (Código de país + número)</label>
+          <input type="tel" id="buyerWhatsappInput" placeholder="Ej. 18095551234">
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: TICKET SELECTION & RESERVATION -->
+    <div class="glass-card form-locked-state" id="step3Card">
+      <div class="step-card-header">
+        <div class="step-badge">3</div>
+        <h3>Elige tu boleto de 5 dígitos</h3>
+      </div>
+
+      <div class="form-unlock-warning" id="step3Warning">
+        <i data-lucide="lock" style="width:16px;"></i> Completa tu Nombre y WhatsApp en el Paso 2 para desbloquear la tómbola
+      </div>
+
+      <div class="tab-header">
+        <button class="tab-btn active" id="tabRandomBtn"><i data-lucide="dices" style="width:16px;"></i> Tómbola al Azar</button>
+        <button class="tab-btn" id="tabCustomBtn"><i data-lucide="keyboard" style="width:16px;"></i> Escribir Número</button>
+        <button class="tab-btn" id="tabExploreBtn"><i data-lucide="grid" style="width:16px;"></i> Explorar Todos</button>
+      </div>
+
+      <!-- PANE 1 & 2: Random / Custom selection -->
+      <div class="ticket-box" id="selectorTicketBox">
+        <div class="ticket-deco-line">
+          <div class="ticket-deco-dot glow"></div>
+          <div class="ticket-deco-dot"></div>
+          <div class="ticket-deco-dot"></div>
+        </div>
+
+        <div class="digits-row" id="digitsRow">
+          <div class="digit-cell">–</div>
+          <div class="digit-cell">–</div>
+          <div class="digit-cell">–</div>
+          <div class="digit-cell">–</div>
+          <div class="digit-cell">–</div>
+        </div>
+
+        <!-- Secret Input for Manual digit entries -->
+        <input type="text" id="secretInput" maxlength="5" pattern="\d*">
+
+        <!-- Helper keypad for manual mode -->
+        <div class="manual-keypad" id="manualKeypad" style="display:none;">
+          <button class="keypad-btn">1</button>
+          <button class="keypad-btn">2</button>
+          <button class="keypad-btn">3</button>
+          <button class="keypad-btn">4</button>
+          <button class="keypad-btn">5</button>
+          <button class="keypad-btn">6</button>
+          <button class="keypad-btn">7</button>
+          <button class="keypad-btn">8</button>
+          <button class="keypad-btn">9</button>
+          <button class="keypad-btn" id="keypadClear" style="color:var(--red)"><i data-lucide="delete" style="width:18px;"></i></button>
+          <button class="keypad-btn">0</button>
+        </div>
+
+        <div class="status-lbl info" id="statusMessage">
+          <i data-lucide="info" style="width:16px;"></i> Presiona "Generar" para obtener tu número
+        </div>
+
+        <div class="ticket-actions">
+          <button class="btn btn-secondary" id="btnActionRandom"><i data-lucide="refresh-cw" style="width:18px;"></i> Generar Número</button>
+          <button class="btn btn-primary" id="btnActionReserve" disabled><i data-lucide="check-circle" style="width:18px;"></i> Apartar Boleto</button>
+        </div>
+      </div>
+
+      <!-- PANE 3: Explorer Grid -->
+      <div class="ticket-box explorer-panel" id="explorerTicketBox" style="display:none;">
+        <div class="explorer-filters">
+          <input type="text" id="explorerSearch" class="filter-input" placeholder="Buscar boleto..." maxlength="5">
+          <select id="explorerFilterEnd" class="filter-select">
+            <option value="">Termina en...</option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+          </select>
+          <select id="explorerFilterType" class="filter-select">
+            <option value="">Todos</option>
+            <option value="even">Pares</option>
+            <option value="odd">Impares</option>
+            <option value="available">Disponibles</option>
+          </select>
+        </div>
+
+        <div class="grid-container" id="explorerGridContainer">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div class="explorer-pagination">
+          <button class="page-btn" id="explorerPrevPage"><i data-lucide="chevron-left" style="width:14px; vertical-align:middle;"></i> Anterior</button>
+          <span id="explorerPageNum">Pág. 1 de 10</span>
+          <button class="page-btn" id="explorerNextPage">Siguiente <i data-lucide="chevron-right" style="width:14px; vertical-align:middle;"></i></button>
+        </div>
+        
+        <button class="btn btn-primary" style="width:100%; margin-top:20px;" id="btnExplorerReserve" disabled>
+          <i data-lucide="check-circle" style="width:18px;"></i> Confirmar Boleto Seleccionado
+        </button>
+      </div>
+
+      <!-- Sales Progress for Chosen Raffle (Neon Glow) -->
+      <div class="progress-wrap">
+        <div class="progress-label-row">
+          <span id="soldLabel" style="font-weight:700;">0 vendidos</span>
+          <span class="mono" id="pctLabel" style="color:var(--cyan); font-weight:800; text-shadow: 0 0 10px rgba(0, 229, 255, 0.3)">0.0% comprado</span>
+        </div>
+        <div class="progress-track" style="border-color: rgba(0, 229, 255, 0.35); box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Countdown timer and draw results -->
+  <section class="stats-grid">
+    <!-- Próximo Sorteo -->
+    <div class="glass-card stat-card">
+      <div>
+        <div class="stat-card-title"><i data-lucide="clock" style="color:var(--cyan)"></i> Cuenta Regresiva</div>
+        <div class="countdown-row">
+          <div class="countdown-box"><div class="countdown-val" id="cdDays">00</div><div class="countdown-lbl">Días</div></div>
+          <div class="countdown-box"><div class="countdown-val" id="cdHours">00</div><div class="countdown-lbl">Hrs</div></div>
+          <div class="countdown-box"><div class="countdown-val" id="cdMins">00</div><div class="countdown-lbl">Min</div></div>
+          <div class="countdown-box"><div class="countdown-val" id="cdSecs">00</div><div class="countdown-lbl">Seg</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="bottom-info-lbl">Premio Principal</div>
+        <div class="bottom-info-val" id="jackpotDisplay">iPhone 16 Pro Max</div>
+      </div>
+    </div>
+
+    <!-- Último Ganador -->
+    <div class="glass-card stat-card">
+      <div>
+        <div class="stat-card-title"><i data-lucide="award" style="color:var(--gold)"></i> Último Ganador</div>
+        <div class="lotto-balls" id="lottoBallsRow">
+          <div class="lotto-ball">–</div>
+          <div class="lotto-ball">–</div>
+          <div class="lotto-ball">–</div>
+          <div class="lotto-ball">–</div>
+          <div class="lotto-ball">–</div>
+        </div>
+      </div>
+      <div>
+        <div class="bottom-info-lbl" id="lastDrawTitle">Sorteo en marcha</div>
+        <div class="bottom-info-val" style="font-size:1.25rem; color:#FFF;" id="lastDrawWinner">¡Participa ahora!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ads and Video Player Showcase Section -->
+  <section class="content-grid">
+    <!-- Advertising Card -->
+    <div class="ad-panel">
+      <div class="ad-badge">Seguridad Garantizada</div>
+      <i data-lucide="shield-check" style="width:48px; height:48px; color:var(--green); margin-bottom:15px;"></i>
+      <h3 style="margin-bottom: 8px;">Sorteos Certificados</h3>
+      <p style="color: var(--text-grey); font-size: 0.9rem; max-width: 280px; line-height: 1.6;">
+        Todas nuestras rifas están vinculadas a las loterías oficiales nacionales para garantizar la transparencia absoluta de cada sorteo.
+      </p>
+    </div>
+
+    <!-- Video Showcase Card -->
+    <div class="video-panel">
+      <div class="video-placeholder" id="btnPlayVideo">
+        <div class="play-btn">▶</div>
+        <h3>Cómo comprar tu Boleto</h3>
+        <p style="color: var(--text-grey); font-size: 0.85rem; margin-top:6px; display:flex; align-items:center; gap:5px;">
+          <i data-lucide="play-circle" style="width:14px;"></i> Mira el tutorial animado
+        </p>
+      </div>
+      <!-- Simulated iframe placeholder -->
+      <div id="videoContainer" style="display:none; width:100%; height:100%; background:#000;">
+        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width:100%; height:100%; color:var(--cyan); font-family:var(--font-mono); gap:12px; padding:20px; text-align:center;">
+          <i data-lucide="film" style="width:48px; height:48px; animation: pulse 1.5s infinite"></i>
+          <span>[Reproduciendo Video: Tutorial_Sorteo.mp4]</span>
+          <small style="color:var(--text-grey); font-size:0.75rem;">Para registrarse: seleccione un boleto de 5 dígitos, ingrese sus datos de contacto y confirme su pago por WhatsApp.</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Historial de Ganadores Carrusel -->
+  <section class="carousel-section" id="winnersSection">
+    <div class="section-header-row">
+      <div class="section-title">
+        <h2>Historial de Sorteos</h2>
+        <p>Conoce a los ganadores previos de nuestras rifas exclusivas.</p>
+      </div>
+      <div class="carousel-arrows">
+        <button class="arrow-btn" id="carouselPrevBtn"><i data-lucide="chevron-left"></i></button>
+        <button class="arrow-btn" id="carouselNextBtn"><i data-lucide="chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="carousel-wrapper">
+      <div class="carousel-container" id="winnersCarousel">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- VERTICAL WINNER STORIES (Specific request) -->
+  <section class="stories-section" id="storiesSection">
+    <div class="section-title" style="text-align:center; margin-bottom:35px;">
+      <h2>Historias de Ganadores del Sorteo Anterior</h2>
+      <p>Testimonios de ganadores reales que confiaron y ganaron con nosotros.</p>
+    </div>
+    
+    <div class="stories-vertical-feed">
+      <!-- Story 1 -->
+      <div class="glass-card story-card-vertical">
+        <div class="story-video-container">
+          <img src="./suerte_rd_car.png" class="story-video-poster" alt="Ganador de Toyota Hilux">
+          <div class="story-play-overlay" onclick="window.srd.playStoryVideo('Hilux_Winner_Delivering.mp4')">
+            <div class="story-play-icon">
+              <i data-lucide="play" style="width:20px; height:20px; fill:#000;"></i>
+            </div>
+          </div>
+        </div>
+        <div class="story-details">
+          <div class="eyebrow" style="color:var(--gold); border-color:var(--gold); background:rgba(255,215,0,0.08); font-size:0.7rem; margin-bottom:10px; width:fit-content;">
+            🏆 Sorteo Gran Carro
+          </div>
+          <h3>Entrega oficial de la Toyota Hilux 2026</h3>
+          <p>
+            "No tengo palabras para explicar mi felicidad. Aparté mi boleto por la web de Suerte RD combinándolo con el sorteo de la Lotería Nacional, ¡y mi número #12894 resultó ganador! Aquí nos comparten el video oficial de la entrega de las llaves."
+          </p>
+          <div class="story-meta-row">
+            <span>Ganador: Juan Carlos Pérez</span>
+            <span>Boleto: #12894</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Story 2 -->
+      <div class="glass-card story-card-vertical">
+        <div class="story-video-container">
+          <img src="./suerte_rd_banner.png" class="story-video-poster" alt="Ganadora de iPhone 16">
+          <div class="story-play-overlay" onclick="window.srd.playStoryVideo('iPhone_Unboxing_Success.mp4')">
+            <div class="story-play-icon">
+              <i data-lucide="play" style="width:20px; height:20px; fill:#000;"></i>
+            </div>
+          </div>
+        </div>
+        <div class="story-details">
+          <div class="eyebrow" style="color:var(--cyan); border-color:var(--cyan); background:rgba(0,229,255,0.08); font-size:0.7rem; margin-bottom:10px; width:fit-content;">
+            📱 Sorteo Celular
+          </div>
+          <h3>Sofía Díaz estrena su iPhone 16 Pro Max</h3>
+          <p>
+            Sofía nos envía su video abriendo la caja del nuevo iPhone 16 Pro Max. Compró su boleto #04213 directamente en la grilla visual, validó el pago por WhatsApp en unos minutos y la suerte la acompañó en el sorteo de Loteka. ¡Felicidades!
+          </p>
+          <div class="story-meta-row">
+            <span>Ganadora: Sofía Mendoza Díaz</span>
+            <span>Boleto: #04213</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Buscador y verificador de disponibilidad -->
+  <section class="search-section" id="searchSection">
+    <div class="section-title" style="text-align:center; margin-bottom:25px;">
+      <h2>Buscador de Disponibilidad</h2>
+      <p>Comprueba si tu número preferido está libre, reservado o pagado.</p>
+    </div>
+    <div class="search-input-box">
+      <input type="text" id="searchInput" placeholder="Introduce 5 dígitos..." maxlength="5">
+      <button class="btn btn-primary" style="flex:initial; padding: 12px 24px; border-radius: 14px;" id="btnSearch">
+        <i data-lucide="search" style="width:16px;"></i> Comprobar
+      </button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section">
+    <div class="section-title" style="text-align:center;">
+      <h2>Preguntas Frecuentes</h2>
+      <p>Todo lo que necesitas saber sobre el funcionamiento de la plataforma.</p>
+    </div>
+    <div class="faq-accordion">
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>¿Cómo se determinan los ganadores?</span>
+          <i data-lucide="chevron-down" class="chevron-icon" style="width:18px;"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Los sorteos se vinculan con los resultados oficiales de loterías reconocidas en el país (como LOTEKA, LEIDSA o Lotería Nacional). Al registrar tu boleto, este queda combinado con el sorteo oficial que elijas y los últimos 5 dígitos del primer premio determinan al ganador.
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>¿Cuánto tiempo tengo para pagar mi boleto apartado?</span>
+          <i data-lucide="chevron-down" class="chevron-icon" style="width:18px;"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Una vez apartado el boleto, dispones de 24 horas para completar el pago y enviar el comprobante a nuestro soporte por WhatsApp. Transcurrido este plazo, el boleto será liberado automáticamente.
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>¿Es seguro participar en Suerte RD?</span>
+          <i data-lucide="chevron-down" class="chevron-icon" style="width:18px;"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Absolutamente. Suerte RD provee una plataforma transparente donde las reservas son visibles en tiempo real, impidiendo la duplicidad de números. Los sorteos externos de lotería nacional aseguran imparcialidad absoluta.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal: Tómbola Rodillos Animación -->
+<div class="overlay" id="slotOverlay">
+  <div class="modal" style="text-align:center;">
+    <div class="eyebrow" style="margin-bottom: 8px;"><i data-lucide="toy-brick" style="width:14px; vertical-align:middle;"></i> Tómbola Virtual</div>
+    <h3 style="margin-bottom: 15px;">Girando Tómbola...</h3>
+    <div class="reel-box" id="reelRow">
+      <div class="reel-cell">0</div>
+      <div class="reel-cell">0</div>
+      <div class="reel-cell">0</div>
+      <div class="reel-cell">0</div>
+      <div class="reel-cell">0</div>
+    </div>
+    <p class="mono" style="color:var(--text-grey); font-size:0.9rem;" id="slotStatus">Buscando tu combinación ideal...</p>
+    <div id="goodLuckText" class="good-luck-anim" style="display: none;">¡BUENA SUERTE!</div>
+  </div>
+</div>
+
+<!-- Modal: Checkout / Confirm Reserve Dialog -->
+<div class="overlay" id="reserveConfirmOverlay">
+  <div class="modal">
+    <button class="modal-close-btn" id="closeReserveConfirmBtn"><i data-lucide="x"></i></button>
+    <h3>Confirmar Registro de Boleto</h3>
+    <p style="color:var(--text-grey); font-size:0.85rem; margin-bottom: 20px;">Por favor verifica tus datos de registro antes del apartado.</p>
+    
+    <div class="field">
+      <label>Boleto a Reservar</label>
+      <div style="font-family: var(--font-mono); font-size: 2rem; color: var(--cyan); font-weight:800; text-shadow: 0 0 10px rgba(0,229,255,0.2)" id="reserveConfirmNumberDisplay">00000</div>
+    </div>
+    
+    <div class="field">
+      <label>Comprador</label>
+      <div style="font-weight:700; color:#FFF; font-size:1.1rem;" id="reserveConfirmNameDisplay">Carlos Mendoza</div>
+    </div>
+
+    <div class="field">
+      <label>WhatsApp</label>
+      <div style="font-weight:700; color:#FFF; font-size:1.1rem;" id="reserveConfirmWhatsappDisplay">18095551234</div>
+    </div>
+
+    <div class="field">
+      <label for="buyerLottery">Lotería de Combinación Oficial</label>
+      <select id="buyerLottery">
+        <option value="LOTEKA" selected>LOTEKA (Por defecto)</option>
+        <option value="Lotería Nacional">Lotería Nacional</option>
+        <option value="LEIDSA">LEIDSA</option>
+        <option value="Lotería Real">Lotería Real</option>
+        <option value="Sorteo Propio Suerte RD">Sorteo Propio Suerte RD</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%; margin-top: 10px;" id="btnConfirmReserveFinal"><i data-lucide="check"></i> Confirmar y Generar Recibo</button>
+    <div class="status-lbl bad" style="margin-top: 15px;" id="reserveConfirmErrorMsg"></div>
+  </div>
+</div>
+
+<!-- Modal: Recibo y WhatsApp Checkout (Apple Wallet Design) -->
+<div class="overlay" id="receiptOverlay">
+  <div class="modal" style="max-width: 480px;">
+    <button class="modal-close-btn" id="closeReceiptBtn"><i data-lucide="x"></i></button>
+    <h3 style="text-align: center; margin-bottom: 5px;">¡Boleto Reservado!</h3>
+    <p style="text-align: center; color: var(--text-grey); font-size: 0.85rem;">Valida tu recibo digital y finaliza el pago.</p>
+
+    <!-- Receipt Pass -->
+    <div class="receipt">
+      <div class="receipt-header">
+        <div class="receipt-title" id="receiptRaffleTitle">SORTEO</div>
+        <small style="color: #718096; font-family: var(--font-mono); font-weight:600;" id="receiptDate">15/07/2026</small>
+      </div>
+
+      <div class="receipt-row">
+        <span class="receipt-lbl">Comprador</span>
+        <span class="receipt-val" id="receiptName">Carlos Mendoza</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">WhatsApp</span>
+        <span class="receipt-val" id="receiptPhone">+1 (809) 555-1234</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">Precio de Entrada</span>
+        <span class="receipt-val" id="receiptPrice">RD$500</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">Lotería Combinada</span>
+        <span class="receipt-val" id="receiptLottery" style="font-weight: 700; color: #054C54;">LOTEKA</span>
+      </div>
+
+      <div class="receipt-ticket-display">
+        <div class="receipt-lbl" style="font-size:0.75rem; text-transform:uppercase; margin-bottom:4px; font-weight:700;">Tu Boleto Oficial</div>
+        <div class="receipt-ticket-num" id="receiptTicketNum">00000</div>
+      </div>
+
+      <!-- simulated barcode -->
+      <div class="barcode-wrapper">
+        <div class="barcode-stripes"></div>
+        <div class="barcode-lbl" id="receiptBarcodeText">SRD-00000</div>
+      </div>
+    </div>
+
+    <div class="receipt-actions">
+      <button class="btn btn-secondary" style="flex:initial; width: 50px; padding:0;" id="btnCopyReceipt" title="Copiar Datos">
+        <i data-lucide="copy" style="width:18px;"></i>
+      </button>
+      <button class="btn btn-primary" style="flex:1; gap: 10px; background:#00E676; color:#020d0f; font-weight:800;" id="btnSendWhatsApp">
+        <i data-lucide="message-square" style="width:20px;"></i> Validar en WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Giga-Jackpot Screen Announcement Overlay (Specific Request) -->
+<div class="overlay" id="jackpotOverlay">
+  <div class="modal jackpot-modal">
+    <button class="modal-close-btn" id="closeJackpotBtn" style="color:var(--gold);"><i data-lucide="x"></i></button>
+    <div class="jackpot-stars">🏆 🏆 🏆</div>
+    <h1 style="color:var(--gold); font-size:2.8rem; margin:15px 0 5px; text-shadow:0 0 25px rgba(255,215,0,0.4)">¡TENEMOS GANADOR!</h1>
+    <p style="color:var(--text-grey); font-size:1rem; margin-bottom:20px;">Sorteo Oficial - Suerte RD</p>
+
+    <div class="jackpot-winner-box">
+      <div class="bottom-info-lbl" style="color:var(--gold); font-size:0.95rem; font-weight:700;">Boleto Premiado</div>
+      <div id="jackpotWinnerTicket" style="font-family:var(--font-mono); font-size:4.5rem; font-weight:800; color:#FFF; margin:10px 0; text-shadow: 0 0 25px rgba(255,255,255,0.4)">00000</div>
+      
+      <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid rgba(255,215,0,0.2); padding-top:20px; margin-top:15px;">
+        <div style="font-size:1.15rem;">
+          <span style="color:var(--text-grey);">Comprador:</span>
+          <strong id="jackpotWinnerName" style="color:#FFF; font-size:1.4rem; margin-left:8px;">Carlos Mendoza</strong>
+        </div>
+        <div style="font-size:1.05rem;">
+          <span style="color:var(--text-grey);">WhatsApp:</span>
+          <strong id="jackpotWinnerPhone" style="color:var(--cyan); margin-left:8px;">+18095551234</strong>
+        </div>
+        <div style="font-size:1.1rem;">
+          <span style="color:var(--text-grey);">Premio Obtenido:</span>
+          <strong id="jackpotWinnerPrize" style="color:var(--gold); margin-left:8px;">iPhone 16 Pro Max</strong>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnContactWinner" style="background:var(--gold); color:#020d0f; font-weight:800; width:100%; border:none;">
+      <i data-lucide="message-square"></i> Contactar Ganador por WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- Modal: Video Stories player -->
+<div class="overlay" id="storyVideoOverlay">
+  <div class="modal" style="max-width: 600px; padding: 10px; background: #000;">
+    <button class="modal-close-btn" id="closeStoryVideoBtn" style="top:15px; right:15px; z-index:1001;"><i data-lucide="x"></i></button>
+    <div style="position: relative; width: 100%; padding-top: 177.77%; background: #111; border-radius: 18px; overflow: hidden;">
+      <div style="position: absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; color:var(--cyan); font-family:var(--font-mono);">
+        <i data-lucide="film" style="width:48px; height:48px; margin-bottom:15px; animation: pulse 1s infinite;"></i>
+        <span id="storyVideoText" style="text-align:center; padding:20px;">[Reproduciendo Video Ganador...]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Admin Settings Panel (Interactive Dashboard) -->
+<div class="overlay" id="adminOverlay">
+  <div class="modal admin-modal">
+    <button class="modal-close-btn" id="closeAdminBtn"><i data-lucide="x"></i></button>
+    
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border-cyan); padding-bottom:15px;">
+      <i data-lucide="sliders" style="width:28px; height:28px; color:var(--cyan);"></i>
+      <div>
+        <h3 style="line-height:1.1">Dashboard Organizador</h3>
+        <p style="color:var(--text-grey); font-size:0.8rem;">Control de sorteos, cantidad de boletos, validaciones y sorteo oficial.</p>
+      </div>
+    </div>
+    
+    <div class="admin-grid">
+      <!-- Sidebar navigation -->
+      <div class="admin-sidebar">
+        <button class="admin-tab-btn active" data-target="paneStats">
+          <i data-lucide="bar-chart-3" style="width:16px;"></i> Estadísticas
+        </button>
+        <button class="admin-tab-btn" data-target="paneTickets">
+          <i data-lucide="list-checks" style="width:16px;"></i> Gestionar Ventas
+        </button>
+        <button class="admin-tab-btn" data-target="paneConfigs">
+          <i data-lucide="cog" style="width:16px;"></i> Configurar Sorteos
+        </button>
+        <button class="admin-tab-btn" data-target="paneDraw">
+          <i data-lucide="play" style="width:16px; color:var(--gold)"></i> Sorteador Oficial
+        </button>
+      </div>
+
+      <!-- Dashboard Contents -->
+      <div class="admin-content">
+        <!-- PANE 1: Stats & analytics -->
+        <div class="admin-pane active" id="paneStats">
+          <div class="admin-stats-row">
+            <div class="admin-stat-box">
+              <div class="bottom-info-lbl">Total Recaudado (Est.)</div>
+              <div class="admin-stat-num" id="statIncome" style="color:var(--green)">RD$0</div>
+            </div>
+            <div class="admin-stat-box">
+              <div class="bottom-info-lbl">Boletos Vendidos</div>
+              <div class="admin-stat-num" id="statSold">0 / 0</div>
+            </div>
+            <div class="admin-stat-box">
+              <div class="bottom-info-lbl">Pagados vs Reservados</div>
+              <div class="admin-stat-num" id="statPaidRatio" style="font-size:1.15rem; margin-top:12px;">0 Pag. / 0 Res.</div>
+            </div>
+          </div>
+          
+          <h4 style="font-size:0.95rem; color:var(--cyan); text-transform:uppercase; margin-bottom:10px;">Distribución de Ventas</h4>
+          <div class="chart-wrapper">
+            <canvas id="adminChart"></canvas>
+          </div>
+        </div>
+
+        <!-- PANE 2: Managing Tickets & Payments -->
+        <div class="admin-pane" id="paneTickets">
+          <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <input type="text" id="adminTicketSearch" class="filter-input" style="flex:1" placeholder="Buscar por número, nombre o WhatsApp...">
+          </div>
+          
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Boleto</th>
+                  <th>Cliente</th>
+                  <th>WhatsApp</th>
+                  <th>Lotería</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="adminTicketsTableBody">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PANE 3: Editing Raffle Settings & ticket limits -->
+        <div class="admin-pane" id="paneConfigs">
+          <div class="field">
+            <label for="cfgRaffleSelect">Seleccionar Rifa para Modificar</label>
+            <select id="cfgRaffleSelect">
+              <option value="celular">Celular (iPhone 16 Pro Max)</option>
+              <option value="carro">Carro (Toyota Hilux)</option>
+              <option value="patineta">Patineta (Dualtron)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="cfgTitle">Título de la Rifa</label>
+            <input type="text" id="cfgTitle" placeholder="Ej. Sorteo del Celular">
+          </div>
+
+          <div style="display:flex; gap:12px;">
+            <div class="field" style="flex:1;">
+              <label for="cfgPrize">Premio Principal</label>
+              <input type="text" id="cfgPrize" placeholder="Ej. iPhone 16 Pro Max">
+            </div>
+            <div class="field" style="flex:1;">
+              <label for="cfgPrice">Precio Boleto (RD$)</label>
+              <input type="text" id="cfgPrice" placeholder="Ej. RD$500">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="cfgTotal">Total de Boletos (Owner sets total limit)</label>
+            <input type="number" id="cfgTotal" min="10" max="100000" placeholder="10000">
+          </div>
+
+          <button class="btn btn-primary" style="width:100%; margin-bottom: 25px;" id="btnSaveConfig">
+            <i data-lucide="save" style="width:18px;"></i> Guardar Cambios de la Rifa
+          </button>
+
+          <div style="border-top: 1px solid var(--border-cyan); padding-top: 20px; display:flex; flex-direction:column; gap:12px;">
+            <h4 style="font-size: 0.9rem; color: var(--red); text-transform:uppercase;">Acciones de Datos</h4>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-secondary" style="flex:1;" id="btnExportCSV"><i data-lucide="download" style="width:18px;"></i> Exportar CSV</button>
+              <button class="btn btn-secondary" style="flex:1; border-color:var(--red); color:var(--red); background:rgba(255, 77, 94, 0.05)" id="btnResetRaffle"><i data-lucide="trash-2" style="width:18px;"></i> Limpiar Ventas</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 4: Live Official Draw Simulator -->
+        <div class="admin-pane" id="paneDraw">
+          <div class="live-draw-box">
+            <h3 style="margin-bottom: 8px;">Tómbola Oficial en Vivo</h3>
+            <p style="color:var(--text-grey); font-size:0.85rem; max-width:400px; margin: 0 auto 20px;">
+              Ejecuta el sorteo oficial. El sistema seleccionará de forma aleatoria un ganador de entre los boletos **VENDIDOS** (tanto reservados como pagados).
+            </p>
+            
+            <div class="draw-spinner-reels">
+              <div class="draw-spinner-reel" id="drawReel0">0</div>
+              <div class="draw-spinner-reel" id="drawReel1">0</div>
+              <div class="draw-spinner-reel" id="drawReel2">0</div>
+              <div class="draw-spinner-reel" id="drawReel3">0</div>
+              <div class="draw-spinner-reel" id="drawReel4">0</div>
+            </div>
+            
+            <button class="btn btn-primary" style="margin: 0 auto; width:100%; max-width:320px; background:var(--gold); color:#000; font-weight:800;" id="btnStartDraw">
+              <i data-lucide="sparkles" style="width:20px;"></i> Iniciar Sorteo Oficial
+            </button>
+            
+            <p class="mono" id="drawStatusMsg" style="margin-top:15px; font-size:0.85rem; color:var(--text-grey);">Listo para sortear</p>
+          </div>
+
+          <div style="border-top:1px solid var(--border-cyan); padding-top:20px; margin-top:25px;">
+            <h4 style="font-size:0.85rem; color:var(--cyan); text-transform:uppercase; margin-bottom:15px;">Agregar Ganador de Sorteo Externo</h4>
+            
+            <div style="display:flex; gap:12px;">
+              <div class="field" style="flex:1;">
+                <label for="winName">Nombre Ganador</label>
+                <input type="text" id="winName" placeholder="Ej. Sofía Díaz">
+              </div>
+              <div class="field" style="flex:1;">
+                <label for="winNumber">Número Boleto (5 Dígitos)</label>
+                <input type="text" id="winNumber" placeholder="Ej. 08234" maxlength="5">
+              </div>
+            </div>
+            <div class="field">
+              <label for="winPhoto">URL de Foto Ganador (Opcional)</label>
+              <input type="text" id="winPhoto" placeholder="https://...">
+            </div>
+            <button class="btn btn-secondary" style="width:100%;" id="btnAddWinner"><i data-lucide="plus-circle" style="width:18px;"></i> Registrar Ganador Externo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="status-lbl info" style="margin-top:20px; min-height:initial;" id="adminStatusMsg"></div>
+  </div>
+</div>
+
+<!-- Footer Area -->
+<footer>
+  <div class="footer-brand">
+    <img src="./suerte_rd_logo.png" alt="Suerte RD Logo" style="height:28px;">
+    <span>Suerte RD</span>
+  </div>
+  <div class="footer-links">
+    <a href="#" id="adminFooterLink">Panel de Control</a>
+    <a href="#" id="footerSearchLink">Buscador de Boletos</a>
+    <a href="#" id="footerWinnersLink">Historial de Sorteos</a>
+  </div>
+  <div class="footer-note">
+    &copy; 2026 Suerte RD. Todos los derechos reservados.<br>
+    Sorteos certificados con transparencia absoluta y auditoría externa.
+  </div>
+</footer>
+
+<script>
+(function(){
+  // Claves de Almacenamiento
+  const CFG_KEY_PREFIX = "suerterd:config:v2";
+  const TICKETS_KEY_PREFIX = "suerterd:tickets:v2";
+  const WINNERS_KEY = "suerterd:winners:v2";
+
+  const RAFFLE_IDS = ["celular", "carro", "patineta"];
+
+  // --- NUEVAS FUNCIONES DE INTERACTIVIDAD ---
+  const DR_NAMES = ["Carlos M.", "Sofía D.", "Juan P.", "Mateo S.", "María G.", "José L.", "Luis A.", "Ana R.", "David C.", "Laura M.", "Diego V.", "Carmen T.", "Manuel R.", "Elena S.", "Ramón N.", "Altagracia M.", "Milagros D.", "Francisco H.", "Yolanda B.", "Pedro G.", "Giselle F.", "Nelson C.", "Patricia J.", "Franklin S.", "Mildred P."];
+  const DR_PROVINCES = ["Santo Domingo", "Santiago", "La Vega", "Puerto Plata", "San Cristóbal", "Duarte", "La Altagracia", "San Pedro de Macorís", "La Romana", "Espaillat", "Samaná", "Barahona", "Baní", "Moca", "Montecristi", "Boca Chica", "Constanza", "Jarabacoa", "Higüey"];
+  const DR_PRIZES = ["iPhone 16 Pro Max", "Toyota Hilux 2026", "Patineta Dualtron Ultra"];
+
+  function showToast(msg, type = "info") {
+    const container = $("toastContainer");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = `toast`;
+    
+    const iconName = type === "ok" ? "check-circle" : (type === "bad" ? "alert-triangle" : "info");
+    const iconClass = type;
+
+    toast.innerHTML = `
+      <div class="toast-icon ${iconClass}">
+        <i data-lucide="${iconName}"></i>
+      </div>
+      <div class="toast-content">${msg}</div>
+    `;
+    container.appendChild(toast);
+    lucide.createIcons({attrs: {class: "lucide"}});
+
+    setTimeout(() => toast.classList.add("show"), 10);
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 400);
+    }, 4000);
+  }
+
+  function initLiveActivityFeed() {
+    const container = $("liveActivityContainer");
+    if (!container) return;
+
+    function showNextActivity() {
+      const name = DR_NAMES[Math.floor(Math.random() * DR_NAMES.length)];
+      const province = DR_PROVINCES[Math.floor(Math.random() * DR_PROVINCES.length)];
+      const prize = DR_PRIZES[Math.floor(Math.random() * DR_PRIZES.length)];
+      const ticketNum = pad5(Math.floor(Math.random() * 10000));
+      
+      const avatarUrl = `https://ui-avatars.com/api/?background=054c54&color=ffffff&bold=true&size=38&name=${encodeURIComponent(name)}`;
+
+      const card = document.createElement("div");
+      card.className = "activity-card";
+      card.innerHTML = `
+        <img class="activity-avatar" src="${avatarUrl}" alt="${name}">
+        <div class="activity-info">
+          <span class="activity-user">${name} (${province})</span>
+          <span class="activity-desc">Reservó el boleto <strong style="color:var(--cyan)">#${ticketNum}</strong> para el sorteo del ${prize}</span>
+        </div>
+        <span class="activity-time">Hace 1s</span>
+      `;
+
+      container.appendChild(card);
+
+      setTimeout(() => card.classList.add("show"), 10);
+
+      setTimeout(() => {
+        card.classList.remove("show");
+        setTimeout(() => card.remove(), 600);
+      }, 6000);
+
+      const nextTime = Math.random() * (35000 - 18000) + 18000;
+      setTimeout(showNextActivity, nextTime);
+    }
+
+    setTimeout(showNextActivity, 10000);
+  }
+
+  function initParticlesCanvas() {
+    const canvas = $("particlesCanvas");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    let mouse = { x: null, y: null };
+
+    window.addEventListener("resize", () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener("mouseleave", () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    class Particle {
+      constructor() {
+        this.reset();
+        this.y = Math.random() * height;
+      }
+
+      reset() {
+        this.x = Math.random() * width;
+        this.y = height + 10;
+        this.size = Math.random() * 2.5 + 0.5;
+        this.speedY = -(Math.random() * 0.6 + 0.2);
+        this.speedX = Math.random() * 0.4 - 0.2;
+        this.alpha = Math.random() * 0.5 + 0.1;
+      }
+
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+
+        if (mouse.x !== null && mouse.y !== null) {
+          const dx = this.x - mouse.x;
+          const dy = this.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            const force = (100 - dist) / 100;
+            this.x += (dx / dist) * force * 2;
+            this.y += (dy / dist) * force * 2;
+          }
+        }
+
+        if (this.y < -10 || this.x < -10 || this.x > width + 10) {
+          this.reset();
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "#00e5ff";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < 45; i++) {
+      particles.push(new Particle());
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach((p) => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  }
+
+  const DEFAULT_CONFIGS = {
+    celular: {
+      id: "celular",
+      title: "Rifa Especial del Celular",
+      prize: "iPhone 16 Pro Max",
+      price: "RD$500",
+      total: 10000,
+      image: "./005.jpeg"
+    },
+    carro: {
+      id: "carro",
+      title: "Gran Sorteo del Carro",
+      prize: "Toyota Hilux 2026",
+      price: "RD$1,000",
+      total: 50000,
+      image: "./006.jpeg"
+    },
+    patineta: {
+      id: "patineta",
+      title: "Sorteo Patineta Eléctrica",
+      prize: "Patineta Dualtron Ultra",
+      price: "RD$300",
+      total: 5000,
+      image: "./007.jpeg"
+    }
+  };
+
+  let activeRaffleId = "celular";
+  let configs = {};
+  let allTickets = {}; 
+  let winners = [];
+  
+  // Modes: random, custom, explore
+  let mode = "random";
+  let currentNumber = null;
+  let currentStatus = null;
+  
+  // Explorer Pagination
+  let explorerPage = 0;
+  const explorerLimit = 100;
+
+  // Sound Audio Context
+  let audioCtx = null;
+  let isMuted = false;
+
+  // ChartJS instances
+  let dashboardChart = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function pad5(n) {
+    return String(n).padStart(5, "0");
+  }
+
+  // Sound Synth Synthesizer using Web Audio API
+  function playSound(type) {
+    if (isMuted) return;
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } else if (type === 'spin') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(250, now);
+        osc.frequency.setValueAtTime(400, now + 0.04);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'success') {
+        // Play major triad chord (C Major)
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((f, i) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.type = 'sine';
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          o.frequency.setValueAtTime(f, now + i * 0.07);
+          g.gain.setValueAtTime(0.08, now + i * 0.07);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.35 + i * 0.07);
+          o.start(now + i * 0.07);
+          o.stop(now + 0.4 + i * 0.07);
+        });
+      } else if (type === 'error') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(130, now);
+        osc.frequency.linearRampToValueAtTime(70, now + 0.22);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      } else if (type === 'draw') {
+        // Cosmic sweep for official draw
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(1000, now + 1.2);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 1.2);
+        osc.start(now);
+        osc.stop(now + 1.2);
+      }
+    } catch(e) {
+      console.warn("Audio Context block or error", e);
+    }
+  }
+
+  // Fallback seguro a localStorage si no existe la API de window.storage
+  const hasStorageAPI = window.storage && typeof window.storage.get === "function";
+
+  async function getStorageItem(key) {
+    // 1. Intentar con el Servidor Backend
+    try {
+      const res = await fetch(`/api/get?key=${encodeURIComponent(key)}`);
+      if (res.ok) {
+        const data = await res.json();
+        return data.value;
+      }
+    } catch (e) {
+      console.warn("Server API failed, trying alternate storage methods...", e);
+    }
+
+    // 2. Intentar con la API de window.storage (Entorno IDE)
+    if (hasStorageAPI) {
+      try {
+        const res = await window.storage.get(key, true);
+        return res ? res.value : null;
+      } catch (e) {
+        console.warn("Storage API failed, falling back to localStorage", e);
+      }
+    }
+
+    // 3. Fallback a LocalStorage del navegador
+    return localStorage.getItem(key);
+  }
+
+  async function setStorageItem(key, val) {
+    // 1. Guardar en el Servidor Backend
+    let savedOnServer = false;
+    try {
+      const res = await fetch('/api/set', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: val })
+      });
+      if (res.ok) {
+        savedOnServer = true;
+      }
+    } catch (e) {
+      console.warn("Server API set failed, using alternate storage...", e);
+    }
+
+    // 2. Guardar en window.storage (Entorno IDE)
+    if (hasStorageAPI) {
+      try {
+        await window.storage.set(key, val, true);
+        if (savedOnServer) return; // Si ya se guardó en servidor y window.storage, terminamos
+      } catch (e) {
+        console.warn("Storage API set failed, using localStorage as fallback", e);
+      }
+    }
+
+    // 3. Guardar en LocalStorage del navegador
+    localStorage.setItem(key, val);
+  }
+
+
+  // Control de Pantallas / Vistas (Pantalla Principal y Pantalla de Compra)
+  function showScreen(screenName) {
+    if (screenName === 'purchase') {
+      document.body.classList.add("purchase-mode-active");
+      window.scrollTo({top: 0, behavior: "smooth"});
+      setTimeout(() => {
+        if ($("buyerNameInput").value === "") {
+          $("buyerNameInput").focus();
+        }
+      }, 300);
+    } else {
+      document.body.classList.remove("purchase-mode-active");
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }
+  }
+
+  // Carrusel automático para la portada (desvanecimiento)
+  function initHeroCarousel() {
+    const slides = document.querySelectorAll(".hero-banner-frame .carousel-slide");
+    if (!slides.length) return;
+    let currentSlide = 0;
+    
+    setInterval(() => {
+      slides[currentSlide].classList.remove("active");
+      currentSlide = (currentSlide + 1) % slides.length;
+      slides[currentSlide].classList.add("active");
+    }, 4500); // Cambia cada 4.5 segundos
+  }
+
+  // Inicialización de la aplicación
+  async function init() {
+    // 1. Cargar Configuración de las 3 Rifas
+    for (const rId of RAFFLE_IDS) {
+      try {
+        const key = `${CFG_KEY_PREFIX}:${rId}`;
+        const raw = await getStorageItem(key);
+        configs[rId] = raw ? JSON.parse(raw) : {...DEFAULT_CONFIGS[rId]};
+        // Siempre forzar la nueva imagen por defecto para reflejar los archivos de imagen actualizados
+        configs[rId].image = DEFAULT_CONFIGS[rId].image;
+      } catch (e) {
+        configs[rId] = {...DEFAULT_CONFIGS[rId]};
+      }
+    }
+
+    // 2. Cargar Ventas de Boletos de las 3 Rifas
+    for (const rId of RAFFLE_IDS) {
+      try {
+        const key = `${TICKETS_KEY_PREFIX}:${rId}`;
+        const raw = await getStorageItem(key);
+        allTickets[rId] = raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        allTickets[rId] = {};
+      }
+    }
+
+    // 3. Cargar Ganadores Históricos
+    try {
+      const raw = await getStorageItem(WINNERS_KEY);
+      winners = raw ? JSON.parse(raw) : [];
+    } catch(e) {
+      winners = [];
+    }
+
+    // 4. Configurar FAQ Acordeón
+    document.querySelectorAll(".faq-question").forEach(q => {
+      q.addEventListener("click", () => {
+        const item = q.parentElement;
+        const isActive = item.classList.contains("active");
+        
+        // Cierra los demás items
+        document.querySelectorAll(".faq-item").forEach(it => it.classList.remove("active"));
+        
+        if (!isActive) {
+          item.classList.add("active");
+          playSound("click");
+        }
+      });
+    });
+
+    // 5. Configurar validación en tiempo real del Paso 2 (Nombre y WhatsApp)
+    $("buyerNameInput").addEventListener("input", checkStep2Validation);
+    $("buyerWhatsappInput").addEventListener("input", checkStep2Validation);
+
+    renderRaffleSelectorDropdown();
+    renderRaffleSelector();
+    loadRaffleState(activeRaffleId);
+    renderWinnersCarousel();
+    tickCountdown();
+    setInterval(tickCountdown, 1000);
+    
+    // Iniciar carrusel de héroe
+    initHeroCarousel();
+
+    // Iniciar Canvas de partículas y Feed de actividad simulada
+    initParticlesCanvas();
+    initLiveActivityFeed();
+    
+    // Hover confetti event listener for red buttons (Phase 2 & 4)
+    document.addEventListener('mouseover', (e) => {
+      const btn = e.target.closest('button, .btn, .keypad-btn, .sound-btn, .admin-btn, .tab-btn, .arrow-btn, .page-btn, .btn-back-home, .notification-btn, .modal-close-btn, .btn-primary, .btn-secondary');
+      if (!btn) return;
+      if (btn.dataset.hovered === 'true') return;
+      btn.dataset.hovered = 'true';
+
+      const style = window.getComputedStyle(btn);
+      const color = style.color;
+      const border = style.borderColor;
+      const bg = style.backgroundColor;
+      
+      const isRed = color.includes('255, 77, 94') || 
+                    border.includes('255, 77, 94') || 
+                    bg.includes('255, 77, 94') ||
+                    btn.classList.contains('red') ||
+                    btn.classList.contains('has-confetti') ||
+                    btn.id.toLowerCase().includes('delete') ||
+                    btn.id.toLowerCase().includes('clear') ||
+                    btn.id.toLowerCase().includes('clean') ||
+                    btn.textContent.toLowerCase().includes('borrar') ||
+                    btn.textContent.toLowerCase().includes('eliminar');
+
+      if (isRed) {
+        const rect = btn.getBoundingClientRect();
+        const x = (rect.left + rect.width / 2) / window.innerWidth;
+        const y = (rect.top + rect.height / 2) / window.innerHeight;
+        
+        confetti({
+          particleCount: 20,
+          spread: 45,
+          origin: { x, y },
+          colors: ['#FF4D5E', '#FFD700', '#00E5FF', '#00E676'],
+          ticks: 60
+        });
+      }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      const btn = e.target.closest('button, .btn, .keypad-btn, .sound-btn, .admin-btn, .tab-btn, .arrow-btn, .page-btn, .btn-back-home, .notification-btn, .modal-close-btn, .btn-primary, .btn-secondary');
+      if (btn) {
+        delete btn.dataset.hovered;
+      }
+    });
+
+    // Lucide Icon Create
+    lucide.createIcons();
+  }
+
+  // Comprobar si se ingresó nombre y whatsapp para desbloquear el paso 3
+  function checkStep2Validation() {
+    const name = $("buyerNameInput").value.trim();
+    const whatsapp = $("buyerWhatsappInput").value.trim();
+    
+    const isValid = name.length > 2 && whatsapp.length >= 7;
+    
+    const step3 = $("step3Card");
+    const warning = $("step3Warning");
+
+    if (isValid) {
+      step3.classList.remove("form-locked-state");
+      warning.style.display = "none";
+    } else {
+      step3.classList.add("form-locked-state");
+      warning.style.display = "flex";
+      // Clear ticket if locked back
+      currentNumber = null;
+      currentStatus = null;
+      updateDigitsRow("", null);
+      $("btnActionReserve").disabled = true;
+      $("btnExplorerReserve").disabled = true;
+    }
+  }
+
+  // Cargar las opciones del selector directo de rifas
+  function renderRaffleSelectorDropdown() {
+    const select = $("ticketRaffleSelect");
+    select.innerHTML = "";
+    RAFFLE_IDS.forEach(rId => {
+      const conf = configs[rId];
+      const opt = document.createElement("option");
+      opt.value = rId;
+      opt.textContent = `${conf.title} (${conf.price})`;
+      select.appendChild(opt);
+    });
+  }
+
+  // Cargar estado de una Rifa
+  function loadRaffleState(rId) {
+    activeRaffleId = rId;
+
+    const conf = configs[rId];
+    $("heroTitle").innerHTML = `${conf.title.split(" ").slice(0, -1).join(" ") || "Sorteo"} <span>${conf.title.split(" ").slice(-1)[0] || "RD"}</span>`;
+    $("heroSubtitle").textContent = `Participa por nuestro gran premio: ${conf.prize}.`;
+    
+    const bannerImg = $("heroBannerImg");
+    if (bannerImg) {
+      bannerImg.src = conf.image;
+    }
+
+    $("jackpotDisplay").textContent = conf.prize;
+
+    if ($("ticketRaffleSelect").value !== rId) {
+      $("ticketRaffleSelect").value = rId;
+    }
+
+    // Resetear tómbola
+    currentNumber = null;
+    currentStatus = null;
+    updateDigitsRow("", null);
+    $("secretInput").value = "";
+    $("btnActionReserve").disabled = true;
+    $("btnExplorerReserve").disabled = true;
+    
+    showStatus(mode === "random" ? "Presiona el botón para elegir un número aleatorio" : "Escribe un número de 5 dígitos...", "info");
+
+    renderProgress();
+    renderDrawResults();
+    updateAdminForm(rId);
+    
+    if (mode === 'explore') {
+      renderExplorerGrid();
+    }
+
+    document.querySelectorAll(".raffle-card").forEach(c => {
+      c.classList.toggle("active", c.getAttribute("data-id") === rId);
+    });
+  }
+
+  // Dibujar panel de selección de rifas
+  function renderRaffleSelector() {
+    const container = $("raffleGrid");
+    container.innerHTML = "";
+
+    RAFFLE_IDS.forEach(rId => {
+      const conf = configs[rId];
+      const sold = Object.keys(allTickets[rId]).length;
+      const total = Math.max(1, Number(conf.total) || 10000);
+      const pct = Math.min(100, (sold / total) * 100);
+
+      const card = document.createElement("div");
+      card.className = `raffle-card ${rId === activeRaffleId ? 'active' : ''}`;
+      card.setAttribute("data-id", rId);
+      card.innerHTML = `
+        <div class="raffle-img-box">
+          <img class="raffle-img" src="${conf.image}" alt="${conf.title}">
+        </div>
+        <div class="raffle-card-content">
+          <div class="raffle-card-title">${escapeHtml(conf.title)}</div>
+          <div class="raffle-card-meta">
+            <span class="raffle-card-price">${escapeHtml(conf.price)}</span>
+            <span class="raffle-card-percent">${pct.toFixed(1)}% vendido</span>
+          </div>
+          <div class="progress-track" style="height:8px; border-color: rgba(0, 229, 255, 0.25);">
+            <div class="progress-bar" style="width: ${pct}%"></div>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => {
+        playSound("click");
+        loadRaffleState(rId);
+        showScreen('purchase');
+      });
+      container.appendChild(card);
+    });
+  }
+
+  // Actualizar estadísticas de ventas
+  function renderProgress() {
+    const conf = configs[activeRaffleId];
+    const ticketsObj = allTickets[activeRaffleId];
+    const sold = Object.keys(ticketsObj).length;
+    const total = Math.max(1, Number(conf.total) || 10000);
+    const pct = Math.min(100, (sold / total) * 100);
+
+    $("soldLabel").textContent = `${sold.toLocaleString("es-DO")} vendidos de ${total.toLocaleString("es-DO")}`;
+    $("pctLabel").textContent = `${pct.toFixed(1)}% comprado`;
+    $("progressBar").style.width = `${pct}%`;
+
+    const cardEl = document.querySelector(`.raffle-card[data-id="${activeRaffleId}"]`);
+    if (cardEl) {
+      const pEl = cardEl.querySelector(".raffle-card-percent");
+      const bEl = cardEl.querySelector(".progress-bar");
+      if (pEl) pEl.textContent = `${pct.toFixed(1)}% vendido`;
+      if (bEl) bEl.style.width = `${pct}%`;
+    }
+  }
+
+  // Renderizar último resultado para el sorteo activo
+  function renderDrawResults() {
+    const el = $("lottoBallsRow");
+    const rWinners = winners.filter(w => w.raffleId === activeRaffleId);
+
+    if (!rWinners.length) {
+      el.innerHTML = ["–", "–", "–", "–", "–"].map(d => `<div class="lotto-ball">${d}</div>`).join("");
+      $("lastDrawTitle").textContent = "Sin sorteos previos";
+      $("lastDrawWinner").textContent = "Sé el primer ganador";
+    } else {
+      const latest = rWinners[rWinners.length - 1];
+      const digits = pad5(latest.number).split("");
+      el.innerHTML = digits.map(d => `<div class="lotto-ball">${d}</div>`).join("");
+      $("lastDrawTitle").textContent = `Ganador del boleto #${pad5(latest.number)}`;
+      $("lastDrawWinner").textContent = latest.name;
+    }
+  }
+
+  function getAvatar(name) {
+    return `https://ui-avatars.com/api/?background=054c54&color=ffffff&bold=true&name=${encodeURIComponent(name)}`;
+  }
+
+  // Renderizar Carrusel deslizable de ganadores
+  function renderWinnersCarousel() {
+    const el = $("winnersCarousel");
+    el.innerHTML = "";
+
+    if (!winners.length) {
+      el.innerHTML = `<div style="text-align:center; color:var(--text-grey); width:100%; padding:30px; font-family:var(--font-mono); font-size:0.9rem;"><i data-lucide="award" style="width:20px; vertical-align:middle; margin-right:8px;"></i> No hay ganadores registrados aún. ¡Pronto aparecerán aquí!</div>`;
+      lucide.createIcons({attrs: {class: "lucide"}});
+      return;
+    }
+
+    winners.slice().reverse().forEach(w => {
+      const photo = w.photoUrl && w.photoUrl.trim() ? w.photoUrl.trim() : getAvatar(w.name);
+      const card = document.createElement("div");
+      card.className = "winner-card";
+      card.innerHTML = `
+        <img class="winner-avatar" src="${photo}" alt="${w.name}" onerror="this.src='${getAvatar(w.name)}'">
+        <div class="winner-name">${escapeHtml(w.name)}</div>
+        <div class="winner-ticket-num">#${escapeHtml(pad5(w.number))}</div>
+        <div class="winner-prize-desc">${escapeHtml(w.prize || "Premio")}</div>
+      `;
+      el.appendChild(card);
+    });
+  }
+
+  // Carousel Navigation links
+  $("carouselPrevBtn").addEventListener("click", () => {
+    $("winnersCarousel").scrollLeft -= 300;
+    playSound("click");
+  });
+  $("carouselNextBtn").addEventListener("click", () => {
+    $("winnersCarousel").scrollLeft += 300;
+    playSound("click");
+  });
+
+  // Countdown al próximo miércoles 8:00 PM
+  function getNextDrawDate() {
+    const now = new Date();
+    const target = new Date(now);
+    target.setHours(20, 0, 0, 0);
+    const WED = 3;
+    let diff = (WED - now.getDay() + 7) % 7;
+    if (diff === 0 && now >= target) diff = 7;
+    target.setDate(now.getDate() + diff);
+    return target;
+  }
+
+  function tickCountdown() {
+    const target = getNextDrawDate();
+    const diff = Math.max(0, target - new Date());
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((diff / (1000 * 60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+
+    $("cdDays").textContent = String(d).padStart(2, "0");
+    $("cdHours").textContent = String(h).padStart(2, "0");
+    $("cdMins").textContent = String(m).padStart(2, "0");
+    $("cdSecs").textContent = String(s).padStart(2, "0");
+  }
+
+  // Animación de la Tómbola
+  function runSlotAnimation(finalNumber, onDone) {
+    const reels = document.querySelectorAll("#reelRow .reel-cell");
+    $("slotOverlay").classList.add("active");
+    $("slotStatus").textContent = "GIRANDO TÓMBOLA...";
+    $("goodLuckText").style.display = "none";
+
+    let intervals = [];
+    reels.forEach((reel, i) => {
+      reel.className = "reel-cell spinning";
+      const timer = setInterval(() => {
+        reel.textContent = Math.floor(Math.random() * 10);
+        playSound("spin");
+      }, 70);
+      intervals.push(timer);
+
+      setTimeout(() => {
+        clearInterval(timer);
+        reel.textContent = finalNumber[i];
+        reel.className = "reel-cell locked";
+
+        if (i === reels.length - 1) {
+          $("slotStatus").textContent = "¡Combinación de la suerte!";
+          playSound("success");
+          $("goodLuckText").style.display = "block";
+          setTimeout(() => {
+            $("slotOverlay").classList.remove("active");
+            onDone();
+          }, 2200);
+        }
+      }, 700 + i * 300);
+    });
+  }
+
+  // Generar Número Aleatorio
+  function generateRandomNumber() {
+    const conf = configs[activeRaffleId];
+    const maxVal = Math.max(1, Number(conf.total) || 10000);
+    const ticketsObj = allTickets[activeRaffleId];
+    const soldList = Object.keys(ticketsObj);
+
+    if (soldList.length >= maxVal) {
+      showStatus("¡Todos los números de esta rifa están agotados!", "bad");
+      playSound("error");
+      return;
+    }
+
+    let val, attempts = 0;
+    do {
+      val = pad5(Math.floor(Math.random() * maxVal));
+      attempts++;
+    } while (ticketsObj[val] && attempts < 800);
+
+    if (ticketsObj[val]) {
+      for (let i = 0; i < maxVal; i++) {
+        const formatted = pad5(i);
+        if (!ticketsObj[formatted]) {
+          val = formatted;
+          break;
+        }
+      }
+    }
+
+    $("btnActionRandom").disabled = true;
+    runSlotAnimation(val, () => {
+      currentNumber = val;
+      currentStatus = "ok";
+      updateDigitsRow(val, "ok");
+      showStatus("Número disponible. Procede al apartado.", "ok");
+      $("btnActionReserve").disabled = false;
+      $("btnActionRandom").disabled = false;
+    });
+  }
+
+  // Cambio entre Azar, Manual y Explorar
+  function switchMode(newMode) {
+    mode = newMode;
+    $("tabRandomBtn").classList.toggle("active", mode === "random");
+    $("tabCustomBtn").classList.toggle("active", mode === "custom");
+    $("tabExploreBtn").classList.toggle("active", mode === "explore");
+
+    $("selectorTicketBox").style.display = (mode === "explore") ? "none" : "block";
+    $("explorerTicketBox").style.display = (mode === "explore") ? "block" : "none";
+    $("manualKeypad").style.display = (mode === "custom") ? "grid" : "none";
+
+    currentNumber = null;
+    currentStatus = null;
+    $("secretInput").value = "";
+    updateDigitsRow("", null);
+    $("btnActionReserve").disabled = true;
+    $("btnExplorerReserve").disabled = true;
+
+    if (mode === "random") {
+      showStatus("Presiona el botón para generar tu número aleatorio", "info");
+    } else if (mode === "custom") {
+      showStatus("Escribe un número de 5 dígitos usando el teclado", "info");
+      focusSecretInput();
+    } else if (mode === "explore") {
+      explorerPage = 0;
+      renderExplorerGrid();
+    }
+    playSound("click");
+  }
+
+  function focusSecretInput() {
+    $("secretInput").focus();
+  }
+
+  // Manejar entrada de dígitos manual
+  function handleSecretInput() {
+    const rawVal = $("secretInput").value.replace(/\D/g, "").slice(0, 5);
+    $("secretInput").value = rawVal;
+
+    if (rawVal.length < 5) {
+      updateDigitsRow(rawVal, null);
+      showStatus(rawVal.length === 0 ? "Introduce 5 dígitos..." : `Escribiendo: ${rawVal.length}/5 dígitos`, "info");
+      currentNumber = null;
+      currentStatus = null;
+      $("btnActionReserve").disabled = true;
+      return;
+    }
+
+    validateEnteredNumber(rawVal);
+  }
+
+  function validateEnteredNumber(rawVal) {
+    const conf = configs[activeRaffleId];
+    const ticketsObj = allTickets[activeRaffleId];
+    const maxVal = Math.max(1, Number(conf.total) || 10000);
+    const parsed = parseInt(rawVal, 10);
+
+    if (parsed >= maxVal) {
+      updateDigitsRow(rawVal, "taken");
+      showStatus(`Fuera de rango para esta rifa (Límite: ${pad5(maxVal - 1)})`, "bad");
+      currentNumber = null;
+      currentStatus = null;
+      $("btnActionReserve").disabled = true;
+      playSound("error");
+    } else if (ticketsObj[rawVal]) {
+      const ticketState = ticketsObj[rawVal].estado || "reservado";
+      updateDigitsRow(rawVal, "taken");
+      showStatus(ticketState === "pagado" ? "Boleto ya pagado. Elige otro." : "Boleto ya apartado. Intenta con otro.", "bad");
+      currentNumber = null;
+      currentStatus = null;
+      $("btnActionReserve").disabled = true;
+      playSound("error");
+    } else {
+      updateDigitsRow(rawVal, "ok");
+      showStatus("¡Boleto disponible! Procede al apartado.", "ok");
+      currentNumber = rawVal;
+      currentStatus = "ok";
+      $("btnActionReserve").disabled = false;
+      playSound("click");
+    }
+  }
+
+  function updateDigitsRow(str, statusClass) {
+    const cells = document.querySelectorAll("#digitsRow .digit-cell");
+    const arr = str.padEnd(5, " ").split("");
+    cells.forEach((cell, idx) => {
+      const char = arr[idx];
+      cell.textContent = char.trim() ? char : "–";
+      cell.className = "digit-cell";
+      if (char.trim()) {
+        cell.classList.add("filled");
+        if (statusClass) {
+          cell.classList.add(statusClass);
+        }
+      }
+    });
+  }
+
+  function showStatus(txt, type) {
+    const el = $("statusMessage");
+    const icon = type === "ok" ? "check-circle" : (type === "bad" ? "alert-circle" : "info");
+    el.innerHTML = `<i data-lucide="${icon}" style="width:16px;"></i> ${txt}`;
+    el.className = `status-lbl ${type || "info"}`;
+    lucide.createIcons({attrs: {class: "lucide"}});
+  }
+
+  // --- EXPLORER GRID MODULE ---
+  function renderExplorerGrid() {
+    const grid = $("explorerGridContainer");
+    grid.innerHTML = "";
+
+    const conf = configs[activeRaffleId];
+    const totalTickets = Math.max(1, Number(conf.total) || 10000);
+    const ticketsObj = allTickets[activeRaffleId];
+
+    // Filter properties
+    const searchVal = $("explorerSearch").value.trim();
+    const filterEnd = $("explorerFilterEnd").value;
+    const filterType = $("explorerFilterType").value;
+
+    let pageStartIndex = explorerPage * explorerLimit;
+    let matchedTickets = [];
+
+    // Filter tickets in memory
+    for (let i = 0; i < totalTickets; i++) {
+      const formatted = pad5(i);
+      const isSold = !!ticketsObj[formatted];
+
+      // 1. Filter search query
+      if (searchVal && !formatted.includes(searchVal)) continue;
+
+      // 2. Filter ending digit
+      if (filterEnd && !formatted.endsWith(filterEnd)) continue;
+
+      // 3. Filter types (even, odd, available)
+      if (filterType === 'even' && i % 2 !== 0) continue;
+      if (filterType === 'odd' && i % 2 === 0) continue;
+      if (filterType === 'available' && isSold) continue;
+
+      matchedTickets.push({num: formatted, sold: isSold});
+    }
+
+    const totalFiltered = matchedTickets.length;
+    const totalPages = Math.max(1, Math.ceil(totalFiltered / explorerLimit));
+    
+    // Adjust current page if out of bounds
+    if (explorerPage >= totalPages) {
+      explorerPage = totalPages - 1;
+      pageStartIndex = explorerPage * explorerLimit;
+    }
+    if (explorerPage < 0) explorerPage = 0;
+
+    $("explorerPageNum").textContent = `Pág. ${explorerPage + 1} de ${totalPages}`;
+    $("explorerPrevPage").disabled = explorerPage === 0;
+    $("explorerNextPage").disabled = explorerPage >= totalPages - 1;
+
+    const pageSlice = matchedTickets.slice(pageStartIndex, pageStartIndex + explorerLimit);
+
+    if (pageSlice.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-muted);">Sin resultados. Intenta otros filtros.</div>`;
+      return;
+    }
+
+    pageSlice.forEach(t => {
+      const card = document.createElement("div");
+      card.className = `grid-ticket ${t.sold ? 'sold' : ''} ${t.num === currentNumber ? 'selected' : ''}`;
+      
+      const ticketsObj = allTickets[activeRaffleId];
+      if (t.sold && ticketsObj[t.num] && ticketsObj[t.num].estado === "pagado") {
+        card.classList.add("paid");
+        card.style.borderColor = "var(--border-cyan)";
+        card.style.color = "var(--text-muted)";
+      }
+
+      card.textContent = t.num;
+      
+      if (!t.sold) {
+        card.addEventListener("click", () => {
+          document.querySelectorAll(".grid-ticket").forEach(el => el.classList.remove("selected"));
+          card.classList.add("selected");
+          currentNumber = t.num;
+          currentStatus = "ok";
+          $("btnExplorerReserve").disabled = false;
+          playSound("click");
+        });
+      }
+      grid.appendChild(card);
+    });
+  }
+
+  $("explorerPrevPage").addEventListener("click", () => {
+    if (explorerPage > 0) {
+      explorerPage--;
+      renderExplorerGrid();
+      playSound("click");
+    }
+  });
+
+  $("explorerNextPage").addEventListener("click", () => {
+    explorerPage++;
+    renderExplorerGrid();
+    playSound("click");
+  });
+
+  $("explorerSearch").addEventListener("input", () => {
+    explorerPage = 0;
+    renderExplorerGrid();
+  });
+  $("explorerFilterEnd").addEventListener("change", () => {
+    explorerPage = 0;
+    renderExplorerGrid();
+    playSound("click");
+  });
+  $("explorerFilterType").addEventListener("change", () => {
+    explorerPage = 0;
+    renderExplorerGrid();
+    playSound("click");
+  });
+
+  $("btnExplorerReserve").addEventListener("click", () => {
+    if (currentNumber && currentStatus === "ok") {
+      openReserveForm();
+    }
+  });
+
+  // Modal: Formulario de Reserva (Checkout dialog confirm)
+  function openReserveForm() {
+    if (!currentNumber || currentStatus !== "ok") return;
+    
+    const name = $("buyerNameInput").value.trim();
+    const whatsapp = $("buyerWhatsappInput").value.trim();
+
+    $("reserveConfirmNumberDisplay").textContent = currentNumber;
+    $("reserveConfirmNameDisplay").textContent = name;
+    $("reserveConfirmWhatsappDisplay").textContent = whatsapp;
+    
+    $("reserveConfirmErrorMsg").textContent = "";
+    $("reserveConfirmOverlay").classList.add("active");
+    playSound("click");
+  }
+
+  async function submitReservation() {
+    const name = $("buyerNameInput").value.trim();
+    const phone = $("buyerWhatsappInput").value.trim();
+    const lottery = $("buyerLottery").value;
+    const err = $("reserveConfirmErrorMsg");
+
+    if (!name || !phone) {
+      err.textContent = "Por favor completa todos los campos requeridos en el Paso 2.";
+      showToast("Por favor completa los campos del Paso 2.", "bad");
+      playSound("error");
+      return;
+    }
+
+    // Double check tickets state in Storage API
+    let latestTickets = {};
+    try {
+      const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
+      const raw = await getStorageItem(key);
+      latestTickets = raw ? JSON.parse(raw) : {};
+    } catch(e) { latestTickets = allTickets[activeRaffleId]; }
+
+    if (latestTickets[currentNumber]) {
+      allTickets[activeRaffleId] = latestTickets;
+      err.textContent = "Este número fue reservado recientemente. Intenta de nuevo.";
+      showToast("Este boleto ya fue apartado por otra persona.", "bad");
+      currentStatus = "taken";
+      updateDigitsRow(currentNumber, "taken");
+      showStatus("El boleto seleccionado ya no se encuentra libre", "bad");
+      $("btnActionReserve").disabled = true;
+      $("btnExplorerReserve").disabled = true;
+      renderProgress();
+      playSound("error");
+      return;
+    }
+
+    // Save ticket reservation (status reserved by default)
+    latestTickets[currentNumber] = {
+      name,
+      whatsapp: phone,
+      loteria: lottery,
+      estado: "reservado",
+      timestamp: Date.now()
+    };
+    allTickets[activeRaffleId] = latestTickets;
+
+    const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
+    await setStorageItem(key, JSON.stringify(latestTickets));
+    
+    renderProgress();
+    
+    // Confetti effect!
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 }
+    });
+
+    playSound("success");
+    showToast("¡Boleto reservado! Completa tu pago por WhatsApp.", "ok");
+
+    $("reserveConfirmOverlay").classList.remove("active");
+    showReceipt(currentNumber, name, phone, lottery);
+  }
+
+  // Recibo (Apple Wallet Design)
+  function showReceipt(num, name, phone, lottery) {
+    const conf = configs[activeRaffleId];
+    $("receiptRaffleTitle").textContent = conf.title.toUpperCase();
+    $("receiptDate").textContent = new Date().toLocaleDateString("es-DO", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
+    $("receiptName").textContent = name;
+    $("receiptPhone").textContent = phone;
+    $("receiptPrice").textContent = conf.price;
+    $("receiptLottery").textContent = lottery;
+    $("receiptTicketNum").textContent = num;
+    $("receiptBarcodeText").textContent = `SRD-${num}`;
+
+    $("receiptOverlay").classList.add("active");
+  }
+
+  function handleSendWhatsApp() {
+    const conf = configs[activeRaffleId];
+    const num = $("receiptTicketNum").textContent;
+    const name = $("receiptName").textContent;
+    const lottery = $("receiptLottery").textContent;
+
+    const textMsg = `Hola Suerte RD, he reservado el boleto digital #${num} en combinación con ${lottery} para el sorteo del "${conf.prize}" a nombre de ${name}. Solicito los datos para completar mi pago.`;
+    const encoded = encodeURIComponent(textMsg);
+
+    window.open(`https://wa.me/18092800000?text=${encoded}`, "_blank");
+
+    clearTicketSelection();
+    $("receiptOverlay").classList.remove("active");
+  }
+
+  function clearTicketSelection() {
+    currentNumber = null;
+    currentStatus = null;
+    updateDigitsRow("", null);
+    $("secretInput").value = "";
+    $("btnActionReserve").disabled = true;
+    $("btnExplorerReserve").disabled = true;
+    
+    // Clear user profile inputs
+    $("buyerNameInput").value = "";
+    $("buyerWhatsappInput").value = "";
+    checkStep2Validation(); // relock Step 3
+    
+    showStatus(mode === "random" ? "Presiona el botón para elegir un número aleatorio" : "Escribe un número de 5 dígitos...", "info");
+    
+    if (mode === 'explore') {
+      renderExplorerGrid();
+    }
+  }
+
+  // Copiar datos del recibo
+  $("btnCopyReceipt").addEventListener("click", () => {
+    const num = $("receiptTicketNum").textContent;
+    const name = $("receiptName").textContent;
+    const lottery = $("receiptLottery").textContent;
+    const text = `Sorteo: Suerte RD\nBoleto: #${num}\nComprador: ${name}\nLotería combinada: ${lottery}\nEstado: Reservado`;
+    navigator.clipboard.writeText(text).then(() => {
+      playSound("click");
+      showToast("Datos del recibo copiados al portapapeles.", "ok");
+      const btn = $("btnCopyReceipt");
+      btn.innerHTML = `<i data-lucide="check" style="color:var(--green)"></i>`;
+      lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = `<i data-lucide="copy"></i>`;
+        lucide.createIcons();
+      }, 1500);
+    });
+  });
+
+  // Buscador de Boletos
+  function runSearch() {
+    const query = $("searchInput").value.trim().replace(/\D/g, "");
+    const box = $("searchResults");
+    box.innerHTML = "";
+
+    if (query.length < 3) {
+      box.innerHTML = `<div style="text-align:center; font-size:0.85rem; color:var(--text-muted);"><i data-lucide="alert-circle" style="width:14px; vertical-align:middle;"></i> Escribe al menos 3 dígitos...</div>`;
+      lucide.createIcons({attrs: {class: "lucide"}});
+      playSound("error");
+      return;
+    }
+
+    const formatted = pad5(parseInt(query, 10));
+    const conf = configs[activeRaffleId];
+    const maxVal = Math.max(1, Number(conf.total) || 10000);
+
+    if (parseInt(formatted, 10) >= maxVal) {
+      box.innerHTML = `
+        <div class="result-item-card sold">
+          <div class="result-item-info">
+            <div class="result-status-dot">×</div>
+            <div>
+              <div class="mono" style="font-weight:700;">#${formatted}</div>
+              <small style="color:var(--text-muted);">Fuera de rango para este sorteo</small>
+            </div>
+          </div>
+        </div>`;
+      playSound("error");
+      return;
+    }
+
+    const ticketsObj = allTickets[activeRaffleId];
+    const ticketInfo = ticketsObj[formatted];
+    const isSold = !!ticketInfo;
+
+    if (!isSold) {
+      box.innerHTML = `
+        <div class="result-item-card available">
+          <div class="result-item-info">
+            <div class="result-status-dot">✓</div>
+            <div>
+              <div class="mono" style="font-weight:700;">#${formatted}</div>
+              <small style="color:var(--green); font-weight:600;">Disponible para apartar</small>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="flex:initial; padding:8px 16px; font-size:0.8rem; border-radius:10px;" onclick="window.srd.quickPick('${formatted}')"><i data-lucide="check" style="width:14px;"></i> Apartar</button>
+        </div>`;
+      playSound("success");
+    } else {
+      const isPaid = ticketInfo.estado === 'pagado';
+      const statusText = isPaid ? `Boleto PAGADO por ${ticketInfo.name}` : `Boleto RESERVADO por ${ticketInfo.name}`;
+      const cardClass = isPaid ? 'paid' : 'sold';
+      const statusSymbol = isPaid ? '✓' : '✕';
+      
+      box.innerHTML = `
+        <div class="result-item-card ${cardClass}">
+          <div class="result-item-info">
+            <div class="result-status-dot">${statusSymbol}</div>
+            <div>
+              <div class="mono" style="font-weight:700;">#${formatted}</div>
+              <small style="color:var(--text-grey); font-weight:600;">${statusText}</small>
+            </div>
+          </div>
+        </div>`;
+      playSound("click");
+    }
+    lucide.createIcons();
+  }
+
+  function quickPick(num) {
+    // Fill in mock name and whatsapp if empty to unlock
+    if (!$("buyerNameInput").value.trim()) {
+      $("buyerNameInput").value = "Usuario Buscador";
+    }
+    if (!$("buyerWhatsappInput").value.trim()) {
+      $("buyerWhatsappInput").value = "18095550000";
+    }
+    checkStep2Validation();
+
+    switchMode("custom");
+    $("secretInput").value = num;
+    validateEnteredNumber(num);
+    showScreen('purchase');
+  }
+
+  // Play Vertical Winner Story video simulation (Specific request)
+  function playStoryVideo(videoName) {
+    playSound("draw");
+    $("storyVideoText").textContent = `[Reproduciendo Video Ganador: ${videoName}]`;
+    $("storyVideoOverlay").classList.add("active");
+  }
+
+  // --- ADMIN INTERACTIVE DASHBOARD MODULE ---
+  function initAdminDashboard() {
+    document.querySelectorAll(".admin-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        playSound("click");
+        document.querySelectorAll(".admin-tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".admin-pane").forEach(p => p.classList.remove("active"));
+
+        btn.classList.add("active");
+        const target = btn.getAttribute("data-target");
+        $(target).classList.add("active");
+
+        if (target === 'paneStats') {
+          updateStatsPane();
+        } else if (target === 'paneTickets') {
+          updateReservationsTable();
+        } else if (target === 'paneConfigs') {
+          updateAdminForm(activeRaffleId);
+        }
+      });
+    });
+
+    $("adminTicketSearch").addEventListener("input", updateReservationsTable);
+  }
+
+  function openAdminPanel() {
+    updateStatsPane();
+    updateReservationsTable();
+    updateAdminForm(activeRaffleId);
+    
+    $("adminStatusMsg").textContent = "";
+    $("adminOverlay").classList.add("active");
+    playSound("click");
+  }
+
+  // Stat pane calculations & chart
+  function updateStatsPane() {
+    const rId = $("cfgRaffleSelect").value;
+    const conf = configs[rId];
+    const tickets = allTickets[rId];
+    
+    const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 500;
+    const totalTicketsCount = Math.max(1, Number(conf.total) || 10000);
+    
+    let soldCount = 0;
+    let paidCount = 0;
+    let reservedCount = 0;
+
+    Object.keys(tickets).forEach(k => {
+      soldCount++;
+      if (tickets[k].estado === 'pagado') {
+        paidCount++;
+      } else {
+        reservedCount++;
+      }
+    });
+
+    const incomeEstimate = paidCount * ticketPrice;
+    
+    $("statIncome").textContent = `RD$ ${incomeEstimate.toLocaleString("es-DO")}`;
+    $("statSold").textContent = `${soldCount.toLocaleString("es-DO")} / ${totalTicketsCount.toLocaleString("es-DO")}`;
+    $("statPaidRatio").textContent = `${paidCount} Pag. / ${reservedCount} Res.`;
+
+    const ctx = $("adminChart").getContext("2d");
+    if (dashboardChart) {
+      dashboardChart.destroy();
+    }
+
+    dashboardChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Pagados', 'Reservados', 'Disponibles'],
+        datasets: [{
+          data: [paidCount, reservedCount, totalTicketsCount - soldCount],
+          backgroundColor: ['#00E676', '#FFD700', 'rgba(255,255,255,0.05)'],
+          borderColor: ['#00E676', '#FFD700', 'rgba(0, 229, 255, 0.15)'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#B2C4C6',
+              font: {
+                family: 'Inter',
+                size: 11
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Render and search admin reservations table
+  function updateReservationsTable() {
+    const searchVal = $("adminTicketSearch").value.trim().toLowerCase();
+    const tbody = $("adminTicketsTableBody");
+    tbody.innerHTML = "";
+
+    const rId = $("cfgRaffleSelect").value;
+    const tickets = allTickets[rId];
+    const ticketKeys = Object.keys(tickets);
+
+    let rowsAdded = 0;
+
+    ticketKeys.sort().forEach(k => {
+      const details = tickets[k];
+      const name = details.name.toLowerCase();
+      const whatsapp = details.whatsapp.toLowerCase();
+      
+      // Match query filters
+      if (searchVal && !k.includes(searchVal) && !name.includes(searchVal) && !whatsapp.includes(searchVal)) {
+        return;
+      }
+
+      const row = document.createElement("tr");
+      const isPaid = details.estado === 'pagado';
+      const statusBadge = isPaid ? '<span class="badge badge-paid">Pagado</span>' : '<span class="badge badge-pending">Reservado</span>';
+      
+      const togglePayBtn = isPaid 
+        ? `<button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; border-color:var(--gold); color:var(--gold)" onclick="window.srd.togglePaymentState('${rId}', '${k}', false)">Reservar</button>`
+        : `<button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; border-color:var(--green); color:var(--green)" onclick="window.srd.togglePaymentState('${rId}', '${k}', true)">Confirmar</button>`;
+
+      row.innerHTML = `
+        <td class="mono" style="font-weight:700; color:var(--cyan)">#${k}</td>
+        <td>${escapeHtml(details.name)}</td>
+        <td><a href="https://wa.me/${details.whatsapp.replace(/\D/g, "")}" target="_blank" style="color:var(--cyan); text-decoration:underline;">${escapeHtml(details.whatsapp)}</a></td>
+        <td>${escapeHtml(details.loteria || "LOTEKA")}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <div style="display:flex; gap:5px;">
+            ${togglePayBtn}
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; border-color:var(--red); color:var(--red)" onclick="window.srd.deleteReservation('${rId}', '${k}')"><i data-lucide="trash-2" style="width:12px;"></i></button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(row);
+      rowsAdded++;
+    });
+
+    if (rowsAdded === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-muted)">No se encontraron registros de ventas.</td></tr>`;
+    }
+    
+    lucide.createIcons();
+  }
+
+  // Toggle ticket payment state (reserved <=> paid)
+  async function togglePaymentState(rId, ticketNum, markPaid) {
+    if (allTickets[rId] && allTickets[rId][ticketNum]) {
+      allTickets[rId][ticketNum].estado = markPaid ? 'pagado' : 'reservado';
+      
+      const key = `${TICKETS_KEY_PREFIX}:${rId}`;
+      await setStorageItem(key, JSON.stringify(allTickets[rId]));
+      
+      updateReservationsTable();
+      updateStatsPane();
+      renderProgress();
+      playSound("success");
+      showToast(`Boleto #${ticketNum} marcado como ${markPaid ? 'pagado' : 'reservado'}.`, "ok");
+    }
+  }
+
+  // Delete ticket reservation (free ticket)
+  async function deleteReservation(rId, ticketNum) {
+    if (!confirm(`¿Estás seguro de que deseas liberar el boleto #${ticketNum}?`)) return;
+
+    if (allTickets[rId] && allTickets[rId][ticketNum]) {
+      delete allTickets[rId][ticketNum];
+      
+      const key = `${TICKETS_KEY_PREFIX}:${rId}`;
+      await setStorageItem(key, JSON.stringify(allTickets[rId]));
+      
+      updateReservationsTable();
+      updateStatsPane();
+      renderProgress();
+      playSound("click");
+      showToast(`Boleto #${ticketNum} liberado con éxito.`, "info");
+    }
+  }
+
+  // Admin config sync
+  function updateAdminForm(rId) {
+    const conf = configs[rId];
+    $("cfgTitle").value = conf.title;
+    $("cfgPrize").value = conf.prize;
+    $("cfgPrice").value = conf.price;
+    $("cfgTotal").value = conf.total;
+  }
+
+  async function saveConfig() {
+    const editId = $("cfgRaffleSelect").value;
+    const total = Math.max(10, Math.min(100000, parseInt($("cfgTotal").value, 10) || DEFAULT_CONFIGS[editId].total));
+
+    configs[editId] = {
+      ...configs[editId],
+      title: $("cfgTitle").value.trim() || DEFAULT_CONFIGS[editId].title,
+      prize: $("cfgPrize").value.trim() || DEFAULT_CONFIGS[editId].prize,
+      price: $("cfgPrice").value.trim() || DEFAULT_CONFIGS[editId].price,
+      total: total
+    };
+
+    const key = `${CFG_KEY_PREFIX}:${editId}`;
+    await setStorageItem(key, JSON.stringify(configs[editId]));
+
+    renderRaffleSelectorDropdown();
+    renderRaffleSelector();
+    if (editId === activeRaffleId) {
+      loadRaffleState(activeRaffleId);
+    }
+    showAdminMsg("Configuración de rifa guardada con éxito.", "ok");
+    showToast("Configuración de la rifa guardada.", "ok");
+    playSound("success");
+  }
+
+  async function addWinner() {
+    const name = $("winName").value.trim();
+    const number = $("winNumber").value.replace(/\D/g, "");
+    const photoUrl = $("winPhoto").value.trim();
+
+    if (!name || number.length !== 5) {
+      showAdminMsg("Nombre y boleto válido son requeridos.", "bad");
+      showToast("Datos incompletos para agregar ganador.", "bad");
+      playSound("error");
+      return;
+    }
+
+    winners.push({
+      raffleId: activeRaffleId,
+      name,
+      number: parseInt(number, 10),
+      prize: configs[activeRaffleId].prize,
+      photoUrl,
+      date: new Date().toISOString()
+    });
+
+    await setStorageItem(WINNERS_KEY, JSON.stringify(winners));
+    renderDrawResults();
+    renderWinnersCarousel();
+    lucide.createIcons();
+
+    $("winName").value = "";
+    $("winNumber").value = "";
+    $("winPhoto").value = "";
+    showAdminMsg("Ganador agregado al historial.", "ok");
+    showToast("Ganador agregado al historial con éxito.", "ok");
+    playSound("success");
+  }
+
+  // Exportar a CSV
+  function exportCSV() {
+    const editId = $("cfgRaffleSelect").value;
+    const tickets = allTickets[editId];
+    const soldKeys = Object.keys(tickets);
+
+    if (!soldKeys.length) {
+      showAdminMsg("No hay boletos reservados para este sorteo.", "bad");
+      showToast("No hay ventas para exportar.", "bad");
+      playSound("error");
+      return;
+    }
+
+    let csvContent = "Boleto,Nombre,WhatsApp,Loteria Combinada,Estado,Fecha Registro\r\n";
+    soldKeys.sort().forEach(k => {
+      const details = tickets[k];
+      const date = new Date(details.timestamp).toLocaleString("es-DO");
+      const loteria = details.loteria || "LOTEKA";
+      const estado = details.estado || "reservado";
+      csvContent += `${k},"${details.name.replace(/"/g, '""')}",${details.whatsapp},"${loteria}","${estado}","${date}"\r\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `suerterd_ventas_${editId}_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showAdminMsg("Exportación CSV descargada.", "ok");
+    showToast("Ventas exportadas en formato CSV.", "ok");
+    playSound("success");
+  }
+
+  async function resetRaffle() {
+    const editId = $("cfgRaffleSelect").value;
+    if (!confirm(`¿Estás seguro de reiniciar todas las ventas de la rifa "${configs[editId].title}"? Esto eliminará todos los boletos vendidos.`)) return;
+
+    allTickets[editId] = {};
+    const key = `${TICKETS_KEY_PREFIX}:${editId}`;
+    await setStorageItem(key, JSON.stringify({}));
+
+    renderRaffleSelector();
+    if (editId === activeRaffleId) {
+      renderProgress();
+      clearTicketSelection();
+    }
+    
+    updateReservationsTable();
+    updateStatsPane();
+    showAdminMsg("Ventas reiniciadas con éxito.", "ok");
+    showToast("Sorteo reiniciado y ventas vaciadas.", "info");
+    playSound("success");
+  }
+
+  function showAdminMsg(txt, type) {
+    const el = $("adminStatusMsg");
+    el.textContent = txt;
+    el.className = `status-lbl ${type === "ok" ? "ok" : "bad"}`;
+    setTimeout(() => { el.textContent = ""; }, 4000);
+  }
+
+  // --- LIVE DRAW OFFICIAL SIMULATOR ---
+  function startOfficialDraw() {
+    const rId = activeRaffleId;
+    const tickets = allTickets[rId];
+    const soldKeys = Object.keys(tickets);
+
+    if (!soldKeys.length) {
+      $("drawStatusMsg").textContent = "Error: No se han vendido boletos para este sorteo.";
+      $("drawStatusMsg").className = "mono bad";
+      playSound("error");
+      return;
+    }
+
+    $("btnStartDraw").disabled = true;
+    $("drawStatusMsg").textContent = "MEZCLANDO TÓMBOLA DE COMPRADORES...";
+    $("drawStatusMsg").className = "mono info";
+    playSound("draw");
+
+    // Choose a random winner from actual sold tickets
+    const winningIndex = Math.floor(Math.random() * soldKeys.length);
+    const winningTicket = soldKeys[winningIndex];
+    const winnerDetails = tickets[winningTicket];
+
+    // Trigger spinning animation in the dashboard draw UI
+    const reels = [
+      $("drawReel0"),
+      $("drawReel1"),
+      $("drawReel2"),
+      $("drawReel3"),
+      $("drawReel4")
+    ];
+
+    let intervals = [];
+    reels.forEach((reel, i) => {
+      reel.className = "draw-spinner-reel spinning";
+      const timer = setInterval(() => {
+        reel.textContent = Math.floor(Math.random() * 10);
+      }, 70);
+      intervals.push(timer);
+
+      setTimeout(() => {
+        clearInterval(timer);
+        reel.textContent = winningTicket[i];
+        reel.className = "draw-spinner-reel";
+        playSound("spin");
+
+        if (i === reels.length - 1) {
+          // Closed admin modal to show giga screen (overlay jackpot)
+          $("adminOverlay").classList.remove("active");
+          
+          showJackpotAnnouncement(winningTicket, winnerDetails);
+          $("btnStartDraw").disabled = false;
+        }
+      }, 1500 + i * 400);
+    });
+  }
+
+  function showJackpotAnnouncement(ticketNum, buyerDetails) {
+    const conf = configs[activeRaffleId];
+    $("jackpotWinnerTicket").textContent = ticketNum;
+    $("jackpotWinnerName").textContent = buyerDetails.name;
+    $("jackpotWinnerPhone").textContent = buyerDetails.whatsapp;
+    $("jackpotWinnerPrize").textContent = conf.prize;
+
+    $("btnContactWinner").onclick = () => {
+      const text = `¡Felicidades ${buyerDetails.name}! Tu boleto #${ticketNum} ha sido seleccionado ganador del premio "${conf.prize}" en la plataforma de Suerte RD. Nos pondremos en contacto contigo de inmediato para coordinar la entrega.`;
+      window.open(`https://wa.me/${buyerDetails.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+    };
+
+    $("jackpotOverlay").classList.add("active");
+    playSound("success");
+
+    // Confetti rain
+    let duration = 5 * 1000;
+    let animationEnd = Date.now() + duration;
+    let defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1100 };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    let interval = setInterval(function() {
+      let timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      let particleCount = 50 * (timeLeft / duration);
+      // since particles fall down, animate a bit higher than random
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
+
+    // Save automatically to history
+    saveWinnerFromDraw(ticketNum, buyerDetails);
+  }
+
+  async function saveWinnerFromDraw(ticketNum, buyerDetails) {
+    winners.push({
+      raffleId: activeRaffleId,
+      name: buyerDetails.name,
+      number: parseInt(ticketNum, 10),
+      prize: configs[activeRaffleId].prize,
+      photoUrl: "", // default avatar
+      date: new Date().toISOString()
+    });
+
+    await setStorageItem(WINNERS_KEY, JSON.stringify(winners));
+    renderDrawResults();
+    renderWinnersCarousel();
+    lucide.createIcons();
+    updateStatsPane();
+  }
+
+  // Toggle Sound Action
+  $("toggleSoundBtn").addEventListener("click", () => {
+    isMuted = !isMuted;
+    const icon = isMuted ? "volume-x" : "volume-2";
+    $("toggleSoundBtn").innerHTML = `<i data-lucide="${icon}"></i>`;
+    lucide.createIcons();
+    if (!isMuted) {
+      playSound("click");
+    }
+  });
+
+  // Video tutorial interactivo
+  $("btnPlayVideo").addEventListener("click", () => {
+    $("btnPlayVideo").style.display = "none";
+    $("videoContainer").style.display = "block";
+    playSound("click");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  // Keyboard helper keypad bindings
+  document.querySelectorAll(".manual-keypad .keypad-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const val = btn.textContent.trim();
+      const input = $("secretInput");
+      
+      if (btn.id === 'keypadClear') {
+        input.value = input.value.slice(0, -1);
+      } else {
+        if (input.value.length < 5) {
+          input.value += val;
+        }
+      }
+      handleSecretInput();
+      playSound("click");
+    });
+  });
+
+  // Event Listeners
+  $("ticketRaffleSelect").addEventListener("change", (e) => {
+    playSound("click");
+    loadRaffleState(e.target.value);
+  });
+  $("tabRandomBtn").addEventListener("click", () => switchMode("random"));
+  $("tabCustomBtn").addEventListener("click", () => switchMode("custom"));
+  $("tabExploreBtn").addEventListener("click", () => switchMode("explore"));
+  $("btnActionRandom").addEventListener("click", generateRandomNumber);
+  $("secretInput").addEventListener("input", handleSecretInput);
+  $("digitsRow").addEventListener("click", () => { if (mode === "custom") focusSecretInput(); });
+
+  $("btnActionReserve").addEventListener("click", openReserveForm);
+  $("closeReserveConfirmBtn").addEventListener("click", () => $("reserveConfirmOverlay").classList.remove("active"));
+  $("btnConfirmReserveFinal").addEventListener("click", submitReservation);
+
+  $("closeReceiptBtn").addEventListener("click", () => {
+    $("receiptOverlay").classList.remove("active");
+    playSound("click");
+  });
+  $("btnSendWhatsApp").addEventListener("click", handleSendWhatsApp);
+
+  // Jackpot overlays close
+  $("closeJackpotBtn").addEventListener("click", () => {
+    $("jackpotOverlay").classList.remove("active");
+    playSound("click");
+  });
+
+  // Stories Close Video
+  $("closeStoryVideoBtn").addEventListener("click", () => {
+    $("storyVideoOverlay").classList.remove("active");
+    playSound("click");
+  });
+
+  // Panel Admin Listeners
+  $("openAdminBtn").addEventListener("click", openAdminPanel);
+  $("adminFooterLink").addEventListener("click", (e) => {
+    e.preventDefault();
+    openAdminPanel();
+  });
+  $("closeAdminBtn").addEventListener("click", () => {
+    $("adminOverlay").classList.remove("active");
+    playSound("click");
+  });
+  $("cfgRaffleSelect").addEventListener("change", (e) => {
+    playSound("click");
+    updateStatsPane();
+    updateReservationsTable();
+    updateAdminForm(e.target.value);
+  });
+  $("btnSaveConfig").addEventListener("click", saveConfig);
+  $("btnAddWinner").addEventListener("click", addWinner);
+  $("btnExportCSV").addEventListener("click", exportCSV);
+  $("btnResetRaffle").addEventListener("click", resetRaffle);
+
+  // Draw Simulator Button
+  $("btnStartDraw").addEventListener("click", startOfficialDraw);
+
+  // Buscador
+  $("btnSearch").addEventListener("click", runSearch);
+  $("searchInput").addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); });
+
+  // Eventos para Transición de Pantallas
+  $("heroBuyTicketsBtn").addEventListener("click", () => {
+    playSound("click");
+    showScreen('purchase');
+  });
+  $("btnBackToHome").addEventListener("click", () => {
+    playSound("click");
+    showScreen('home');
+  });
+  $("navHome").addEventListener("click", (e) => {
+    e.preventDefault();
+    playSound("click");
+    showScreen('home');
+  });
+  $("navRaffles").addEventListener("click", (e) => {
+    e.preventDefault();
+    playSound("click");
+    showScreen('home');
+    setTimeout(() => {
+      $("raffleSection").scrollIntoView({behavior: "smooth"});
+    }, 100);
+  });
+  $("navBuyTickets").addEventListener("click", (e) => {
+    e.preventDefault();
+    playSound("click");
+    showScreen('purchase');
+  });
+  $("navStories").addEventListener("click", (e) => {
+    e.preventDefault();
+    playSound("click");
+    showScreen('home');
+    setTimeout(() => {
+      $("storiesSection").scrollIntoView({behavior: "smooth"});
+    }, 100);
+  });
+  $("footerSearchLink").addEventListener("click", (e) => {
+    e.preventDefault();
+    playSound("click");
+    showScreen('home');
+    setTimeout(() => {
+      $("searchSection").scrollIntoView({behavior: "smooth"});
+    }, 100);
+  });
+  $("footerWinnersLink").addEventListener("click", (e) => {
+    e.preventDefault();
+    playSound("click");
+    showScreen('home');
+    setTimeout(() => {
+      $("winnersSection").scrollIntoView({behavior: "smooth"});
+    }, 100);
+  });
+
+  // Exponer a contexto global para quickPick y tabla admin
+  window.srd = { 
+    quickPick, 
+    togglePaymentState, 
+    deleteReservation,
+    playStoryVideo
+  };
+
+  init();
+  initAdminDashboard();
+})();
+</script>
+</body>
+</html>

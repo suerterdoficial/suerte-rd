@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suerte RD - Plataforma Profesional de Sorteos</title>
+<meta name="description" content="Suerte RD es la plataforma profesional de sorteos y rifas en la República Dominicana. Participa en tómbolas oficiales y gana increíbles premios con total transparencia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Canvas Confetti -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="bg-aura-1"></div>
+<div class="bg-aura-2"></div>
+<canvas id="particlesCanvas"></canvas>
+
+<!-- System Toast Notifications -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Live Simulated Activity Feed -->
+<div class="live-activity-container" id="liveActivityContainer"></div>
+
+<!-- Navbar Top -->
+<nav class="navbar">
+  <div class="brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="cursor:pointer;">
+    <img class="brand-logo" src="./suerte_rd_logo.png" alt="Suerte RD Logo">
+    <span>Suerte RD</span>
+  </div>
+  <div class="nav-links-desktop">
+    <a href="#" id="navHome" class="nav-link-btn"><i data-lucide="home" style="width:16px;"></i> Inicio</a>
+    <a href="#" id="navRaffles" class="nav-link-btn"><i data-lucide="award" style="width:16px;"></i> Sorteos</a>
+    <a href="#" id="navBuyTickets" class="nav-link-btn nav-buy-highlight"><i data-lucide="shopping-cart" style="width:16px;"></i> Comprar Tickets</a>
+    <a href="#" id="navStories" class="nav-link-btn"><i data-lucide="video" style="width:16px;"></i> Historias</a>
+  </div>
+  <div class="nav-actions" style="position: relative;">
+    <button class="notification-btn" id="toggleNotificationsBtn" title="Notificaciones en Vivo">
+      <i data-lucide="bell"></i>
+      <span class="notification-badge" id="notificationsBadge"></span>
+    </button>
+    
+    <!-- Notifications Dropdown (Phase 2) -->
+    <div class="notifications-dropdown" id="notificationsDropdown">
+      <div class="dropdown-header">
+        <span>Actividad en Vivo</span>
+        <button id="clearNotificationsBtn" style="font-size:0.75rem; color:var(--red); font-weight:600; cursor:pointer;">Limpiar</button>
+      </div>
+      <div class="dropdown-body" id="notificationsList">
+        <div style="padding: 15px; text-align: center; color: var(--text-grey); font-size: 0.8rem;">Cargando actividad...</div>
+      </div>
+    </div>
+
+    <button class="sound-btn" id="toggleSoundBtn" title="Activar/Silenciar Sonido">
+      <i data-lucide="volume-2"></i>
+    </button>
+
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Dynamic Hero info -->
+  <section class="hero">
+    <div class="hero-banner-frame">
+      <div class="carousel-slide active"><img class="hero-banner-img" src="./listo_patron_ad.png" alt="Publicidad Listo Patrón" style="object-fit: contain; background-color: #de3d03;"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./001.jpeg" alt="Ganador 1"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./002.jpeg" alt="Ganador 2"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./003.jpeg" alt="Ganador 3"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./004.jpeg" alt="Ganador 4"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./005.jpeg" alt="Ganador 5"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./006.jpeg" alt="Ganador 6"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./007.jpeg" alt="Ganador 7"></div>
+      <div class="carousel-slide"><img class="hero-banner-img" src="./008.png" alt="Ganador 8"></div>
+    </div>
+    <div class="eyebrow" id="heroEyebrow"><i data-lucide="sparkles" style="width: 14px; height: 14px;"></i> Sorteo Especial Activo</div>
+    <h1 id="heroTitle">Sorteo Especial</h1>
+    <p class="sub" id="heroSubtitle">Participa en nuestra tómbola y reserva tu boleto de la suerte.</p>
+    <div id="heroCountdownContainer" style="display:none; margin: 15px auto 0; background: linear-gradient(135deg, rgba(255, 77, 94, 0.1) 0%, rgba(255, 77, 94, 0.02) 100%); border: 1px solid rgba(255, 77, 94, 0.3); border-radius: 12px; padding: 10px 20px; width: fit-content; box-shadow: 0 4px 15px rgba(255, 77, 94, 0.15); text-align: center;">
+      <span style="color: var(--red); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; justify-content: center;">
+        <i data-lucide="clock" style="width: 14px; height: 14px;"></i> El sorteo cierra en:
+      </span>
+      <div id="heroCountdownTimer" style="color: #FFF; font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; margin-top: 5px;">0s 0d 0h 0m 0s</div>
+    </div>
+    <div style="margin-top: 25px;">
+      <button class="btn btn-giga-cta" id="heroBuyTicketsBtn">
+        <i data-lucide="ticket" style="width: 22px; height: 22px;"></i> Comprar Tickets
+      </button>
+    </div>
+  </section>
+
+  <!-- Multi-Raffle Selector catalog -->
+  <h2 class="raffle-selector-title" id="raffleSection">Elige tu Rifa Activa</h2>
+  <section class="raffle-grid" id="raffleGrid">
+    <!-- Active Raffle Cards will load here dynamically -->
+  </section>
+
+  <!-- STEP-BY-STEP BUYING FLOW -->
+  <div id="btnBackToHomeContainer">
+    <button class="btn-back-home" id="btnBackToHome">
+      <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> Volver al Inicio
+    </button>
+  </div>
+  <section class="buying-flow-wrapper" id="buyingFlowSection">
+    <div id="purchaseCountdownContainer" style="display:none; width: 100%; margin-bottom: 25px; background: linear-gradient(135deg, rgba(255, 77, 94, 0.12) 0%, rgba(255, 77, 94, 0.02) 100%); border: 1px solid rgba(255, 77, 94, 0.4); border-radius: 18px; padding: 15px 25px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); backdrop-filter: blur(10px);">
+      <span style="color: var(--red); font-family: var(--font-title); font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; justify-content: center;">
+        <i data-lucide="clock" style="width: 18px; height: 18px;"></i> ¡TIEMPO LÍMITE ACTIVADO! LAS VENTAS CIERRAN EN:
+      </span>
+      <div id="purchaseCountdownTimer" style="color: #FFF; font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; margin-top: 8px; text-shadow: 0 0 15px rgba(255,255,255,0.2);">
+        0 semanas, 0 días, 00:00:00
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-grey); font-weight: 600; margin-top: 5px;">El sorteo oficial se realizará inmediatamente al finalizar el conteo.</div>
+    </div>
+    
+    <!-- 10 Números Bendecidos Interactivos -->
+    <div class="bendecidos-card">
+      <div class="bendecidos-container">
+        <h3 class="bendecidos-title">10 NUMEROS BENDECIDOS DE $5,000 PESOS CADA UNO</h3>
+        
+        <div class="bendecidos-grid">
+          <!-- Cargados dinámicamente -->
+        </div>
+        
+        <div class="bendecidos-footer" id="bendecidosFooter">
+          Si uno de tus tickets coincide con alguno de estos números bendecidos, te ganas el premio correspondiente de inmediato.
+        </div>
+      </div>
+    </div>
+    
+    <!-- STEP 1: SELECTED RAFFE INFO -->
+    <div class="glass-card casino-led-card" id="step1Card">
+      <!-- Floating decorative gold coins & sparkles -->
+      <div class="floating-coin">🪙</div>
+      <div class="floating-coin">✨</div>
+      <div class="floating-coin">🪙</div>
+      <div class="floating-coin">✨</div>
+      
+      <div class="step-card-header">
+        <div class="step-badge">1</div>
+        <h3>Rifa Seleccionada</h3>
+        <span class="led-warning-badge">¡ELIGE TU RIFA AQUÍ!</span>
+      </div>
+      
+      <div class="field" style="margin-bottom:0;">
+        <label for="ticketRaffleSelect" style="color:var(--text-white); font-weight:600; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="ticket" style="width:18px; color:var(--cyan)"></i> Estás comprando boleto para:
+        </label>
+        <select id="ticketRaffleSelect">
+          <!-- Loaded dynamically -->
+        </select>
+      </div>
+
+      <!-- Dynamic Visual Prize Showcase Panel -->
+      <div class="prize-showcase-panel" id="prizeShowcasePanel"></div>
+    </div>
+
+    <!-- STEP 2: USER PROFILE REGISTRATION -->
+    <div class="glass-card" id="step2Card">
+      <div class="step-card-header">
+        <div class="step-badge">2</div>
+        <h3>Registra tus datos de contacto</h3>
+      </div>
+      <p style="color:var(--text-grey); font-size:0.85rem; margin-bottom: 20px; line-height: 1.5;">
+        Introduce tu nombre y WhatsApp. Esto nos permite mantener un registro seguro de quién compra cada boleto para certificar al ganador del sorteo.
+      </p>
+      
+      <div style="display:flex; flex-direction:column; gap:15px;">
+        <div class="field" style="margin-bottom:0;">
+          <label for="buyerNameInput"><i data-lucide="user" style="width:14px; vertical-align:middle; margin-right:4px;"></i> Nombre Completo</label>
+          <input type="text" id="buyerNameInput" placeholder="Ej. Carlos Mendoza">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="buyerWhatsappInput"><i data-lucide="message-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i> WhatsApp (Código de país + número)</label>
+          <input type="tel" id="buyerWhatsappInput" placeholder="Ej. 18095551234">
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: TICKET SELECTION & RESERVATION -->
+    <div class="glass-card form-locked-state" id="step3Card">
+      <div class="step-card-header">
+        <div class="step-badge" id="step3Badge"><i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i></div>
+        <h3>Elige tu boleto de 5 dígitos</h3>
+      </div>
+
+      <div class="form-unlock-warning" id="step3Warning">
+        <i data-lucide="lock" style="width:16px;"></i> Completa tu Nombre y WhatsApp en el Paso 2 para desbloquear la tómbola
+      </div>
+
+      <div class="tab-header">
+        <button class="tab-btn active" id="tabRandomBtn"><i data-lucide="dices" style="width:16px;"></i> Tómbola al Azar</button>
+        <button class="tab-btn" id="tabCustomBtn"><i data-lucide="keyboard" style="width:16px;"></i> Escribir Número</button>
+        <button class="tab-btn" id="tabExploreBtn"><i data-lucide="grid" style="width:16px;"></i> Explorar Todos</button>
+      </div>
+
+      <!-- PANE 1 & 2: Random / Custom selection -->
+      <div class="ticket-box" id="selectorTicketBox">
+        <!-- Casino Marquee Letrero -->
+        <div class="casino-marquee">
+          <div class="marquee-lights left">
+            <span class="light"></span>
+            <span class="light"></span>
+            <span class="light"></span>
+          </div>
+          <h2 class="marquee-text">¡MUCHA SUERTE!</h2>
+          <div class="marquee-lights right">
+            <span class="light"></span>
+            <span class="light"></span>
+            <span class="light"></span>
+          </div>
+        </div>
+
+        <div class="digits-row" id="digitsRow">
+          <div class="digit-cell">–</div>
+          <div class="digit-cell">–</div>
+          <div class="digit-cell">–</div>
+          <div class="digit-cell">–</div>
+          <div class="digit-cell">–</div>
+        </div>
+
+        <!-- Secret Input for Manual digit entries -->
+        <input type="text" id="secretInput" maxlength="5" pattern="\d*">
+
+        <!-- Helper keypad for manual mode -->
+        <div class="manual-keypad" id="manualKeypad" style="display:none;">
+          <button class="keypad-btn">1</button>
+          <button class="keypad-btn">2</button>
+          <button class="keypad-btn">3</button>
+          <button class="keypad-btn">4</button>
+          <button class="keypad-btn">5</button>
+          <button class="keypad-btn">6</button>
+          <button class="keypad-btn">7</button>
+          <button class="keypad-btn">8</button>
+          <button class="keypad-btn">9</button>
+          <button class="keypad-btn" id="keypadClear" style="color:var(--red)"><i data-lucide="delete" style="width:18px;"></i></button>
+          <button class="keypad-btn">0</button>
+        </div>
+
+        <div class="status-lbl info" id="statusMessage">
+          <i data-lucide="info" style="width:16px;"></i> Presiona "Generar" para obtener tu número
+        </div>
+
+        <div class="ticket-actions">
+          <button class="btn btn-secondary" id="btnActionRandom"><i data-lucide="refresh-cw" style="width:18px;"></i> Generar Número</button>
+          <button class="btn btn-secondary" id="btnActionReserve" disabled style="border-color: var(--cyan); color: var(--cyan);"><i data-lucide="shopping-cart" style="width:18px;"></i> Agregar al Carrito</button>
+        </div>
+      </div>
+
+      <!-- PANE 3: Explorer Grid -->
+      <div class="ticket-box explorer-panel" id="explorerTicketBox" style="display:none;">
+        <div class="explorer-filters">
+          <input type="text" id="explorerSearch" class="filter-input" placeholder="Buscar boleto..." maxlength="5">
+          <select id="explorerFilterEnd" class="filter-select">
+            <option value="">Termina en...</option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+          </select>
+          <select id="explorerFilterType" class="filter-select">
+            <option value="">Todos</option>
+            <option value="even">Pares</option>
+            <option value="odd">Impares</option>
+            <option value="available">Disponibles</option>
+          </select>
+        </div>
+
+        <div class="grid-container" id="explorerGridContainer">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div class="explorer-pagination">
+          <button class="page-btn" id="explorerPrevPage"><i data-lucide="chevron-left" style="width:14px; vertical-align:middle;"></i> Anterior</button>
+          <span id="explorerPageNum">Pág. 1 de 10</span>
+          <button class="page-btn" id="explorerNextPage">Siguiente <i data-lucide="chevron-right" style="width:14px; vertical-align:middle;"></i></button>
+        </div>
+        
+        <button class="btn btn-secondary" style="width:100%; margin-top:20px; border-color: var(--cyan); color: var(--cyan);" id="btnExplorerReserve" disabled>
+          <i data-lucide="shopping-cart" style="width:18px;"></i> Agregar al Carrito
+        </button>
+      </div>
+
+      <!-- Shopping Cart section (Phase 4) -->
+      <div class="cart-section" id="cartSection" style="margin-top: 25px; border-top: 1px solid var(--border-cyan); padding-top: 20px; display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h4 style="font-size:0.95rem; color:var(--cyan); text-transform:uppercase; font-weight:800; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="shopping-bag" style="width:16px;"></i> Boletos en tu Carrito
+          </h4>
+          <span class="badge" id="cartCountBadge" style="background:var(--cyan); color:#000; font-weight:800; padding:2px 8px; border-radius:10px; font-size:0.75rem;">0</span>
+        </div>
+        <div class="cart-items-list" id="cartItemsList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px; min-height: 40px; align-items: center; justify-content: flex-start; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; border: 1px dashed var(--border-cyan);">
+          <!-- Added items will appear here -->
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.95rem; font-weight:700; margin-bottom:15px; background:rgba(255,255,255,0.02); padding:12px; border-radius:12px; border: 1px solid rgba(255,255,255,0.05);">
+          <span>Total a Pagar:</span>
+          <span style="color:var(--gold); font-size:1.25rem; font-weight: 800;" id="cartTotalDisplay">RD$ 0</span>
+        </div>
+        <button class="btn btn-primary" id="btnCheckoutCart" style="width: 100%; font-weight:800; gap: 8px;">
+          <i data-lucide="check-circle" style="width:18px;"></i> Reservar Boletos Seleccionados
+        </button>
+      </div>
+
+      <!-- Sales Progress for Chosen Raffle -->
+      <div class="progress-wrap">
+        <div class="progress-label-row">
+          <span id="soldLabel" style="font-weight:700;">0 vendidos</span>
+          <span class="mono" id="pctLabel" style="color:var(--cyan); font-weight:800; text-shadow: 0 0 10px rgba(0, 229, 255, 0.3)">0.0% comprado</span>
+        </div>
+        <div class="progress-track" style="border-color: rgba(0, 229, 255, 0.35); box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Countdown timer and draw results -->
+  <section class="stats-grid">
+    <!-- Próximo Sorteo -->
+    <div class="glass-card stat-card">
+      <div>
+        <div class="stat-card-title"><i data-lucide="clock" style="color:var(--cyan)"></i> Cuenta Regresiva</div>
+        <div class="countdown-row">
+          <div class="countdown-box"><div class="countdown-val" id="cdDays">00</div><div class="countdown-lbl">Días</div></div>
+          <div class="countdown-box"><div class="countdown-val" id="cdHours">00</div><div class="countdown-lbl">Hrs</div></div>
+          <div class="countdown-box"><div class="countdown-val" id="cdMins">00</div><div class="countdown-lbl">Min</div></div>
+          <div class="countdown-box"><div class="countdown-val" id="cdSecs">00</div><div class="countdown-lbl">Seg</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="bottom-info-lbl">Premio Principal</div>
+        <div class="bottom-info-val" id="jackpotDisplay">iPhone 16 Pro Max</div>
+      </div>
+    </div>
+
+    <!-- Último Ganador -->
+    <div class="glass-card stat-card">
+      <div>
+        <div class="stat-card-title"><i data-lucide="award" style="color:var(--gold)"></i> Último Ganador</div>
+        <div class="lotto-balls" id="lottoBallsRow">
+          <div class="lotto-ball">–</div>
+          <div class="lotto-ball">–</div>
+          <div class="lotto-ball">–</div>
+          <div class="lotto-ball">–</div>
+          <div class="lotto-ball">–</div>
+        </div>
+      </div>
+      <div>
+        <div class="bottom-info-lbl" id="lastDrawTitle">Sorteo en marcha</div>
+        <div class="bottom-info-val" style="font-size:1.25rem; color:#FFF;" id="lastDrawWinner">¡Participa ahora!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ads and Video Player Showcase Section -->
+  <section class="content-grid">
+    <!-- Advertising Card -->
+    <div class="ad-panel">
+      <div class="ad-badge">Seguridad Garantizada</div>
+      <i data-lucide="shield-check" style="width:48px; height:48px; color:var(--green); margin-bottom:15px;"></i>
+      <h3 style="margin-bottom: 8px;">Sorteos Certificados</h3>
+      <p style="color: var(--text-grey); font-size: 0.9rem; max-width: 280px; line-height: 1.6;">
+        Todas nuestras rifas están vinculadas a las loterías oficiales nacionales para garantizar la transparencia absoluta de cada sorteo.
+      </p>
+    </div>
+
+    <!-- Video Showcase Card -->
+    <div class="video-panel">
+      <div class="video-placeholder" id="btnPlayVideo">
+        <div class="play-btn">▶</div>
+        <h3>Cómo comprar tu Boleto</h3>
+        <p style="color: var(--text-grey); font-size: 0.85rem; margin-top:6px; display:flex; align-items:center; gap:5px;">
+          <i data-lucide="play-circle" style="width:14px;"></i> Mira el tutorial animado
+        </p>
+      </div>
+      <!-- Simulated iframe placeholder -->
+      <div id="videoContainer" style="display:none; width:100%; height:100%; background:#000;">
+        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width:100%; height:100%; color:var(--cyan); font-family:var(--font-mono); gap:12px; padding:20px; text-align:center;">
+          <i data-lucide="film" style="width:48px; height:48px; animation: pulse 1.5s infinite"></i>
+          <span>[Reproduciendo Video: Tutorial_Sorteo.mp4]</span>
+          <small style="color:var(--text-grey); font-size:0.75rem;">Para registrarse: seleccione un boleto de 5 dígitos, ingrese sus datos de contacto y confirme su pago por WhatsApp.</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Historial de Ganadores Carrusel -->
+  <section class="carousel-section" id="winnersSection">
+    <div class="section-header-row">
+      <div class="section-title">
+        <h2>Historial de Sorteos</h2>
+        <p>Conoce a los ganadores previos de nuestras rifas exclusivas.</p>
+      </div>
+      <div class="carousel-arrows">
+        <button class="arrow-btn" id="carouselPrevBtn"><i data-lucide="chevron-left"></i></button>
+        <button class="arrow-btn" id="carouselNextBtn"><i data-lucide="chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="carousel-wrapper">
+      <div class="carousel-container" id="winnersCarousel">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- VERTICAL WINNER STORIES -->
+  <section class="stories-section" id="storiesSection">
+    <div class="section-title" style="text-align:center; margin-bottom:35px;">
+      <h2>Historias de Ganadores del Sorteo Anterior</h2>
+      <p>Testimonios de ganadores reales que confiaron y ganaron con nosotros.</p>
+    </div>
+    
+    <div class="stories-vertical-feed">
+      <!-- Story 1 -->
+      <div class="glass-card story-card-vertical">
+        <div class="story-video-container">
+          <img src="./suerte_rd_car.png" class="story-video-poster" alt="Ganador de Toyota Hilux">
+          <div class="story-play-overlay" onclick="window.srd.playStoryVideo('Hilux_Winner_Delivering.mp4')">
+            <div class="story-play-icon">
+              <i data-lucide="play" style="width:20px; height:20px; fill:#000;"></i>
+            </div>
+          </div>
+        </div>
+        <div class="story-details">
+          <div class="eyebrow" style="color:var(--gold); border-color:var(--gold); background:rgba(255,215,0,0.08); font-size:0.7rem; margin-bottom:10px; width:fit-content;">
+            🏆 Sorteo Gran Carro
+          </div>
+          <h3>Entrega oficial de la Toyota Hilux 2026</h3>
+          <p>
+            "No tengo palabras para explicar mi felicidad. Aparté mi boleto por la web de Suerte RD combinándolo con el sorteo de la Lotería Nacional, ¡y mi número #12894 resultó ganador! Aquí nos comparten el video oficial de la entrega de las llaves."
+          </p>
+          <div class="story-meta-row">
+            <span>Ganador: Juan Carlos Pérez</span>
+            <span>Boleto: #12894</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Story 2 -->
+      <div class="glass-card story-card-vertical">
+        <div class="story-video-container">
+          <img src="./suerte_rd_banner.png" class="story-video-poster" alt="Ganadora de iPhone 16">
+          <div class="story-play-overlay" onclick="window.srd.playStoryVideo('iPhone_Unboxing_Success.mp4')">
+            <div class="story-play-icon">
+              <i data-lucide="play" style="width:20px; height:20px; fill:#000;"></i>
+            </div>
+          </div>
+        </div>
+        <div class="story-details">
+          <div class="eyebrow" style="color:var(--cyan); border-color:var(--cyan); background:rgba(0,229,255,0.08); font-size:0.7rem; margin-bottom:10px; width:fit-content;">
+            📱 Sorteo Celular
+          </div>
+          <h3>Sofía Díaz estrena su iPhone 16 Pro Max</h3>
+          <p>
+            Sofía nos envía su video abriendo la caja del nuevo iPhone 16 Pro Max. Compró su boleto #04213 directamente en la grilla visual, validó el pago por WhatsApp en unos minutos y la suerte la acompañó en el sorteo de Loteka. ¡Felicidades!
+          </p>
+          <div class="story-meta-row">
+            <span>Ganadora: Sofía Mendoza Díaz</span>
+            <span>Boleto: #04213</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Buscador y verificador de disponibilidad -->
+  <section class="search-section" id="searchSection">
+    <div class="section-title" style="text-align:center; margin-bottom:25px;">
+      <h2>Buscador de Disponibilidad</h2>
+      <p>Comprueba si tu número preferido está libre, reservado o pagado.</p>
+    </div>
+    <div class="search-input-box">
+      <input type="text" id="searchInput" placeholder="Introduce 5 dígitos..." maxlength="5">
+      <button class="btn btn-primary" style="flex:initial; padding: 12px 24px; border-radius: 14px;" id="btnSearch">
+        <i data-lucide="search" style="width:16px;"></i> Comprobar
+      </button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section">
+    <div class="section-title" style="text-align:center;">
+      <h2>Preguntas Frecuentes</h2>
+      <p>Todo lo que necesitas saber sobre el funcionamiento de la plataforma.</p>
+    </div>
+    <div class="faq-accordion">
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>¿Cómo se determinan los ganadores?</span>
+          <i data-lucide="chevron-down" class="chevron-icon" style="width:18px;"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Los sorteos se vinculan con los resultados oficiales de loterías reconocidas en el país (como LOTEKA, LEIDSA o Lotería Nacional). Al registrar tu boleto, este queda combinado con el sorteo oficial que elijas y los últimos 5 dígitos del primer premio determinan al ganador.
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>¿Cuánto tiempo tengo para pagar mi boleto apartado?</span>
+          <i data-lucide="chevron-down" class="chevron-icon" style="width:18px;"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Una vez apartado el boleto, dispones de 24 horas para completar el pago y enviar el comprobante a nuestro soporte por WhatsApp. Transcurrido este plazo, el boleto será liberado automáticamente.
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>¿Es seguro participar en Suerte RD?</span>
+          <i data-lucide="chevron-down" class="chevron-icon" style="width:18px;"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Absolutamente. Suerte RD provee una plataforma transparente donde las reservas son visibles en tiempo real, impidiendo la duplicidad de números. Los sorteos externos de lotería nacional aseguran imparcialidad absoluta.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Support & Contact Section (Phase 2) -->
+  <section class="support-section" id="supportSection" style="margin-top: 50px; margin-bottom: 50px;">
+    <div class="section-title" style="text-align:center; margin-bottom:30px;">
+      <h2>¿Tienes alguna duda o problema?</h2>
+      <p>Envíanos un mensaje y te ayudaremos de inmediato.</p>
+    </div>
+    <div class="glass-card contact-card" style="max-width: 600px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--border-cyan); border-radius: 28px; padding: 30px;">
+      <form id="supportForm" style="display:flex; flex-direction:column; gap:15px;">
+        <div class="field" style="margin-bottom:0; display:flex; flex-direction:column; gap:5px;">
+          <label for="supportName" style="color: #FFF; font-weight:600;"><i data-lucide="user" style="width:14px; vertical-align:middle; margin-right:4px;"></i> Nombre Completo</label>
+          <input type="text" id="supportName" placeholder="Ej. Carlos Mendoza" required style="width: 100%; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-cyan); border-radius: 10px; color:#FFF; outline:none;">
+        </div>
+        <div class="field" style="margin-bottom:0; display:flex; flex-direction:column; gap:5px;">
+          <label for="supportWhatsapp" style="color: #FFF; font-weight:600;"><i data-lucide="message-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i> WhatsApp</label>
+          <input type="tel" id="supportWhatsapp" placeholder="Ej. 18095551234" required style="width: 100%; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-cyan); border-radius: 10px; color:#FFF; outline:none;">
+        </div>
+        <div class="field" style="margin-bottom:0; display:flex; flex-direction:column; gap:5px;">
+          <label for="supportType" style="color: #FFF; font-weight:600;"><i data-lucide="help-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i> Tipo de Consulta</label>
+          <select id="supportType" style="background:#020f11; border:1px solid var(--border-cyan); color:#FFF; padding:12px; border-radius:10px; cursor: pointer; outline:none;">
+            <option value="Duda General">Duda General</option>
+            <option value="Problema con el Pago">Problema con el Pago / Envío de Recibo</option>
+            <option value="Error al Reservar">Error al Reservar Boleto</option>
+            <option value="Sugerencia / Otro">Sugerencia / Otro</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0; display:flex; flex-direction:column; gap:5px;">
+          <label for="supportMessage" style="color: #FFF; font-weight:600;"><i data-lucide="file-text" style="width:14px; vertical-align:middle; margin-right:4px;"></i> Mensaje</label>
+          <textarea id="supportMessage" rows="4" placeholder="Escribe tu mensaje detallado aquí..." required style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border-cyan); color: #FFF; padding: 14px; border-radius: 14px; font-size: 0.95rem; outline: none; resize: vertical;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnSubmitSupport" style="width: 100%; font-weight: 800;">
+          <i data-lucide="send" style="width:18px;"></i> Enviar Mensaje de Soporte
+        </button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<!-- Modal: Tómbola Rodillos Animación -->
+<div class="overlay" id="slotOverlay">
+  <div class="modal casino-slot-modal" style="text-align:center;">
+    <div class="casino-marquee mini">
+      <div class="marquee-lights left">
+        <span class="light"></span>
+        <span class="light"></span>
+      </div>
+      <h3 class="marquee-text" style="font-size: 1.3rem; letter-spacing: 1px;">¡MUCHA SUERTE!</h3>
+      <div class="marquee-lights right">
+        <span class="light"></span>
+        <span class="light"></span>
+      </div>
+    </div>
+    <div class="reel-box" id="reelRow">
+      <div class="reel-cell">0</div>
+      <div class="reel-cell">0</div>
+      <div class="reel-cell">0</div>
+      <div class="reel-cell">0</div>
+      <div class="reel-cell">0</div>
+    </div>
+    <p class="mono" style="color:var(--text-grey); font-size:0.9rem;" id="slotStatus">Buscando tu combinación ideal...</p>
+    <div id="goodLuckText" class="good-luck-anim" style="display: none;">¡BUENA SUERTE!</div>
+  </div>
+</div>
+
+<!-- Modal: Checkout / Confirm Reserve Dialog -->
+<div class="overlay" id="reserveConfirmOverlay">
+  <div class="modal">
+    <button class="modal-close-btn" id="closeReserveConfirmBtn"><i data-lucide="x"></i></button>
+    <h3>Confirmar Registro de Boleto</h3>
+    <p style="color:var(--text-grey); font-size:0.85rem; margin-bottom: 20px;">Por favor verifica tus datos de registro antes del apartado.</p>
+    
+    <div class="field">
+      <label id="reserveConfirmLabel">Boleto(s) a Reservar</label>
+      <div style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--cyan); font-weight:800; text-shadow: 0 0 10px rgba(0,229,255,0.2); word-break: break-all;" id="reserveConfirmNumberDisplay">00000</div>
+    </div>
+    
+    <div class="field">
+      <label>Comprador</label>
+      <div style="font-weight:700; color:#FFF; font-size:1.1rem;" id="reserveConfirmNameDisplay">Carlos Mendoza</div>
+    </div>
+
+    <div class="field">
+      <label>WhatsApp</label>
+      <div style="font-weight:700; color:#FFF; font-size:1.1rem;" id="reserveConfirmWhatsappDisplay">18095551234</div>
+    </div>
+
+    <div class="field">
+      <label for="buyerLottery">Lotería de Combinación Oficial</label>
+      <select id="buyerLottery">
+        <option value="LOTEKA" selected>LOTEKA (Por defecto)</option>
+        <option value="Lotería Nacional">Lotería Nacional</option>
+        <option value="LEIDSA">LEIDSA</option>
+        <option value="Lotería Real">Lotería Real</option>
+        <option value="Sorteo Propio Suerte RD">Sorteo Propio Suerte RD</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%; margin-top: 10px;" id="btnConfirmReserveFinal"><i data-lucide="check"></i> Confirmar y Generar Recibo</button>
+    <div class="status-lbl bad" style="margin-top: 15px;" id="reserveConfirmErrorMsg"></div>
+  </div>
+</div>
+
+<!-- Modal: Recibo y WhatsApp Checkout -->
+<div class="overlay" id="receiptOverlay">
+  <div class="modal" style="max-width: 480px;">
+    <button class="modal-close-btn" id="closeReceiptBtn"><i data-lucide="x"></i></button>
+    <h3 style="text-align: center; margin-bottom: 5px;">¡Boleto(s) Reservado(s)!</h3>
+    <p style="text-align: center; color: var(--text-grey); font-size: 0.85rem;">Valida tu recibo digital y finaliza el pago.</p>
+
+    <!-- Receipt Pass -->
+    <div class="receipt">
+      <div class="receipt-header">
+        <div class="receipt-title" id="receiptRaffleTitle">SORTEO</div>
+        <small style="color: #718096; font-family: var(--font-mono); font-weight:600;" id="receiptDate">15/07/2026</small>
+      </div>
+
+      <div class="receipt-row">
+        <span class="receipt-lbl">Comprador</span>
+        <span class="receipt-val" id="receiptName">Carlos Mendoza</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">WhatsApp</span>
+        <span class="receipt-val" id="receiptPhone">+1 (809) 555-1234</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">Precio de Entrada</span>
+        <span class="receipt-val" id="receiptPrice">RD$500</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">Lotería Combinada</span>
+        <span class="receipt-val" id="receiptLottery" style="font-weight: 700; color: #054C54;">LOTEKA</span>
+      </div>
+
+      <div class="receipt-ticket-display">
+        <div class="receipt-lbl" style="font-size:0.75rem; text-transform:uppercase; margin-bottom:4px; font-weight:700;">Tu(s) Boleto(s) Oficial(es)</div>
+        <div class="receipt-ticket-num" id="receiptTicketNum" style="font-size:1.8rem; word-break: break-all; line-height: 1.2; padding: 5px 0;">00000</div>
+      </div>
+
+      <!-- Bank Payment Instructions (Phase 5) -->
+      <div class="payment-instructions-box" style="margin-top: 15px; padding: 12px; background: rgba(0, 229, 255, 0.05); border: 1px dashed var(--border-cyan); border-radius: 12px; text-align: left;">
+        <span class="receipt-lbl" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px; color: var(--cyan);">Información para el Pago</span>
+        <div id="receiptPaymentInstructions" style="font-size: 0.8rem; color: #FFF; line-height: 1.4; white-space: pre-line;">
+          Cargando métodos de pago...
+        </div>
+      </div>
+
+      <!-- simulated barcode -->
+      <div class="barcode-wrapper">
+        <div class="barcode-stripes"></div>
+        <div class="barcode-lbl" id="receiptBarcodeText">SRD-00000</div>
+      </div>
+    </div>
+
+    <div class="receipt-actions">
+      <button class="btn btn-secondary" style="flex:initial; width: 50px; padding:0;" id="btnCopyReceipt" title="Copiar Datos">
+        <i data-lucide="copy" style="width:18px;"></i>
+      </button>
+      <button class="btn btn-primary" style="flex:1; gap: 10px; background:#00E676; color:#020d0f; font-weight:800;" id="btnSendWhatsApp">
+        <i data-lucide="message-square" style="width:20px;"></i> Validar en WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Giga-Jackpot Screen Announcement Overlay -->
+<div class="overlay" id="jackpotOverlay">
+  <div class="modal jackpot-modal">
+    <button class="modal-close-btn" id="closeJackpotBtn" style="color:var(--gold);"><i data-lucide="x"></i></button>
+    <div class="jackpot-stars">🏆 🏆 🏆</div>
+    <h1 style="color:var(--gold); font-size:2.8rem; margin:15px 0 5px; text-shadow:0 0 25px rgba(255,215,0,0.4)">¡TENEMOS GANADOR!</h1>
+    <p style="color:var(--text-grey); font-size:1rem; margin-bottom:20px;">Sorteo Oficial - Suerte RD</p>
+
+    <div class="jackpot-winner-box">
+      <div class="bottom-info-lbl" style="color:var(--gold); font-size:0.95rem; font-weight:700;">Boleto Premiado</div>
+      <div id="jackpotWinnerTicket" style="font-family:var(--font-mono); font-size:4.5rem; font-weight:800; color:#FFF; margin:10px 0; text-shadow: 0 0 25px rgba(255,255,255,0.4)">00000</div>
+      
+      <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid rgba(255,215,0,0.2); padding-top:20px; margin-top:15px;">
+        <div style="font-size:1.15rem;">
+          <span style="color:var(--text-grey);">Comprador:</span>
+          <strong id="jackpotWinnerName" style="color:#FFF; font-size:1.4rem; margin-left:8px;">Carlos Mendoza</strong>
+        </div>
+        <div style="font-size:1.05rem;">
+          <span style="color:var(--text-grey);">WhatsApp:</span>
+          <strong id="jackpotWinnerPhone" style="color:var(--cyan); margin-left:8px;">+18095551234</strong>
+        </div>
+        <div style="font-size:1.1rem;">
+          <span style="color:var(--text-grey);">Premio Obtenido:</span>
+          <strong id="jackpotWinnerPrize" style="color:var(--gold); margin-left:8px;">iPhone 16 Pro Max</strong>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnContactWinner" style="background:var(--gold); color:#020d0f; font-weight:800; width:100%; border:none;">
+      <i data-lucide="message-square"></i> Contactar Ganador por WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- Modal: Video Stories player -->
+<div class="overlay" id="storyVideoOverlay">
+  <div class="modal" style="max-width: 600px; padding: 10px; background: #000;">
+    <button class="modal-close-btn" id="closeStoryVideoBtn" style="top:15px; right:15px; z-index:1001;"><i data-lucide="x"></i></button>
+    <div style="position: relative; width: 100%; padding-top: 177.77%; background: #111; border-radius: 18px; overflow: hidden;">
+      <div style="position: absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; color:var(--cyan); font-family:var(--font-mono);">
+        <i data-lucide="film" style="width:48px; height:48px; margin-bottom:15px; animation: pulse 1s infinite;"></i>
+        <span id="storyVideoText" style="text-align:center; padding:20px;">[Reproduciendo Video Ganador...]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer Area -->
+<footer>
+  <div class="footer-brand">
+    <img src="./suerte_rd_logo.png" alt="Suerte RD Logo" style="height:28px;">
+    <span>Suerte RD</span>
+  </div>
+  <div class="footer-links">
+
+    <a href="#" id="footerSearchLink">Buscador de Boletos</a>
+    <a href="#" id="footerWinnersLink">Historial de Sorteos</a>
+  </div>
+  <div class="footer-note">
+    &copy; 2026 Suerte RD. Todos los derechos reservados.<br>
+    Sorteos certificados con transparencia absoluta y auditoría externa.
+  </div>
+</footer>
+
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>

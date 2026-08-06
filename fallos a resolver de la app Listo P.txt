@@ -1,0 +1,9 @@
+fallos a resolver de la app Listo Patron:
+
+1: en el perfil de profesionales quiero que la app le valla dando al profesional lo que lleva generado propina aparte un balance 
+2:corregir los nombre largo de los clientes y profesionales  
+3:cambiar el sonido de notificaciones 
+4: cuando un usuario hacce un pedodos debe aver un boto para regresar hacia atras sin tener que cancelar el pedido que se esta haciendo 
+5:  eliminar campara de notoficaciones de la pagina de pedidos
+6: cambiar sonido de notificaciones 
+   
