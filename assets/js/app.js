@@ -1400,19 +1400,31 @@
 
   function renderDrawResults() {
     const el = $("lottoBallsRow");
-    const rWinners = winners.filter(w => w.raffleId === activeRaffleId);
+    if (!el) return;
+    el.innerHTML = "";
 
-    if (!rWinners.length) {
-      el.innerHTML = ["–", "–", "–", "–", "–"].map(d => `<div class="lotto-ball">${d}</div>`).join("");
-      $("lastDrawTitle").textContent = "Sin sorteos previos";
-      $("lastDrawWinner").textContent = "Sé el primer ganador";
-    } else {
-      const latest = rWinners[rWinners.length - 1];
-      const digits = pad5(latest.number).split("");
-      el.innerHTML = digits.map(d => `<div class="lotto-ball">${d}</div>`).join("");
-      $("lastDrawTitle").textContent = `Ganador del boleto #${pad5(latest.number)}`;
-      $("lastDrawWinner").textContent = latest.name;
+    const conf = configs[activeRaffleId] || {};
+    const blessedList = conf.blessedNumbers || [];
+    const tickets = allTickets[activeRaffleId] || {};
+    const prize = conf.blessedPrize || "RD$5,000";
+
+    const titleEl = $("lastDrawTitle");
+    const labelEl = $("lastDrawWinner");
+    
+    if (titleEl) titleEl.textContent = "Premios al instante";
+    if (labelEl) labelEl.textContent = `${prize} c/u`;
+
+    if (blessedList.length === 0) {
+      el.innerHTML = `<div style="color:var(--text-grey); font-family:var(--font-mono); font-size:0.8rem; padding: 10px;">Ninguno configurado</div>`;
+      return;
     }
+
+    el.innerHTML = blessedList.map(num => {
+      const ticket = tickets[num];
+      const isSold = ticket && (ticket.estado === 'reservado' || ticket.estado === 'pagado');
+      const extraClass = isSold ? 'sold' : 'available';
+      return `<div class="blessed-mini-ball ${extraClass}" title="Boleto #${num} - ${isSold ? 'Vendido' : 'Disponible'}">${num}</div>`;
+    }).join("");
   }
 
   function getAvatar(name) {
