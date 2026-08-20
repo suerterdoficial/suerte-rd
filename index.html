@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suerte RD - Plataforma Profesional de Sorteos</title>
 <meta name="description" content="Suerte RD es la plataforma profesional de sorteos y rifas en la República Dominicana. Participa en tómbolas oficiales y gana increíbles premios con total transparencia.">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://suerterd.com.do/">
+<meta property="og:title" content="Suerte RD - Plataforma Profesional de Sorteos">
+<meta property="og:description" content="Participa en tómbolas oficiales y gana increíbles premios en la República Dominicana con total transparencia.">
+<meta property="og:image" content="https://suerterd.com.do/suerte_rd_logo.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://suerterd.com.do/">
+<meta property="twitter:title" content="Suerte RD - Plataforma Profesional de Sorteos">
+<meta property="twitter:description" content="Participa en tómbolas oficiales y gana increíbles premios en la República Dominicana con total transparencia.">
+<meta property="twitter:image" content="https://suerterd.com.do/suerte_rd_logo.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -480,13 +495,12 @@
           <i data-lucide="play-circle" style="width:14px;"></i> Mira el tutorial animado
         </p>
       </div>
-      <!-- Simulated iframe placeholder -->
+      <!-- Real Video player -->
       <div id="videoContainer" style="display:none; width:100%; height:100%; background:#000;">
-        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width:100%; height:100%; color:var(--cyan); font-family:var(--font-mono); gap:12px; padding:20px; text-align:center;">
-          <i data-lucide="film" style="width:48px; height:48px; animation: pulse 1.5s infinite"></i>
-          <span>[Reproduciendo Video: Tutorial_Sorteo.mp4]</span>
-          <small style="color:var(--text-grey); font-size:0.75rem;">Para registrarse: seleccione un boleto de 5 dígitos, ingrese sus datos de contacto y confirme su pago por WhatsApp.</small>
-        </div>
+        <video id="videoPlayer" style="width:100%; height:100%; object-fit: cover;" controls>
+          <source src="2026-08-04_20-04-22.mp4" type="video/mp4">
+          Tu navegador no soporta la reproducción de video.
+        </video>
       </div>
     </div>
   </section>

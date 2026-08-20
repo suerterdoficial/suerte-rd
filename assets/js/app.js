@@ -192,7 +192,8 @@
       blessedPct: 0.05,
       blessedPrize: "RD$5,000",
       saleStatus: "active",
-      blessedNumbers: []
+      blessedNumbers: [],
+      whatsapp: "18092800000"
     },
     carro: {
       id: "carro",
@@ -209,7 +210,8 @@
       blessedPct: 0.05,
       blessedPrize: "RD$5,000",
       saleStatus: "locked",
-      blessedNumbers: ["00123", "04567", "12345", "18442", "29402", "32947", "45678", "56789", "67890", "78901", "89012", "90123", "01196", "02061", "03628", "04527", "10452", "11946", "19068", "80312", "69819", "02234", "04321", "08976", "09876"]
+      blessedNumbers: ["00123", "04567", "12345", "18442", "29402", "32947", "45678", "56789", "67890", "78901", "89012", "90123", "01196", "02061", "03628", "04527", "10452", "11946", "19068", "80312", "69819", "02234", "04321", "08976", "09876"],
+      whatsapp: "18092800000"
     },
     patineta: {
       id: "patineta",
@@ -226,7 +228,8 @@
       blessedPct: 0.2,
       blessedPrize: "RD$3,000",
       saleStatus: "locked",
-      blessedNumbers: ["00111", "00222", "00333", "00444", "00555", "00666", "00777", "00888", "00999", "01000"]
+      blessedNumbers: ["00111", "00222", "00333", "00444", "00555", "00666", "00777", "00888", "00999", "01000"],
+      whatsapp: "18092800000"
     }
   };
 
@@ -2169,7 +2172,8 @@
     const textMsg = `Hola Suerte RD, he subido mi comprobante de pago para el/los boleto(s) digital(es) #${num} en combinación con ${lottery} para el sorteo del "${conf.prize}" a nombre de ${name}. Quedo a la espera de la validación.`;
     const encoded = encodeURIComponent(textMsg);
 
-    window.open(`https://wa.me/18092800000?text=${encoded}`, "_blank");
+    const whatsappNum = conf.whatsapp || "18092800000";
+    window.open(`https://wa.me/${whatsappNum}?text=${encoded}`, "_blank");
 
     // Reset selected file fields
     selectedPaymentReceiptBase64 = null;
@@ -3043,6 +3047,10 @@
   $("btnPlayVideo").addEventListener("click", () => {
     $("btnPlayVideo").style.display = "none";
     $("videoContainer").style.display = "block";
+    const player = $("videoPlayer");
+    if (player) {
+      player.play();
+    }
     playSound("click");
   });
 

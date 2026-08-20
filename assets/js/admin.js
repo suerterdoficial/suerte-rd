@@ -30,7 +30,8 @@
       blessedDrawInterval: 5,
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
-      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"]
+      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
+      whatsapp: "18092800000"
     },
     carro: {
       id: "carro",
@@ -50,7 +51,8 @@
       blessedDrawInterval: 5,
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
-      blessedNumbers: ["00123", "04567", "12345", "18442", "29402", "32947", "45678", "56789", "67890", "78901", "89012", "90123", "01196", "02061", "03628", "04527", "10452", "11946", "19068", "80312", "69819", "02234", "04321", "08976", "09876"]
+      blessedNumbers: ["00123", "04567", "12345", "18442", "29402", "32947", "45678", "56789", "67890", "78901", "89012", "90123", "01196", "02061", "03628", "04527", "10452", "11946", "19068", "80312", "69819", "02234", "04321", "08976", "09876"],
+      whatsapp: "18092800000"
     },
     patineta: {
       id: "patineta",
@@ -70,7 +72,8 @@
       blessedDrawInterval: 5,
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
-      blessedNumbers: ["00111", "00222", "00333", "00444", "00555", "00666", "00777", "00888", "00999", "01000"]
+      blessedNumbers: ["00111", "00222", "00333", "00444", "00555", "00666", "00777", "00888", "00999", "01000"],
+      whatsapp: "18092800000"
     }
   };
 
@@ -407,6 +410,7 @@
     $("cfgModel").value = conf.model || "";
     $("cfgYear").value = conf.year || "";
     $("cfgDetails").value = conf.details || "";
+    $("cfgWhatsapp").value = conf.whatsapp || "";
     $("cfgPaymentInstructions").value = conf.paymentInstructions || "";
 
     const preview = $("cfgImgPreview");
@@ -544,6 +548,7 @@
       details: $("cfgDetails").value.trim(),
       active: $("cfgActive").checked,
       image: finalImage,
+      whatsapp: $("cfgWhatsapp").value.trim(),
       paymentInstructions: $("cfgPaymentInstructions").value.trim()
     };
 
@@ -620,6 +625,7 @@
       details: "Gran sorteo premium. Elige tu boleto.",
       active: true,
       image: configs["celular"] ? configs["celular"].image : "./suerte_rd_banner.png",
+      whatsapp: configs["celular"] ? configs["celular"].whatsapp : "18092800000",
       paymentInstructions: configs["celular"] ? configs["celular"].paymentInstructions : ""
     };
     configs[id] = newConfig;
