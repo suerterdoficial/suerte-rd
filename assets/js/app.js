@@ -630,11 +630,6 @@
       return;
     }
 
-    if (cart.length >= 10) {
-      showToast("El límite de boletos por compra es de 10.", "bad");
-      return;
-    }
-
     cart.push(currentNumber);
     playSound("success");
     showToast(`Boleto #${currentNumber} agregado al carrito.`, "ok");
@@ -728,6 +723,22 @@
         <span class="cart-item-remove" onclick="window.srd.removeFromCart('${num}')">&times;</span>
       </span>
     `).join("");
+
+    const btn = $("btnCheckoutCart");
+    if (btn) {
+      if (cart.length < 25) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+        btn.innerHTML = `<i data-lucide="alert-triangle" style="width:18px;"></i> Mínimo 25 números requeridos (${cart.length}/25)`;
+      } else {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+        btn.innerHTML = `<i data-lucide="check-circle" style="width:18px;"></i> Comprar Boletos Seleccionados`;
+      }
+      lucide.createIcons();
+    }
   }
 
   // Carrusel automático para la portada (desplazamiento horizontal con indicadores)
@@ -1740,6 +1751,59 @@
     });
   }
 
+  function generate25RandomNumbers() {
+    const conf = configs[activeRaffleId];
+    const maxVal = Math.max(1, Number(conf.total) || 10000);
+    const ticketsObj = allTickets[activeRaffleId];
+    const soldList = Object.keys(ticketsObj);
+    
+    const countNeeded = 25;
+    const selected = new Set(cart);
+    
+    if (soldList.length + selected.size >= maxVal) {
+      showToast("No hay suficientes números disponibles.", "bad");
+      playSound("error");
+      return;
+    }
+    
+    const added = [];
+    let attempts = 0;
+    while (added.length < countNeeded && attempts < 5000) {
+      const num = Math.floor(Math.random() * maxVal);
+      const formatted = pad5(num);
+      if (!ticketsObj[formatted] && !selected.has(formatted)) {
+        selected.add(formatted);
+        added.push(formatted);
+      }
+      attempts++;
+    }
+    
+    if (added.length < countNeeded) {
+      for (let i = 0; i < maxVal; i++) {
+        const formatted = pad5(i);
+        if (!ticketsObj[formatted] && !selected.has(formatted)) {
+          selected.add(formatted);
+          added.push(formatted);
+          if (added.length === countNeeded) break;
+        }
+      }
+    }
+    
+    if (added.length === 0) {
+      showToast("No hay números disponibles para agregar.", "bad");
+      playSound("error");
+      return;
+    }
+    
+    cart.push(...added);
+    playSound("success");
+    showToast(`¡${added.length} números aleatorios agregados al carrito!`, "ok");
+    renderCart();
+    if (mode === 'explore') {
+      renderExplorerGrid();
+    }
+  }
+
   function switchMode(newMode) {
     mode = newMode;
     $("tabRandomBtn").classList.toggle("active", mode === "random");
@@ -1970,6 +2034,11 @@
 
   function openReserveForm() {
     if (cart.length === 0) return;
+    if (cart.length < 25) {
+      showToast("Debes comprar un mínimo de 25 boletos.", "bad");
+      playSound("error");
+      return;
+    }
     
     $("reserveConfirmNumberDisplay").textContent = cart.join(", ");
     
@@ -3087,6 +3156,7 @@
   $("tabCustomBtn").addEventListener("click", () => switchMode("custom"));
   $("tabExploreBtn").addEventListener("click", () => switchMode("explore"));
   $("btnActionRandom").addEventListener("click", generateRandomNumber);
+  $("btnActionRandom25").addEventListener("click", generate25RandomNumbers);
   $("secretInput").addEventListener("input", handleSecretInput);
   $("digitsRow").addEventListener("click", () => { if (mode === "custom") focusSecretInput(); });
 

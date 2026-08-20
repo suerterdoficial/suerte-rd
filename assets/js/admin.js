@@ -1351,6 +1351,20 @@
       await setStorageItem(key, JSON.stringify(tickets));
       showNotification(`¡Se aprobaron ${countApprove} boletos con éxito!`, "success");
       
+      // Send WhatsApp message to user confirming activation
+      const firstNum = nums[0];
+      const tInfo = tickets[firstNum];
+      const conf = configs[rId];
+      if (tInfo && tInfo.whatsapp && conf) {
+        const clientName = tInfo.name || "Cliente";
+        const raffleTitle = conf.title;
+        const formattedNums = nums.map(n => `#${n}`).join(", ");
+        const textMsg = `¡Hola ${clientName}! Te informamos de parte de Suerte RD que tus ${nums.length} boletos (${formattedNums}) para el sorteo "${raffleTitle}" han sido validados y activados de manera oficial para participar. ¡Mucho éxito! 🍀`;
+        const encoded = encodeURIComponent(textMsg);
+        const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
+        window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
+      }
+
       renderPaymentsTable();
       if (activeRaffleId === rId) {
         renderTicketsTable();
