@@ -8,8 +8,9 @@
   let adminPin = sessionStorage.getItem('admin_pin') || '';
   let cart = [];
   
-  let RAFFLE_IDS = ["celular", "carro", "patineta"];
+  let RAFFLE_IDS = ["numero", "celular", "carro", "patineta"];
   const RAFFLE_ICONS = {
+    numero: "🍀",
     celular: "📱",
     carro: "🚗",
     patineta: "🛴"
@@ -177,6 +178,27 @@
   }
 
   const DEFAULT_CONFIGS = {
+    numero: {
+      id: "numero",
+      title: "Sorteo de Números",
+      prize: "Gran Premio en Efectivo",
+      price: "RD$50",
+      total: 10000,
+      image: "./suerte_rd_banner.png",
+      active: true,
+      brand: "Suerte RD",
+      model: "Sorteo de Números Especial",
+      year: "2026",
+      details: "Sorteo general de números. ¡Compra tus números de la suerte y gana!",
+      blessedPct: 0.1,
+      blessedPrize: "RD$5,000",
+      saleStatus: "active",
+      blessedDrawInterval: 5,
+      countdownTriggerPct: 80,
+      countdownDurationDays: 7,
+      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
+      whatsapp: "18092800000"
+    },
     celular: {
       id: "celular",
       title: "Rifa Especial del Celular",
@@ -191,7 +213,7 @@
       details: "iPhone 17 Pro Max Mamey de 512 GB. Rifa automática de RD$5,000 cada 5% de ventas.",
       blessedPct: 0.05,
       blessedPrize: "RD$5,000",
-      saleStatus: "active",
+      saleStatus: "locked",
       blessedNumbers: [],
       whatsapp: "18092800000"
     },
@@ -233,7 +255,7 @@
     }
   };
 
-  let activeRaffleId = "celular";
+  let activeRaffleId = "numero";
   let configs = {};
   let allTickets = {}; 
   let winners = [];

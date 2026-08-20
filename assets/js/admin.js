@@ -9,9 +9,30 @@
   const TICKETS_KEY_PREFIX = "suerterd:tickets:v2";
   const WINNERS_KEY = "suerterd:winners:v2";
 
-  const RAFFLE_IDS = ["celular", "carro", "patineta"];
+  const RAFFLE_IDS = ["numero", "celular", "carro", "patineta"];
 
   const DEFAULT_CONFIGS = {
+    numero: {
+      id: "numero",
+      title: "Sorteo de Números",
+      prize: "Gran Premio en Efectivo",
+      price: "RD$50",
+      total: 10000,
+      image: "./suerte_rd_banner.png",
+      active: true,
+      brand: "Suerte RD",
+      model: "Sorteo de Números Especial",
+      year: "2026",
+      details: "Sorteo general de números. ¡Compra tus números de la suerte y gana!",
+      blessedPct: 0.1,
+      blessedPrize: "RD$5,000",
+      saleStatus: "active",
+      blessedDrawInterval: 5,
+      countdownTriggerPct: 80,
+      countdownDurationDays: 7,
+      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
+      whatsapp: "18092800000"
+    },
     celular: {
       id: "celular",
       title: "Rifa Especial del Celular",
@@ -26,12 +47,9 @@
       details: "Capacidad 256GB, Color mamaey, Cámara de 48MP.",
       blessedPct: 0.1,
       blessedPrize: "RD$5,000",
-      saleStatus: "active",
-      blessedDrawInterval: 5,
-      countdownTriggerPct: 80,
-      countdownDurationDays: 7,
       blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
-      whatsapp: "18092800000"
+      whatsapp: "18092800000",
+      saleStatus: "locked"
     },
     carro: {
       id: "carro",
@@ -77,7 +95,7 @@
     }
   };
 
-  let activeRaffleId = "celular";
+  let activeRaffleId = "numero";
   let adminPin = sessionStorage.getItem('admin_pin') || '';
   let configs = {};
   let allTickets = {};
