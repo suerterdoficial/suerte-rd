@@ -300,9 +300,11 @@
       loadRaffleState(e.target.value);
     });
 
-    $("cfgRaffleSelect").addEventListener("change", (e) => {
-      loadConfigForm(e.target.value);
-    });
+    if ($("cfgRaffleSelect")) {
+      $("cfgRaffleSelect").addEventListener("change", (e) => {
+        loadConfigForm(e.target.value);
+      });
+    }
 
     // Image Upload Preview
     $("cfgImageUpload").addEventListener("change", (e) => {
@@ -383,7 +385,7 @@
 
     // Dropdowns Sync
     if ($("globalRaffleSelect").value !== rId) $("globalRaffleSelect").value = rId;
-    if ($("cfgRaffleSelect").value !== rId) $("cfgRaffleSelect").value = rId;
+    if ($("cfgRaffleSelect") && $("cfgRaffleSelect").value !== rId) $("cfgRaffleSelect").value = rId;
 
     loadConfigForm(rId);
     updateDashboardStats();
