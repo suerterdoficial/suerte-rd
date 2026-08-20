@@ -2045,7 +2045,7 @@
     });
 
     playSound("success");
-    showToast("¡Boletos reservados! Completa tu pago por WhatsApp.", "ok");
+    showToast("¡Boletos comprados! Completa tu pago por WhatsApp.", "ok");
 
     $("reserveConfirmOverlay").classList.remove("active");
     
@@ -2211,7 +2211,7 @@
     const num = $("receiptTicketNum").textContent;
     const name = $("receiptName").textContent;
     const lottery = $("receiptLottery").textContent;
-    const text = `Sorteo: Suerte RD\nBoleto: #${num}\nComprador: ${name}\nLotería combinada: ${lottery}\nEstado: Reservado`;
+    const text = `Sorteo: Suerte RD\nBoleto: #${num}\nComprador: ${name}\nLotería combinada: ${lottery}\nEstado: Comprado`;
     navigator.clipboard.writeText(text).then(() => {
       playSound("click");
       showToast("Datos del recibo copiados al portapapeles.", "ok");
@@ -2279,7 +2279,7 @@
       } else {
         const isPaid = ticketInfo.estado === 'pagado';
         const isBlocked = ticketInfo.estado === 'bloqueado';
-        const statusText = isBlocked ? "Boleto reservado por la administración" : (isPaid ? `Boleto PAGADO por ${ticketInfo.name}` : `Boleto RESERVADO por ${ticketInfo.name}`);
+        const statusText = isBlocked ? "Boleto bloqueado por la administración" : (isPaid ? `Boleto PAGADO por ${ticketInfo.name}` : `Boleto COMPRADO por ${ticketInfo.name}`);
         const cardClass = isPaid ? 'paid' : 'sold';
         const statusSymbol = isPaid ? '✓' : '✕';
         
@@ -2323,7 +2323,7 @@
         <div style="display:flex; flex-direction:column; gap:10px; max-height:220px; overflow-y:auto; padding-right:5px;">
           ${matches.map(m => {
             const isPaid = m.estado === 'pagado';
-            const statusLabel = isPaid ? 'PAGADO' : 'RESERVADO';
+            const statusLabel = isPaid ? 'PAGADO' : 'COMPRADO';
             const statusColor = isPaid ? 'var(--green)' : 'var(--red)';
             return `
               <div class="result-item-card ${isPaid ? 'paid' : 'sold'}" style="padding:10px; margin:0;">
