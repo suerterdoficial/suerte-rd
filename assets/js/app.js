@@ -181,7 +181,7 @@
       id: "celular",
       title: "Rifa Especial del Celular",
       prize: "iPhone 17 Pro Max",
-      price: "RD$100",
+      price: "RD$10",
       total: 50000,
       image: "./005.jpeg",
       active: true,
@@ -254,7 +254,9 @@
   const $ = (id) => document.getElementById(id);
 
   function pad5(n) {
-    return String(n).padStart(5, "0");
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    return String(n).padStart(digitCount, "0");
   }
 
   // Sound Synth Synthesizer using Web Audio API
@@ -725,17 +727,57 @@
     `).join("");
   }
 
-  // Carrusel automático para la portada (desvanecimiento)
+  // Carrusel automático para la portada (desplazamiento horizontal con indicadores)
   function initHeroCarousel() {
-    const slides = document.querySelectorAll(".hero-banner-frame .carousel-slide");
-    if (!slides.length) return;
-    let currentSlide = 0;
+    const track = $("heroCarouselTrack");
+    const slides = document.querySelectorAll("#heroCarouselTrack .carousel-slide");
+    const dotsContainer = $("heroCarouselDots");
+    if (!track || !slides.length) return;
     
-    setInterval(() => {
-      slides[currentSlide].classList.remove("active");
-      currentSlide = (currentSlide + 1) % slides.length;
-      slides[currentSlide].classList.add("active");
-    }, 4500);
+    let currentSlide = 0;
+    let autoPlayTimer = null;
+    
+    // Render dots
+    if (dotsContainer) {
+      dotsContainer.innerHTML = "";
+      slides.forEach((_, idx) => {
+        const dot = document.createElement("span");
+        dot.className = `carousel-dot ${idx === 0 ? 'active' : ''}`;
+        dot.addEventListener("click", () => {
+          goToSlide(idx);
+          resetAutoPlay();
+        });
+        dotsContainer.appendChild(dot);
+      });
+    }
+    
+    function goToSlide(idx) {
+      currentSlide = idx;
+      track.style.transform = `translateX(-${currentSlide * 100}%)`;
+      
+      // Update dots
+      if (dotsContainer) {
+        const dots = dotsContainer.querySelectorAll(".carousel-dot");
+        dots.forEach((dot, dIdx) => {
+          dot.classList.toggle("active", dIdx === currentSlide);
+        });
+      }
+    }
+    
+    function startAutoPlay() {
+      autoPlayTimer = setInterval(() => {
+        goToSlide((currentSlide + 1) % slides.length);
+      }, 4000);
+    }
+    
+    function resetAutoPlay() {
+      if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+      }
+      startAutoPlay();
+    }
+    
+    startAutoPlay();
   }
 
   // Inicialización de la aplicación
@@ -833,9 +875,22 @@
       });
     });
 
-    // 5. Configurar validación en tiempo real del Paso 2 (Nombre y WhatsApp)
-    $("buyerNameInput").addEventListener("input", checkStep2Validation);
-    $("buyerWhatsappInput").addEventListener("input", checkStep2Validation);
+
+
+    // Secret trigger: click the logo 5 times to go to /admin
+    let logoClickCount = 0;
+    const logoBrand = $("navBrandLogo");
+    if (logoBrand) {
+      logoBrand.addEventListener("click", () => {
+        logoClickCount++;
+        if (logoClickCount >= 5) {
+          window.location.href = "/admin";
+        }
+        setTimeout(() => {
+          logoClickCount = 0;
+        }, 3000);
+      });
+    }
 
     // Ensure activeRaffleId is an active raffle
     const activeIds = RAFFLE_IDS.filter(id => configs[id] && configs[id].active !== false);
@@ -848,6 +903,19 @@
     loadRaffleState(activeRaffleId);
     renderWinnersCarousel();
     updateStatsCountdown();
+    
+    const winCarousel = $("winnersCarousel");
+    if (winCarousel) {
+      winCarousel.addEventListener("mouseenter", () => {
+        if (winnersCarouselInterval) {
+          clearInterval(winnersCarouselInterval);
+          winnersCarouselInterval = null;
+        }
+      });
+      winCarousel.addEventListener("mouseleave", () => {
+        startWinnersCarouselAutoScroll();
+      });
+    }
     
     initHeroCarousel();
     initParticlesCanvas();
@@ -914,11 +982,6 @@
   }
 
   function checkStep2Validation() {
-    const name = $("buyerNameInput").value.trim();
-    const whatsapp = $("buyerWhatsappInput").value.trim();
-    
-    const isValid = name.length > 2 && whatsapp.length >= 7;
-    
     const step3 = $("step3Card");
     const warning = $("step3Warning");
 
@@ -935,20 +998,8 @@
       return;
     }
 
-    if (isValid) {
-      step3.classList.remove("form-locked-state");
-      warning.style.display = "none";
-    } else {
-      step3.classList.add("form-locked-state");
-      warning.style.display = "flex";
-      warning.innerHTML = `<i data-lucide="alert-triangle" style="width:16px; margin-right:5px; vertical-align:middle;"></i> Completa tus datos en el Paso 2 para habilitar la compra de boletos.`;
-      currentNumber = null;
-      currentStatus = null;
-      updateDigitsRow("", null);
-      $("btnActionReserve").disabled = true;
-      $("btnExplorerReserve").disabled = true;
-      lucide.createIcons();
-    }
+    step3.classList.remove("form-locked-state");
+    warning.style.display = "none";
   }
 
   function renderRaffleSelectorDropdown() {
@@ -988,6 +1039,40 @@
 
     $("jackpotDisplay").textContent = conf.prize;
 
+    const digitCount = conf.ticketDigits || 5;
+    const digitsRow = $("digitsRow");
+    if (digitsRow) {
+      digitsRow.innerHTML = "";
+      const placeholderIcon = RAFFLE_ICONS[activeRaffleId] || "🎰";
+      for (let i = 0; i < digitCount; i++) {
+        const cell = document.createElement("div");
+        cell.className = "digit-cell placeholder-icon";
+        cell.textContent = placeholderIcon;
+        digitsRow.appendChild(cell);
+      }
+    }
+
+    const reelRow = $("reelRow");
+    if (reelRow) {
+      reelRow.innerHTML = "";
+      for (let i = 0; i < digitCount; i++) {
+        const reelCell = document.createElement("div");
+        reelCell.className = "reel-cell";
+        reelCell.textContent = "0";
+        reelRow.appendChild(reelCell);
+      }
+    }
+
+    const secretInput = $("secretInput");
+    if (secretInput) {
+      secretInput.setAttribute("maxlength", digitCount);
+    }
+
+    const explorerSearch = $("explorerSearch");
+    if (explorerSearch) {
+      explorerSearch.setAttribute("maxlength", digitCount);
+    }
+
     if ($("ticketRaffleSelect").value !== rId) {
       $("ticketRaffleSelect").value = rId;
     }
@@ -999,7 +1084,7 @@
     $("btnActionReserve").disabled = true;
     $("btnExplorerReserve").disabled = true;
     
-    showStatus(mode === "random" ? "Presiona el botón para elegir un número aleatorio" : "Escribe un número de 5 dígitos...", "info");
+    showStatus(mode === "random" ? "Presiona el botón para elegir un número aleatorio" : `Escribe un número de ${digitCount} dígitos...`, "info");
 
     renderProgress();
     renderDrawResults();
@@ -1486,6 +1571,29 @@
       `;
       el.appendChild(card);
     });
+    // Start auto-scroll for winners carousel
+    if (winners.length > 0) {
+      startWinnersCarouselAutoScroll();
+    }
+  }
+
+  let winnersCarouselInterval = null;
+  function startWinnersCarouselAutoScroll() {
+    const carousel = $("winnersCarousel");
+    if (!carousel) return;
+    
+    if (winnersCarouselInterval) {
+      clearInterval(winnersCarouselInterval);
+    }
+    
+    winnersCarouselInterval = setInterval(() => {
+      const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
+      if (carousel.scrollLeft >= maxScrollLeft - 10) {
+        carousel.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        carousel.scrollBy({ left: 300, behavior: 'smooth' });
+      }
+    }, 3500);
   }
 
   $("carouselPrevBtn").addEventListener("click", () => {
@@ -1663,12 +1771,14 @@
   }
 
   function handleSecretInput() {
-    const rawVal = $("secretInput").value.replace(/\D/g, "").slice(0, 5);
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    const rawVal = $("secretInput").value.replace(/\D/g, "").slice(0, digitCount);
     $("secretInput").value = rawVal;
 
-    if (rawVal.length < 5) {
+    if (rawVal.length < digitCount) {
       updateDigitsRow(rawVal, null);
-      showStatus(rawVal.length === 0 ? "Introduce 5 dígitos..." : `Escribiendo: ${rawVal.length}/5 dígitos`, "info");
+      showStatus(rawVal.length === 0 ? `Introduce ${digitCount} dígitos...` : `Escribiendo: ${rawVal.length}/${digitCount} dígitos`, "info");
       currentNumber = null;
       currentStatus = null;
       $("btnActionReserve").disabled = true;
@@ -1711,19 +1821,23 @@
 
   function updateDigitsRow(str, statusClass) {
     const cells = document.querySelectorAll("#digitsRow .digit-cell");
-    const arr = str.padEnd(5, " ").split("");
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    const arr = str.padEnd(digitCount, " ").split("");
     const placeholderIcon = RAFFLE_ICONS[activeRaffleId] || "🎰";
     cells.forEach((cell, idx) => {
       const char = arr[idx];
-      if (char.trim()) {
-        cell.textContent = char;
-        cell.className = "digit-cell filled";
-        if (statusClass) {
-          cell.classList.add(statusClass);
+      if (char !== undefined) {
+        if (char.trim()) {
+          cell.textContent = char;
+          cell.className = "digit-cell filled";
+          if (statusClass) {
+            cell.classList.add(statusClass);
+          }
+        } else {
+          cell.textContent = placeholderIcon;
+          cell.className = "digit-cell placeholder-icon";
         }
-      } else {
-        cell.textContent = placeholderIcon;
-        cell.className = "digit-cell placeholder-icon";
       }
     });
   }
@@ -1854,12 +1968,7 @@
   function openReserveForm() {
     if (cart.length === 0) return;
     
-    const name = $("buyerNameInput").value.trim();
-    const whatsapp = $("buyerWhatsappInput").value.trim();
-
     $("reserveConfirmNumberDisplay").textContent = cart.join(", ");
-    $("reserveConfirmNameDisplay").textContent = name;
-    $("reserveConfirmWhatsappDisplay").textContent = whatsapp;
     
     $("reserveConfirmErrorMsg").textContent = "";
     $("reserveConfirmOverlay").classList.add("active");
@@ -1873,8 +1982,8 @@
     const err = $("reserveConfirmErrorMsg");
 
     if (!name || !phone) {
-      err.textContent = "Por favor completa todos los campos requeridos en el Paso 2.";
-      showToast("Por favor completa los campos del Paso 2.", "bad");
+      err.textContent = "Por favor completa todos los campos requeridos.";
+      showToast("Por favor completa los campos requeridos.", "bad");
       playSound("error");
       return;
     }
@@ -1968,22 +2077,109 @@
     const firstNum = num.split(", ")[0];
     $("receiptBarcodeText").textContent = `SRD-${firstNum}-${count}tix`;
 
-    const instructions = conf.paymentInstructions || "Transferir a:\nBanco Popular: Cta Corriente 123-45678-9\nBanco Banreservas: Cta Ahorros 987-65432-1\nA nombre de Suerte RD S.R.L.";
-    $("receiptPaymentInstructions").textContent = instructions;
+    // Render structured bank details
+    const bankAccounts = [
+      {
+        bank: "Banco Qik",
+        type: "Cuenta de Ahorro",
+        number: "1000490608",
+        owner: "Luis Fernando Alvarez"
+      },
+      {
+        bank: "Banreservas",
+        type: "Cuenta de Ahorro",
+        number: "9602059888",
+        owner: "Cristhofer Sosa"
+      },
+      {
+        bank: "Banco Popular",
+        type: "Cuenta de Ahorro",
+        number: "823386362",
+        owner: "Erika Santos Francisco"
+      },
+      {
+        bank: "Scotiabank",
+        type: "Cuenta corriente",
+        number: "03100039851",
+        owner: "Luis Fernando Alvarez"
+      }
+    ];
+
+    const bankGrid = $("receiptBankAccounts");
+    if (bankGrid) {
+      bankGrid.innerHTML = bankAccounts.map((acc, idx) => `
+        <div class="bank-card-item">
+          <div class="bank-card-info">
+            <span class="bank-card-name" style="color: #1A202C;">${acc.bank}</span>
+            <span class="bank-card-type">${acc.type}</span>
+            <span class="bank-card-num" style="font-size: 1rem; font-weight: 700; color: #2D3748; letter-spacing: 0.5px; margin: 2px 0;">${acc.number}</span>
+            <span class="bank-card-owner" style="font-size: 0.7rem; color: #718096;">Titular: ${acc.owner}</span>
+          </div>
+          <button class="bank-card-copy-btn" onclick="window.srd.copyToClipboard('${acc.number}', '${acc.bank}')" type="button" title="Copiar número de cuenta">
+            <i data-lucide="copy" style="width:14px; height:14px;"></i>
+          </button>
+        </div>
+      `).join("");
+      
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }
 
     $("receiptOverlay").classList.add("active");
   }
 
-  function handleSendWhatsApp() {
+  async function handleSendWhatsApp() {
     const conf = configs[activeRaffleId];
     const num = $("receiptTicketNum").textContent;
     const name = $("receiptName").textContent;
     const lottery = $("receiptLottery").textContent;
 
-    const textMsg = `Hola Suerte RD, he reservado el/los boleto(s) digital(es) #${num} en combinación con ${lottery} para el sorteo del "${conf.prize}" a nombre de ${name}. Solicito los datos para completar mi pago.`;
+    if (!selectedPaymentReceiptBase64) {
+      showToast("Por favor selecciona una imagen del comprobante de pago.", "bad");
+      return;
+    }
+
+    showToast("Registrando comprobante...", "info");
+
+    const ticketNums = num.split(", ");
+    try {
+      const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
+      const raw = await getStorageItem(key);
+      const latestTickets = raw ? JSON.parse(raw) : {};
+
+      ticketNums.forEach(tNum => {
+        if (latestTickets[tNum]) {
+          latestTickets[tNum].estado = "esperando_validacion";
+          latestTickets[tNum].comprobante = selectedPaymentReceiptBase64;
+          latestTickets[tNum].timestamp_comprobante = Date.now();
+        }
+      });
+
+      allTickets[activeRaffleId] = latestTickets;
+      await setStorageItem(key, JSON.stringify(latestTickets));
+
+      showToast("¡Comprobante registrado!", "ok");
+    } catch(e) {
+      console.error("Failed to upload receipt", e);
+      showToast("Error al subir comprobante. Reintenta.", "bad");
+      return;
+    }
+
+    const textMsg = `Hola Suerte RD, he subido mi comprobante de pago para el/los boleto(s) digital(es) #${num} en combinación con ${lottery} para el sorteo del "${conf.prize}" a nombre de ${name}. Quedo a la espera de la validación.`;
     const encoded = encodeURIComponent(textMsg);
 
     window.open(`https://wa.me/18092800000?text=${encoded}`, "_blank");
+
+    // Reset selected file fields
+    selectedPaymentReceiptBase64 = null;
+    const receiptInput = $("paymentReceiptInput");
+    if (receiptInput) receiptInput.value = "";
+    const fileNameEl = $("paymentReceiptFileName");
+    if (fileNameEl) fileNameEl.textContent = "Sin archivo seleccionado";
+    const previewCont = $("paymentReceiptPreviewContainer");
+    if (previewCont) previewCont.style.display = "none";
+    $("btnSendWhatsApp").disabled = true;
 
     clearTicketSelection();
     $("receiptOverlay").classList.remove("active");
@@ -2196,6 +2392,7 @@
     showToast(`¡Se agregaron ${count} boletos al carrito con tarifa de paquete!`, "ok");
     
     showScreen('purchase');
+    openReserveForm();
   }
 
   function playStoryVideo(videoName) {
@@ -2863,7 +3060,9 @@
       if (btn.id === 'keypadClear') {
         input.value = input.value.slice(0, -1);
       } else {
-        if (input.value.length < 5) {
+        const conf = configs[activeRaffleId];
+        const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+        if (input.value.length < digitCount) {
           input.value += val;
         }
       }
@@ -2896,6 +3095,27 @@
     playSound("click");
   });
   $("btnSendWhatsApp").addEventListener("click", handleSendWhatsApp);
+
+  // File Upload listener for Payment Receipt (Phase 6)
+  let selectedPaymentReceiptBase64 = null;
+  const receiptInput = $("paymentReceiptInput");
+  if (receiptInput) {
+    receiptInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      $("paymentReceiptFileName").textContent = file.name;
+      
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        selectedPaymentReceiptBase64 = evt.target.result;
+        $("paymentReceiptPreview").src = selectedPaymentReceiptBase64;
+        $("paymentReceiptPreviewContainer").style.display = "block";
+        $("btnSendWhatsApp").disabled = false; // Enable confirm button!
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 
   $("closeJackpotBtn").addEventListener("click", () => {
     $("jackpotOverlay").classList.remove("active");
@@ -2993,6 +3213,16 @@
     }, 100);
   });
 
+  function copyToClipboard(text, label) {
+    navigator.clipboard.writeText(text).then(() => {
+      playSound("click");
+      showToast(`${label} copiado al portapapeles.`, "ok");
+    }).catch(err => {
+      console.error("Error al copiar al portapapeles", err);
+      showToast("Error al copiar al portapapeles.", "bad");
+    });
+  }
+
   window.srd = { 
     quickPick, 
     togglePaymentState, 
@@ -3000,7 +3230,8 @@
     playStoryVideo,
     removeFromCart,
     deleteSupportMessage,
-    addPackageToCart
+    addPackageToCart,
+    copyToClipboard
   };
 
   init();

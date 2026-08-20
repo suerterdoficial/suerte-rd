@@ -565,6 +565,27 @@
 </head>
 <body>
 
+  <!-- Login Overlay -->
+  <div class="overlay active" id="adminLoginOverlay">
+    <div class="modal" style="max-width: 400px; text-align: center; border-color: var(--cyan); box-shadow: 0 0 30px var(--cyan-glow);">
+      <div style="margin-bottom: 20px;">
+        <i data-lucide="shield-alert" style="width: 60px; height: 60px; color: var(--cyan); filter: drop-shadow(0 0 10px var(--cyan-glow));"></i>
+      </div>
+      <h2 style="font-family: var(--font-title); font-weight: 800; font-size: 1.6rem; color: #FFF; margin-bottom: 8px;">Acceso Administrador</h2>
+      <p style="color: var(--text-grey); font-size: 0.9rem; margin-bottom: 24px;">Ingresa el PIN de seguridad para acceder al panel de control.</p>
+      
+      <div class="field" style="margin-bottom: 20px;">
+        <input type="password" id="adminLoginPinInput" placeholder="••••••" style="text-align: center; font-size: 1.5rem; letter-spacing: 6px; font-family: var(--font-mono); font-weight: 700; max-width: 220px; margin: 0 auto; border-color: var(--border-cyan);">
+      </div>
+      
+      <button class="btn btn-primary" id="btnAdminLoginSubmit" style="width: 100%; font-weight: 800;">
+        <i data-lucide="unlock"></i> Desbloquear Panel
+      </button>
+      
+      <p id="adminLoginErrorMsg" style="color: var(--red); font-size: 0.85rem; font-weight: 700; margin-top: 15px; display: none;"></p>
+    </div>
+  </div>
+
   <div class="admin-container">
     <!-- Sidebar -->
     <div class="sidebar">
@@ -589,11 +610,18 @@
         <button class="nav-btn" data-target="paneSupport">
           <i data-lucide="mail"></i> Quejas de Soporte
         </button>
+        <button class="nav-btn" data-target="panePayments" id="navBtnPayments" style="display:flex; align-items:center; width:100%;">
+          <i data-lucide="wallet"></i> Validar Pagos
+          <span class="badge" id="paymentNotificationBadge" style="display:none; background:var(--red); color:#FFF; border-radius:50%; font-size:0.65rem; padding: 2px 6px; margin-left: auto;">0</span>
+        </button>
       </nav>
 
-      <div class="sidebar-footer">
+      <div class="sidebar-footer" style="display:flex; flex-direction:column; gap:10px;">
         <button class="btn-exit" onclick="window.location.href='/'">
           <i data-lucide="arrow-left"></i> Volver a la Web
+        </button>
+        <button class="btn-exit" id="btnAdminLogout" style="border-color: rgba(255, 77, 94, 0.4); color: var(--red);">
+          <i data-lucide="log-out"></i> Cerrar Sesión
         </button>
       </div>
     </div>
@@ -712,6 +740,15 @@
               <label for="cfgTotal">Cantidad de Boletos a Vender</label>
               <input type="number" id="cfgTotal" min="10" max="100000" placeholder="10000">
             </div>
+            <div class="field">
+              <label for="cfgTicketDigits">Dígitos del Boleto</label>
+              <select id="cfgTicketDigits" style="background:#05141b; font-weight:700; width:100%; border:1px solid var(--border-cyan); border-radius:10px; color:#FFF; height:45px; padding:0 10px;">
+                <option value="2">2 Dígitos (00 - 99)</option>
+                <option value="3">3 Dígitos (000 - 999)</option>
+                <option value="4">4 Dígitos (0000 - 9999)</option>
+                <option value="5" selected>5 Dígitos (00000 - 99999)</option>
+              </select>
+            </div>
 
             <div class="field">
               <label for="cfgBlessedPct">Porcentaje Números Bendecidos (%)</label>
@@ -789,6 +826,18 @@
               <button class="btn btn-primary" id="btnSaveConfig" style="width:100%;">
                 <i data-lucide="save"></i> Guardar Configuración de la Rifa
               </button>
+            </div>
+
+            <!-- Change Admin PIN Section -->
+            <div class="field full-width" style="border-top:1px solid var(--border-cyan); padding-top:20px; margin-top:10px;">
+              <span style="color:var(--cyan); font-weight:700; font-size:0.85rem; text-transform:uppercase;">Seguridad del Administrador</span>
+              <div style="display:flex; gap:12px; margin-top:12px; align-items:flex-end;">
+                <div class="field" style="flex:1; margin-bottom:0;">
+                  <label for="cfgAdminPin">Cambiar PIN de Acceso</label>
+                  <input type="password" id="cfgAdminPin" placeholder="Nuevo PIN de 4+ dígitos">
+                </div>
+                <button class="btn btn-primary" id="btnUpdatePin" style="height:48px; min-width: 150px;"><i data-lucide="key"></i> Cambiar PIN</button>
+              </div>
             </div>
 
             <div class="field full-width" style="border-top:1px solid var(--border-cyan); padding-top:20px; margin-top:10px;">
@@ -881,6 +930,41 @@
         </div>
       </div>
 
+      <!-- PANE 6: VALIDATE PAYMENTS (Phase 6) -->
+      <div class="pane" id="panePayments">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="wallet" style="color:var(--cyan)"></i> Validar Pagos y Comprobantes
+          </div>
+          <p style="color: var(--text-grey); font-size: 0.85rem; margin-bottom: 20px;">
+            Revisa los comprobantes de depósito subidos por los usuarios para validar sus apartados y convertirlos en boletos PAGADOS oficiales.
+          </p>
+          
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sorteo</th>
+                  <th>Boleto(s)</th>
+                  <th>Comprador</th>
+                  <th>WhatsApp</th>
+                  <th>Comprobante</th>
+                  <th>Fecha</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="paymentsTableBody">
+                <tr>
+                  <td colspan="7" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
+                    No hay comprobantes pendientes de validación.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div class="status-msg" id="statusMessage"></div>
     </div>
   </div>
@@ -913,6 +997,15 @@
           <label for="newRaffleTotal">Total Boletos</label>
           <input type="number" id="newRaffleTotal" value="10000">
         </div>
+        <div class="field" style="flex:1;">
+          <label for="newRaffleTicketDigits">Dígitos</label>
+          <select id="newRaffleTicketDigits" style="background:#05141b; font-weight:700; width:100%; border:1px solid var(--border-cyan); border-radius:10px; color:#FFF; height:45px; padding:0 10px;">
+            <option value="2">2 Dígitos</option>
+            <option value="3">3 Dígitos</option>
+            <option value="4">4 Dígitos</option>
+            <option value="5" selected>5 Dígitos</option>
+          </select>
+        </div>
       </div>
 
       <div style="display:flex; gap:12px;">
@@ -944,6 +1037,20 @@
       <div class="field" style="margin-top: 10px;">
         <button class="btn btn-primary" id="btnCreateSubmit" style="width: 100%;">Crear y Guardar Sorteo</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VER COMPROBANTE (Phase 6) -->
+  <div class="overlay" id="viewReceiptOverlay" style="z-index: 9999;">
+    <div class="modal" style="max-width: 500px; text-align: center;">
+      <button class="modal-close-btn" id="closeViewReceiptBtn"><i data-lucide="x"></i></button>
+      <h3 style="margin-bottom: 15px; color: var(--cyan);">Comprobante de Depósito</h3>
+      <div style="background: #000; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); max-height: 400px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+        <img id="viewReceiptImg" style="max-width: 100%; max-height: 400px; object-fit: contain; padding: 10px;">
+      </div>
+      <button class="btn btn-primary" id="btnApproveReceiptModal" style="width: 100%; background:#00E676; color:#020d0f; font-weight:800; gap: 8px;">
+        <i data-lucide="check-circle"></i> Aprobar este Pago
+      </button>
     </div>
   </div>
 

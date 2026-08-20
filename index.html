@@ -32,7 +32,7 @@
 
 <!-- Navbar Top -->
 <nav class="navbar">
-  <div class="brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="cursor:pointer;">
+  <div class="brand" id="navBrandLogo" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="cursor:pointer;">
     <img class="brand-logo" src="./suerte_rd_logo.png" alt="Suerte RD Logo">
     <span>Suerte RD</span>
   </div>
@@ -70,19 +70,22 @@
   <!-- Dynamic Hero info -->
   <section class="hero">
     <div class="hero-banner-frame">
-      <div class="carousel-slide active"><img class="hero-banner-img" src="./suerte_rd_plus.jpg" alt="Suerte RD Plus" style="object-fit: contain; background-color: #020305;"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./fco_rent_car_ad.png" alt="Publicidad FCO Rent Car" style="object-fit: contain; background-color: #000000;"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./listo_patron_ad.png" alt="Publicidad Listo Patrón" style="object-fit: contain; background-color: #de3d03;"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./winner_iphone.jpg" alt="Ganadora de iPhone 17" style="object-fit: cover;"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./winner_check.jpg" alt="Ganadora Ana Paula Hernández" style="object-fit: contain; background-color: #022778;"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./001.jpeg" alt="Ganador 1"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./002.jpeg" alt="Ganador 2"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./003.jpeg" alt="Ganador 3"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./004.jpeg" alt="Ganador 4"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./005.jpeg" alt="Ganador 5"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./006.jpeg" alt="Ganador 6"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./007.jpeg" alt="Ganador 7"></div>
-      <div class="carousel-slide"><img class="hero-banner-img" src="./008.png" alt="Ganador 8"></div>
+      <div class="carousel-track" id="heroCarouselTrack">
+        <div class="carousel-slide"><img class="hero-banner-img" src="./suerte_rd_plus.jpg" alt="Suerte RD Plus" style="object-fit: contain; background-color: #020305;"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./fco_rent_car_ad.png" alt="Publicidad FCO Rent Car" style="object-fit: contain; background-color: #000000;"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./listo_patron_ad.png" alt="Publicidad Listo Patrón" style="object-fit: contain; background-color: #de3d03;"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./winner_iphone.jpg" alt="Ganadora de iPhone 17" style="object-fit: cover;"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./winner_check.jpg" alt="Ganadora Ana Paula Hernández" style="object-fit: contain; background-color: #022778;"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./001.jpeg" alt="Ganador 1"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./002.jpeg" alt="Ganador 2"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./003.jpeg" alt="Ganador 3"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./004.jpeg" alt="Ganador 4"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./005.jpeg" alt="Ganador 5"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./006.jpeg" alt="Ganador 6"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./007.jpeg" alt="Ganador 7"></div>
+        <div class="carousel-slide"><img class="hero-banner-img" src="./008.png" alt="Ganador 8"></div>
+      </div>
+      <div class="carousel-dots" id="heroCarouselDots"></div>
     </div>
     <div class="eyebrow" id="heroEyebrow"><i data-lucide="sparkles" style="width: 14px; height: 14px;"></i> Sorteo Especial Activo</div>
     <h1 id="heroTitle">Sorteo Especial</h1>
@@ -118,7 +121,7 @@
         <div class="package-name" style="font-size: 0.8rem; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Paquete Bronce</div>
         <div class="package-title">50 Números</div>
         <div class="package-price">RD$ 150</div>
-        <div class="package-discount">¡Ahorras 97%!</div>
+        <div class="package-discount">¡Ahorras 70%!</div>
         <button class="package-btn">Comprar Paquete</button>
       </div>
 
@@ -129,7 +132,7 @@
         <div class="package-name" style="font-size: 0.8rem; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Paquete Plata</div>
         <div class="package-title">150 Números</div>
         <div class="package-price">RD$ 450</div>
-        <div class="package-discount">¡Ahorras 97%!</div>
+        <div class="package-discount">¡Ahorras 70%!</div>
         <button class="package-btn">Comprar Paquete</button>
       </div>
 
@@ -140,7 +143,7 @@
         <div class="package-name" style="font-size: 0.8rem; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Paquete Oro</div>
         <div class="package-title">250 Números</div>
         <div class="package-price">RD$ 750</div>
-        <div class="package-discount">¡Ahorras 97%!</div>
+        <div class="package-discount">¡Ahorras 70%!</div>
         <button class="package-btn">Comprar Paquete</button>
       </div>
 
@@ -151,7 +154,7 @@
         <div class="package-name" style="font-size: 0.8rem; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Paquete Diamante</div>
         <div class="package-title">500 Números</div>
         <div class="package-price">RD$ 1,500</div>
-        <div class="package-discount">¡Ahorras 97%!</div>
+        <div class="package-discount">¡Ahorras 70%!</div>
         <button class="package-btn">Comprar Paquete</button>
       </div>
     </div>
@@ -165,47 +168,47 @@
   </div>
   <section class="buying-flow-wrapper" id="buyingFlowSection">
     <!-- Carrucel Largo y Estrecho de Paquetes -->
-    <div class="packages-carousel-container" style="width: 100%; margin-bottom: 25px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-cyan); border-radius: 18px; padding: 12px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow: hidden;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <span style="color: var(--cyan); font-family: var(--font-title); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="zap" style="width: 16px; height: 16px; color:var(--gold);"></i> COMPRA RÁPIDA EN PAQUETE
+    <div class="casino-packages-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; position:relative; z-index:2;">
+        <span style="color: var(--gold); font-family: var(--font-title); font-weight: 900; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; text-shadow: 0 0 10px rgba(255,215,0,0.4);">
+          <i data-lucide="zap" style="width: 18px; height: 18px; color:var(--gold); fill: var(--gold)"></i> COMPRA EN PAQUETE
         </span>
-        <span style="font-size: 0.75rem; color: var(--text-grey); font-weight: 600;">Tarifa fija de 3 pesos por boleto</span>
+        <span style="font-size: 0.75rem; color: var(--text-grey); font-weight: 700; font-family: var(--font-mono)">Tarifa: RD$3 por boleto</span>
       </div>
-      <div class="packages-carousel-track" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: thin; scrollbar-color: var(--cyan) transparent;">
+      <div class="packages-carousel-track" style="display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: var(--gold) transparent; position:relative; z-index:2;">
         <!-- Card 1 -->
-        <div class="carousel-package-card" onclick="window.srd.addPackageToCart(50)" style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; background: #ffffff; border: 1px solid rgba(205, 127, 50, 0.3); border-radius: 12px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease;">
-          <i data-lucide="award" style="color:#cd7f32; width: 22px; height: 22px;"></i>
+        <div class="carousel-package-card level-bronce" onclick="window.srd.addPackageToCart(50)">
+          <i data-lucide="award" style="color:#cd7f32; width: 24px; height: 24px;"></i>
           <div style="text-align: left;">
-            <div style="font-size:0.85rem; font-weight: 800; color:#111;">Paquete Bronce</div>
-            <div style="font-size:0.75rem; color:#cd7f32; font-weight: 700;">50 Números x RD$ 150</div>
+            <div style="font-size:0.85rem; font-weight: 800; color:#FFF; letter-spacing:0.5px;">PAQUETE BRONCE</div>
+            <div style="font-size:0.75rem; color:#cd7f32; font-weight: 800; font-family:var(--font-mono);">50 Nros x RD$150</div>
           </div>
         </div>
 
         <!-- Card 2 -->
-        <div class="carousel-package-card" onclick="window.srd.addPackageToCart(150)" style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; background: #ffffff; border: 1px solid rgba(192, 192, 192, 0.3); border-radius: 12px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease;">
-          <i data-lucide="award" style="color:#c0c0c0; width: 22px; height: 22px;"></i>
+        <div class="carousel-package-card level-plata" onclick="window.srd.addPackageToCart(150)">
+          <i data-lucide="award" style="color:#c0c0c0; width: 24px; height: 24px;"></i>
           <div style="text-align: left;">
-            <div style="font-size:0.85rem; font-weight: 800; color:#111;">Paquete Plata</div>
-            <div style="font-size:0.75rem; color:#888; font-weight: 700;">150 Números x RD$ 450</div>
+            <div style="font-size:0.85rem; font-weight: 800; color:#FFF; letter-spacing:0.5px;">PAQUETE PLATA</div>
+            <div style="font-size:0.75rem; color:#a0a0a0; font-weight: 800; font-family:var(--font-mono);">150 Nros x RD$450</div>
           </div>
         </div>
 
         <!-- Card 3 -->
-        <div class="carousel-package-card" onclick="window.srd.addPackageToCart(250)" style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; background: #ffffff; border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 12px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease;">
-          <i data-lucide="award" style="color:#ffd700; width: 22px; height: 22px;"></i>
+        <div class="carousel-package-card level-oro" onclick="window.srd.addPackageToCart(250)">
+          <i data-lucide="award" style="color:#ffd700; width: 24px; height: 24px;"></i>
           <div style="text-align: left;">
-            <div style="font-size:0.85rem; font-weight: 800; color:#111;">Paquete Oro</div>
-            <div style="font-size:0.75rem; color:#d4af37; font-weight: 700;">250 Números x RD$ 750</div>
+            <div style="font-size:0.85rem; font-weight: 800; color:#FFF; letter-spacing:0.5px;">PAQUETE ORO</div>
+            <div style="font-size:0.75rem; color:#ffd700; font-weight: 800; font-family:var(--font-mono);">250 Nros x RD$750</div>
           </div>
         </div>
 
         <!-- Card 4 -->
-        <div class="carousel-package-card" onclick="window.srd.addPackageToCart(500)" style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; background: #ffffff; border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease;">
-          <i data-lucide="gem" style="color:#00e676; width: 22px; height: 22px;"></i>
+        <div class="carousel-package-card level-diamante" onclick="window.srd.addPackageToCart(500)">
+          <i data-lucide="gem" style="color:#00e676; width: 24px; height: 24px;"></i>
           <div style="text-align: left;">
-            <div style="font-size:0.85rem; font-weight: 800; color:#111;">Paquete Diamante</div>
-            <div style="font-size:0.75rem; color:#00a152; font-weight: 700;">500 Números x RD$ 1,500</div>
+            <div style="font-size:0.85rem; font-weight: 800; color:#FFF; letter-spacing:0.5px;">PAQUETE DIAMANTE</div>
+            <div style="font-size:0.75rem; color:#00e676; font-weight: 800; font-family:var(--font-mono);">500 Nros x RD$1,500</div>
           </div>
         </div>
       </div>
@@ -263,37 +266,15 @@
       <div class="prize-showcase-panel" id="prizeShowcasePanel"></div>
     </div>
 
-    <!-- STEP 2: USER PROFILE REGISTRATION -->
-    <div class="glass-card" id="step2Card">
-      <div class="step-card-header">
-        <div class="step-badge">2</div>
-        <h3>Registra tus datos de contacto</h3>
-      </div>
-      <p style="color:var(--text-grey); font-size:0.85rem; margin-bottom: 20px; line-height: 1.5;">
-        Introduce tu nombre y WhatsApp. Esto nos permite mantener un registro seguro de quién compra cada boleto para certificar al ganador del sorteo.
-      </p>
-      
-      <div style="display:flex; flex-direction:column; gap:15px;">
-        <div class="field" style="margin-bottom:0;">
-          <label for="buyerNameInput"><i data-lucide="user" style="width:14px; vertical-align:middle; margin-right:4px;"></i> Nombre Completo</label>
-          <input type="text" id="buyerNameInput" placeholder="Ej. Carlos Mendoza">
-        </div>
-        <div class="field" style="margin-bottom:0;">
-          <label for="buyerWhatsappInput"><i data-lucide="message-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i> WhatsApp (Código de país + número)</label>
-          <input type="tel" id="buyerWhatsappInput" placeholder="Ej. 18095551234">
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 3: TICKET SELECTION & RESERVATION -->
-    <div class="glass-card form-locked-state" id="step3Card">
+    <!-- STEP 2: TICKET SELECTION & RESERVATION -->
+    <div class="glass-card" id="step3Card">
       <div class="step-card-header">
         <div class="step-badge" id="step3Badge"><i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i></div>
         <h3>Elige tu boleto de 5 dígitos</h3>
       </div>
 
-      <div class="form-unlock-warning" id="step3Warning">
-        <i data-lucide="lock" style="width:16px;"></i> Completa tu Nombre y WhatsApp en el Paso 2 para desbloquear la tómbola
+      <div class="form-unlock-warning" id="step3Warning" style="display:none;">
+        <i data-lucide="lock" style="width:16px;"></i> Las ventas han cerrado para este sorteo
       </div>
 
       <div class="tab-header">
@@ -635,6 +616,43 @@
       </div>
       <div class="faq-item">
         <button class="faq-question">
+          <span>¿Cuáles son las formas de pago disponibles?</span>
+          <i data-lucide="chevron-down" class="chevron-icon" style="width:18px;"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            <p style="margin-bottom: 12px;">Aceptamos transferencias bancarias y depósitos directos a las siguientes cuentas:</p>
+            <div class="bank-accounts-faq" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top: 10px;">
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,229,255,0.15); padding: 14px; border-radius: 12px;">
+                <strong style="color:var(--cyan); font-size: 0.95rem; display: block; margin-bottom: 4px;">Banco Qik</strong>
+                <span style="font-size: 0.8rem; color: var(--text-grey); display: block; margin-bottom: 2px;">Cuenta de Ahorro</span>
+                <span style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: #FFF; display: block; margin-bottom: 4px;">1000490608</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Luis Fernando Alvarez</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,229,255,0.15); padding: 14px; border-radius: 12px;">
+                <strong style="color:var(--cyan); font-size: 0.95rem; display: block; margin-bottom: 4px;">Banreservas</strong>
+                <span style="font-size: 0.8rem; color: var(--text-grey); display: block; margin-bottom: 2px;">Cuenta de Ahorro</span>
+                <span style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: #FFF; display: block; margin-bottom: 4px;">9602059888</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Cristhofer Sosa</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,229,255,0.15); padding: 14px; border-radius: 12px;">
+                <strong style="color:var(--cyan); font-size: 0.95rem; display: block; margin-bottom: 4px;">Banco Popular</strong>
+                <span style="font-size: 0.8rem; color: var(--text-grey); display: block; margin-bottom: 2px;">Cuenta de Ahorro</span>
+                <span style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: #FFF; display: block; margin-bottom: 4px;">823386362</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Erika Santos Francisco</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,229,255,0.15); padding: 14px; border-radius: 12px;">
+                <strong style="color:var(--cyan); font-size: 0.95rem; display: block; margin-bottom: 4px;">Scotiabank</strong>
+                <span style="font-size: 0.8rem; color: var(--text-grey); display: block; margin-bottom: 2px;">Cuenta corriente</span>
+                <span style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: #FFF; display: block; margin-bottom: 4px;">03100039851</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Luis Fernando Alvarez</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">
           <span>¿Es seguro participar en Suerte RD?</span>
           <i data-lucide="chevron-down" class="chevron-icon" style="width:18px;"></i>
         </button>
@@ -723,13 +741,13 @@
     </div>
     
     <div class="field">
-      <label>Comprador</label>
-      <div style="font-weight:700; color:#FFF; font-size:1.1rem;" id="reserveConfirmNameDisplay">Carlos Mendoza</div>
+      <label for="buyerNameInput"><i data-lucide="user" style="width:14px; vertical-align:middle; margin-right:4px;"></i> Nombre Completo</label>
+      <input type="text" id="buyerNameInput" placeholder="Ej. Carlos Mendoza" required>
     </div>
 
     <div class="field">
-      <label>WhatsApp</label>
-      <div style="font-weight:700; color:#FFF; font-size:1.1rem;" id="reserveConfirmWhatsappDisplay">18095551234</div>
+      <label for="buyerWhatsappInput"><i data-lucide="message-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i> WhatsApp (Código de país + número)</label>
+      <input type="tel" id="buyerWhatsappInput" placeholder="Ej. 18095551234" required>
     </div>
 
     <div class="field">
@@ -785,27 +803,62 @@
       </div>
 
       <!-- Bank Payment Instructions (Phase 5) -->
-      <div class="payment-instructions-box" style="margin-top: 15px; padding: 12px; background: rgba(0, 229, 255, 0.05); border: 1px dashed var(--border-cyan); border-radius: 12px; text-align: left;">
-        <span class="receipt-lbl" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px; color: var(--cyan);">Información para el Pago</span>
-        <div id="receiptPaymentInstructions" style="font-size: 0.8rem; color: #FFF; line-height: 1.4; white-space: pre-line;">
-          Cargando métodos de pago...
+      <div class="payment-banks-container" style="margin-top: 15px; text-align: left;">
+        <span class="receipt-lbl" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 8px; color: #718096; letter-spacing: 0.5px;">1. Realizar Transferencia</span>
+        <div class="bank-accounts-grid" id="receiptBankAccounts" style="display:flex; flex-direction:column; gap:8px;">
+          <!-- Loaded dynamically -->
         </div>
       </div>
 
       <!-- simulated barcode -->
-      <div class="barcode-wrapper">
+      <div class="barcode-wrapper" style="margin-top: 15px;">
         <div class="barcode-stripes"></div>
         <div class="barcode-lbl" id="receiptBarcodeText">SRD-00000</div>
       </div>
+
+      <!-- Payment Receipt File Upload (Phase 6) -->
+      <div class="luckium-verify-container" style="margin-top: 15px; border-top: 1px dashed #E2E8F0; padding-top: 15px; text-align: left;">
+        <div class="luckium-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:0.75rem; font-weight:800; color:#FF4D5E; letter-spacing:0.5px;">3. COMPROBANTE DE PAGO</span>
+          <span style="font-size:0.65rem; font-weight:700; color:#A0AEC0; font-family:var(--font-mono)">LUCKIUM VERIFY</span>
+        </div>
+        
+        <div class="luckium-upload-card" id="luckiumUploadCard">
+          <div class="luckium-cloud-icon">
+            <i data-lucide="upload-cloud"></i>
+          </div>
+          <div class="luckium-upload-title">Sube tu captura de pago</div>
+          <div class="luckium-upload-subtitle">Adjunta una foto o captura de pantalla de la transferencia.</div>
+          
+          <label for="paymentReceiptInput" class="luckium-upload-btn">
+            <i data-lucide="image" style="width:14px; height:14px; margin-right:4px;"></i> SELECCIONAR IMAGEN
+          </label>
+          <input type="file" id="paymentReceiptInput" accept="image/*" style="display:none;">
+        </div>
+
+        <div id="paymentReceiptPreviewContainer" style="display:none; margin-top:10px; border-radius:12px; overflow:hidden; border:1px solid #EDF2F7; max-height:160px; background:#F7FAFC; text-align:center;">
+          <img id="paymentReceiptPreview" style="max-width:100%; max-height:160px; object-fit:contain; padding:6px;">
+          <div id="paymentReceiptFileName" style="font-size:0.7rem; color:#718096; padding:4px; background:#EDF2F7; font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+        </div>
+
+        <div class="luckium-terms" style="text-align: center; margin-top: 10px; font-size: 0.75rem; color: #718096; font-weight: 500;">
+          Al confirmar, aceptas los <a href="#" style="color:#FF4D5E; text-decoration:underline; font-weight:600;">Términos y Condiciones</a>.
+        </div>
+      </div>
     </div>
 
-    <div class="receipt-actions">
-      <button class="btn btn-secondary" style="flex:initial; width: 50px; padding:0;" id="btnCopyReceipt" title="Copiar Datos">
+    <div class="receipt-actions" style="margin-top: 15px; display:flex; gap:10px;">
+      <button class="btn btn-secondary" style="flex:initial; width: 50px; height: 50px; padding:0; border-radius:12px;" id="btnCopyReceipt" title="Copiar Datos">
         <i data-lucide="copy" style="width:18px;"></i>
       </button>
-      <button class="btn btn-primary" style="flex:1; gap: 10px; background:#00E676; color:#020d0f; font-weight:800;" id="btnSendWhatsApp">
-        <i data-lucide="message-square" style="width:20px;"></i> Validar en WhatsApp
+      <button class="btn luckium-confirm-btn" id="btnSendWhatsApp" disabled style="flex:1; display:flex; justify-content:center; align-items:center; gap:8px;">
+        Confirmar <i data-lucide="arrow-right" style="width:16px; height:16px;"></i>
       </button>
+    </div>
+
+    <div class="luckium-secure-footer" style="display:flex; justify-content:center; align-items:center; gap:6px; margin-top:15px; font-size:0.7rem; color:#A0AEC0; font-weight:600; text-align:center;">
+      <i data-lucide="shield-check" style="width:14px; height:14px; color:#FF4D5E;"></i>
+      <span>Protegido por <strong style="color:#4A5D5F;">Luckium Secure</strong>. Tu información viaja cifrada.</span>
     </div>
   </div>
 </div>
@@ -864,7 +917,6 @@
     <span>Suerte RD</span>
   </div>
   <div class="footer-links">
-
     <a href="#" id="footerSearchLink">Buscador de Boletos</a>
     <a href="#" id="footerWinnersLink">Historial de Sorteos</a>
   </div>

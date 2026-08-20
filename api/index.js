@@ -75,10 +75,16 @@ async function detectAndLogNotifications(key, oldValStr, newValStr) {
         const newT = newTickets[tNum];
 
         if (!oldT) {
-          messages.push(`¡Boleto #${tNum} reservado por ${newT.name}!`);
+          if (newT.estado === 'esperando_validacion') {
+            messages.push(`¡Boleto #${tNum} apartado y en espera de validación de pago por ${newT.name}!`);
+          } else {
+            messages.push(`¡Boleto #${tNum} reservado por ${newT.name}!`);
+          }
         } else if (oldT.estado !== newT.estado) {
           if (newT.estado === 'pagado') {
             messages.push(`Pago confirmado para el boleto #${tNum} (${newT.name})`);
+          } else if (newT.estado === 'esperando_validacion') {
+            messages.push(`Pago pendiente de validación para el boleto #${tNum} (${newT.name})`);
           } else {
             messages.push(`Boleto #${tNum} revertido a estado reservado (${newT.name})`);
           }
@@ -182,13 +188,16 @@ async function detectAndLogNotifications(key, oldValStr, newValStr) {
   }
 }
 
-function getAdminPin() {
-  const db = readDb();
+async function getAdminPin() {
+  const db = await readDb();
   return db['suerterd:admin:pin'] || process.env.ADMIN_PIN || 'SuerteRD2026';
 }
 
-function isAdmin(req) {
-  return true;
+async function isAdmin(req) {
+  const pin = req.headers['x-admin-pin'] || req.body.pin || req.query.pin;
+  if (!pin) return false;
+  const adminPin = await getAdminPin();
+  return pin === adminPin;
 }
 
 // Background Task: Auto-release expired reserved tickets (Phase 3)
@@ -276,7 +285,7 @@ app.post('/api/admin/verify', async (req, res) => {
 });
 
 app.post('/api/admin/clean-expired', async (req, res) => {
-  if (!isAdmin(req)) {
+  if (!await isAdmin(req)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
   try {
@@ -303,7 +312,7 @@ app.get('/api/get', async (req, res) => {
     return res.status(400).json({ error: "Missing key parameter" });
   }
   if (key === 'supportMessages' || key === 'notifications') {
-    if (!isAdmin(req)) {
+    if (!await isAdmin(req)) {
       return res.status(401).json({ error: "Unauthorized" });
     }
   }
@@ -349,7 +358,7 @@ app.post('/api/set', async (req, res) => {
     needsAdmin = true;
   }
 
-  if (needsAdmin && !isAdmin(req)) {
+  if (needsAdmin && !await isAdmin(req)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -401,7 +410,7 @@ app.post('/api/support', async (req, res) => {
 });
 
 app.get('/api/support', async (req, res) => {
-  if (!isAdmin(req)) {
+  if (!await isAdmin(req)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
   const db = await readDb();
@@ -409,7 +418,7 @@ app.get('/api/support', async (req, res) => {
 });
 
 app.post('/api/support/delete', async (req, res) => {
-  if (!isAdmin(req)) {
+  if (!await isAdmin(req)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
   const { index } = req.body;

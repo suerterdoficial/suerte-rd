@@ -127,5 +127,5 @@
       "timestamp": 1784865902917
     }
   ],
-  "suerterd:config:v2:celular": "{\"id\":\"celular\",\"title\":\"Rifa Especial del Celular\",\"prize\":\"iPhone 17 Pro Max\",\"price\":\"RD$100\",\"total\":50000,\"image\":\"./005.jpeg\",\"active\":true,\"brand\":\"Apple\",\"model\":\"iPhone 17 Pro Max Mamey\",\"year\":\"\",\"details\":\"iPhone 17 Pro Max Mamey de 512 GB. Rifa automática de RD$5,000 cada 5% de ventas.\",\"blessedPct\":0.05,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedNumbers\":[]}"
+  "suerterd:config:v2:celular": "{\"id\":\"celular\",\"title\":\"Rifa Especial del Celular\",\"prize\":\"iPhone 17 Pro Max\",\"price\":\"RD$10\",\"total\":50000,\"image\":\"./005.jpeg\",\"active\":true,\"brand\":\"Apple\",\"model\":\"iPhone 17 Pro Max Mamey\",\"year\":\"\",\"details\":\"iPhone 17 Pro Max Mamey de 512 GB. Rifa automática de RD$5,000 cada 5% de ventas.\",\"blessedPct\":0.05,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedNumbers\":[]}"
 }

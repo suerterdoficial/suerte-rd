@@ -1,5 +1,5 @@
 :root {
-  --bg-deep: #5BC2E7; /* Pantone 2985 */
+  --bg-deep: #030a0d;
   --bg-turquoise: #054C54;
   --bg-turquoise-dark: #022327;
   --bg-turquoise-light: #0d8390;
@@ -40,7 +40,7 @@
 
 html, body {
   background: var(--bg-deep);
-  color: #022327; /* Dark blue/teal for readability on PMS 2985 background */
+  color: var(--text-grey);
   font-family: var(--font-sans);
   scroll-behavior: smooth;
   overflow-x: hidden;
@@ -49,9 +49,9 @@ html, body {
 
 body {
   background-image: 
-    radial-gradient(circle at 5% 15%, rgba(255, 255, 255, 0.4) 0%, transparent 40%),
-    radial-gradient(circle at 95% 85%, rgba(2, 35, 39, 0.12) 0%, transparent 50%),
-    linear-gradient(135deg, var(--bg-deep) 0%, #30A2CE 100%);
+    radial-gradient(circle at 5% 15%, rgba(0, 229, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 95% 85%, rgba(0, 230, 118, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, var(--bg-deep) 0%, #010405 100%);
   background-attachment: fixed;
 }
 
@@ -246,30 +246,52 @@ button {
   background: #000;
 }
 
-.carousel-slide {
-  position: absolute;
-  inset: 0;
+.carousel-track {
+  display: flex;
   width: 100%;
   height: 100%;
-  opacity: 0;
-  transition: opacity 1.5s ease-in-out;
-  z-index: 1;
+  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.carousel-slide.active {
-  opacity: 1;
-  z-index: 2;
+.carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 .hero-banner-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 8s ease;
 }
 
-.carousel-slide.active .hero-banner-img {
-  transform: scale(1.04);
+/* Carousel dots indicators */
+.carousel-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.carousel-dot.active {
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  width: 24px;
+  border-radius: 5px;
 }
 
 .hero-banner-frame::after {
@@ -290,9 +312,9 @@ button {
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #022327;
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(2, 35, 39, 0.25);
+  color: var(--cyan);
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid var(--border-cyan);
   padding: 6px 18px;
   border-radius: 100px;
   margin-bottom: 18px;
@@ -303,18 +325,18 @@ button {
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: 12px;
-  color: #022327;
+  color: #FFF;
 }
 
 .hero h1 span {
-  background: linear-gradient(90deg, #010a0c, #0d8390);
+  background: linear-gradient(90deg, #FFF, var(--cyan));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: none;
 }
 
 .hero p.sub {
-  color: #2b565a;
+  color: var(--text-grey);
   font-size: 1.2rem;
   max-width: 650px;
   margin: 0 auto;
@@ -377,7 +399,7 @@ button {
   font-size: 1.8rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #022327;
+  color: #FFF;
 }
 
 .raffle-grid {
@@ -1222,11 +1244,11 @@ button {
 .section-title h2 {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #022327;
+  color: #FFF;
 }
 
 .section-title p {
-  color: #2b565a;
+  color: var(--text-grey);
   font-size: 0.95rem;
   margin-top: 4px;
 }
@@ -2075,6 +2097,18 @@ button {
   background: rgba(0, 230, 118, 0.12);
   color: var(--green);
   border: 1px solid rgba(0, 230, 118, 0.25);
+}
+
+.badge-reserved {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-grey);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.badge-blocked {
+  background: rgba(255, 77, 94, 0.12);
+  color: var(--red);
+  border: 1px solid rgba(255, 77, 94, 0.25);
 }
 
 /* Live Draw Spinner Module */
@@ -3055,12 +3089,12 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
    BLESSED NUMBERS (10 NUMEROS BENDECIDOS) STYLES
    ========================================== */
 .bendecidos-card {
-  background: #E2E8F0;
-  border: 4px double #054C54;
+  background: var(--card-bg);
+  border: 4px double var(--border-cyan);
   border-radius: 28px;
   padding: 25px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.6);
-  color: #022327;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.05);
+  color: var(--text-white);
   max-width: 100%;
   margin: 0 auto 20px;
 }
@@ -3070,18 +3104,18 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   flex-direction: column;
   align-items: center;
   width: 100%;
-  background: #f1f5f9;
-  border: 2px solid #054C54;
+  background: var(--card-bg-solid);
+  border: 2px solid var(--border-cyan);
   border-radius: 20px;
   padding: 20px;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
 }
 
 .bendecidos-title {
   font-family: var(--font-title);
   font-size: clamp(1rem, 2.5vw, 1.4rem);
   font-weight: 800;
-  color: #000;
+  color: #FFF;
   text-align: center;
   margin-bottom: 25px;
   text-transform: uppercase;
@@ -3212,9 +3246,9 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
 }
 
 .bendecidos-footer {
-  background: #E2E8F0;
-  color: #334155;
-  border: 1px solid #CBD5E1;
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text-grey);
+  border: 1px solid var(--border-cyan);
   border-radius: 12px;
   padding: 12px 20px;
   font-size: 0.9rem;
@@ -3224,7 +3258,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   max-width: 680px;
   margin-top: 15px;
   line-height: 1.4;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
 /* Locked Raffle Styles */
@@ -3306,8 +3340,8 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
 }
 
 .package-card {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--card-bg-solid);
+  border: 1px solid var(--border-cyan);
   border-radius: 20px;
   padding: 24px 20px;
   text-align: center;
@@ -3318,6 +3352,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.4);
 }
 
 .package-card::before {
@@ -3333,11 +3368,11 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
 .package-card:hover {
   transform: translateY(-8px);
   border-color: var(--theme-color);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15), 0 0 15px rgba(var(--theme-rgb), 0.2);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px var(--theme-color);
 }
 
 .package-card:hover::before {
-  opacity: 0.1;
+  opacity: 0.15;
 }
 
 .package-card * {
@@ -3350,7 +3385,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   top: 12px;
   right: -30px;
   background: var(--theme-color);
-  color: #fff !important;
+  color: #000 !important;
   font-weight: 900;
   font-size: 0.6rem;
   padding: 4px 30px;
@@ -3362,14 +3397,14 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 15px;
   font-size: 1.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-cyan);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
   transition: transform 0.4s ease;
 }
 
@@ -3381,7 +3416,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   font-family: var(--font-title);
   font-weight: 800;
   font-size: 1.15rem;
-  color: #111 !important;
+  color: #FFF !important;
   margin-bottom: 8px;
 }
 
@@ -3408,7 +3443,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   width: 100%;
   background: var(--theme-color);
   border: none;
-  color: #fff !important;
+  color: #000 !important;
   padding: 8px 15px;
   border-radius: 12px;
   font-weight: 800;
@@ -3416,13 +3451,13 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(var(--theme-rgb), 0.15);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.25);
 }
 
 .package-card:hover .package-btn {
-  background: #111;
-  color: #fff !important;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  background: #FFF;
+  color: #000 !important;
+  box-shadow: 0 6px 15px rgba(255,255,255,0.3);
 }
 
 /* Package Color Variables */
@@ -3447,17 +3482,298 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   --glow-color: rgba(0, 230, 118, 0.3);
 }
 
-/* Second Screen Carousel Glow */
+/* Second Screen Carousel Retro Board & Glow */
+.casino-packages-panel {
+  position: relative;
+  background: linear-gradient(180deg, #0a0401 0%, #000 100%);
+  border: 4px double #ffd700;
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 25px;
+  box-shadow: 
+    0 0 30px rgba(255, 215, 0, 0.25),
+    inset 0 0 20px rgba(255, 215, 0, 0.1);
+  overflow: hidden;
+}
+
+.casino-packages-panel::before, .casino-packages-panel::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background-size: 24px 6px;
+  animation: casinoBlink 0.6s infinite alternate steps(2);
+  z-index: 1;
+}
+
+.casino-packages-panel::before {
+  top: 4px;
+  background-image: radial-gradient(circle, #ffd700 2px, transparent 3px);
+}
+
+.casino-packages-panel::after {
+  bottom: 4px;
+  background-image: radial-gradient(circle, #ff4d5e 2px, transparent 3px);
+  animation-delay: 0.3s;
+}
+
+@keyframes casinoBlink {
+  0% { opacity: 0.35; filter: hue-rotate(0deg) drop-shadow(0 0 2px #ffd700); }
+  100% { opacity: 1; filter: hue-rotate(90deg) drop-shadow(0 0 6px #ffd700); }
+}
+
 .carousel-package-card {
-  background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #020a0d !important;
+  border-radius: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-package-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transform: skewX(-20deg);
+}
+
+.carousel-package-card:hover::after {
+  left: 150%;
+  transition: left 0.8s ease-in-out;
 }
 
 .carousel-package-card:hover {
-  background: rgba(255, 255, 255, 0.95) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  transform: translateY(-3px) scale(1.03) !important;
 }
 
+.carousel-package-card.level-bronce {
+  border: 2px solid #cd7f32 !important;
+  box-shadow: 0 0 10px rgba(205, 127, 50, 0.2), inset 0 0 8px rgba(205, 127, 50, 0.15);
+}
+.carousel-package-card.level-bronce:hover {
+  box-shadow: 0 0 20px rgba(205, 127, 50, 0.5), inset 0 0 10px rgba(205, 127, 50, 0.25);
+}
 
+.carousel-package-card.level-plata {
+  border: 2px solid #c0c0c0 !important;
+  box-shadow: 0 0 10px rgba(192, 192, 192, 0.2), inset 0 0 8px rgba(192, 192, 192, 0.15);
+}
+.carousel-package-card.level-plata:hover {
+  box-shadow: 0 0 20px rgba(192, 192, 192, 0.5), inset 0 0 10px rgba(192, 192, 192, 0.25);
+}
+
+.carousel-package-card.level-oro {
+  border: 2px solid #ffd700 !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.25), inset 0 0 8px rgba(255, 215, 0, 0.2);
+}
+.carousel-package-card.level-oro:hover {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 12px rgba(255, 215, 0, 0.3);
+}
+
+.carousel-package-card.level-diamante {
+  border: 2px solid #00e676 !important;
+  box-shadow: 0 0 10px rgba(0, 230, 118, 0.25), inset 0 0 8px rgba(0, 230, 118, 0.2);
+}
+.carousel-package-card.level-diamante:hover {
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.6), inset 0 0 12px rgba(0, 230, 118, 0.3);
+}
+
+/* Bank accounts container and cards in receipt modal */
+.bank-accounts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bank-card-item {
+  background: #F7FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.bank-card-item:hover {
+  border-color: #CBD5E0;
+  background: #EDF2F7;
+  transform: translateY(-1px);
+}
+
+.bank-card-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 2px;
+}
+
+.bank-card-name {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #2D3748;
+}
+
+.bank-card-type {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 600;
+}
+
+.bank-card-num {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1A202C;
+  letter-spacing: 0.5px;
+  margin: 3px 0;
+}
+
+.bank-card-owner {
+  font-size: 0.75rem;
+  color: #4A5D5F;
+  font-weight: 600;
+}
+
+.bank-card-copy-btn {
+  background: #EDF2F7;
+  border: 1px solid #E2E8F0;
+  color: #4A5568;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.bank-card-copy-btn:hover {
+  background: #FF4D5E;
+  color: #FFF;
+  border-color: #FF4D5E;
+  box-shadow: 0 4px 10px rgba(255, 77, 94, 0.2);
+}
+
+/* Luckium Verify red and pink upload layout */
+.luckium-upload-card {
+  background: rgba(255, 77, 94, 0.02);
+  border: 2px dashed #FEB2B2;
+  border-radius: 18px;
+  padding: 24px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.luckium-upload-card:hover {
+  border-color: #FF8787;
+  background: rgba(255, 77, 94, 0.04);
+}
+
+.luckium-cloud-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 77, 94, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  color: #FF4D5E;
+  animation: floatCloud 2.5s infinite alternate ease-in-out;
+}
+
+@keyframes floatCloud {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
+}
+
+.luckium-cloud-icon svg, .luckium-cloud-icon i {
+  width: 24px;
+  height: 24px;
+}
+
+.luckium-upload-title {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  font-weight: 800;
+  color: #2D3748;
+  margin-bottom: 4px;
+}
+
+.luckium-upload-subtitle {
+  font-size: 0.8rem;
+  color: #718096;
+  max-width: 250px;
+  margin: 0 auto 16px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.luckium-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FF4D5E;
+  color: #FFF;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 77, 94, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.luckium-upload-btn:hover {
+  background: #E53E3E;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(255, 77, 94, 0.4);
+}
+
+.luckium-upload-btn:active {
+  transform: translateY(0);
+}
+
+.luckium-confirm-btn {
+  background: #FF4D5E !important;
+  color: #FFF !important;
+  font-weight: 800 !important;
+  font-size: 1rem !important;
+  border-radius: 14px !important;
+  height: 50px !important;
+  box-shadow: 0 4px 15px rgba(255, 77, 94, 0.3) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.luckium-confirm-btn:hover:not(:disabled) {
+  background: #E53E3E !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(255, 77, 94, 0.4) !important;
+}
+
+.luckium-confirm-btn:disabled {
+  background: #CBD5E0 !important;
+  color: #A0AEC0 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: 0.65;
+}

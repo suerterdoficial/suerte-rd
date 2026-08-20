@@ -75,6 +75,7 @@
   };
 
   let activeRaffleId = "celular";
+  let adminPin = sessionStorage.getItem('admin_pin') || '';
   let configs = {};
   let allTickets = {};
   let winners = [];
@@ -86,7 +87,9 @@
 
   async function getStorageItem(key) {
     try {
-      const res = await fetch(`${API_GET_URL}?key=${encodeURIComponent(key)}`);
+      const res = await fetch(`${API_GET_URL}?key=${encodeURIComponent(key)}`, {
+        headers: { "x-admin-pin": adminPin }
+      });
       if (!res.ok) return null;
       const data = await res.json();
       return data.value;
@@ -98,18 +101,26 @@
 
   async function setStorageItem(key, val) {
     try {
-      await fetch(API_SET_URL, {
+      const res = await fetch(API_SET_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-pin": adminPin
+        },
         body: JSON.stringify({ key, value: val })
       });
+      if (!res.ok) {
+        console.error(`Error setStorageItem for ${key}: Unauthorized or failed`);
+      }
     } catch (e) {
       console.error(`Error setStorageItem for ${key}`, e);
     }
   }
 
   function pad5(num) {
-    return String(num).padStart(5, "0");
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    return String(num).padStart(digitCount, "0");
   }
 
   // --- INITIALIZATION ---
@@ -255,6 +266,8 @@
         
         if (target === "paneStats") {
           renderChart();
+        } else if (target === "panePayments") {
+          renderPaymentsTable();
         }
       });
     });
@@ -303,6 +316,36 @@
 
     // Ticket search filter
     $("ticketSearchInput").addEventListener("input", renderTicketsTable);
+
+    // Change PIN
+    $("btnUpdatePin").addEventListener("click", updateAdminPinCode);
+
+    // Logout
+    const btnLogout = $("btnAdminLogout");
+    if (btnLogout) {
+      btnLogout.addEventListener("click", () => {
+        sessionStorage.removeItem('admin_pin');
+        localStorage.removeItem('suerterd_admin_logged');
+        window.location.href = '/';
+      });
+    }
+
+    // Receipt Modal Close (Phase 6)
+    const closeBtn = $("closeViewReceiptBtn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeReceiptViewer);
+    }
+    
+    // Receipt Modal Approve (Phase 6)
+    const approveBtn = $("btnApproveReceiptModal");
+    if (approveBtn) {
+      approveBtn.addEventListener("click", () => {
+        if (activeReceiptRaffleId && activeReceiptTicketNum) {
+          approvePaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum);
+          closeReceiptViewer();
+        }
+      });
+    }
   }
 
   // --- STATE LOADER ---
@@ -314,6 +357,9 @@
     $("headerTitle").textContent = conf.title;
     $("headerSubtitle").textContent = `Premio: ${conf.prize} • Precio: ${conf.price} • Total Boletos: ${conf.total.toLocaleString("es-DO")}`;
 
+    // Rebuild draw reels UI
+    updateDrawReelsDOM();
+
     // Dropdowns Sync
     if ($("globalRaffleSelect").value !== rId) $("globalRaffleSelect").value = rId;
     if ($("cfgRaffleSelect").value !== rId) $("cfgRaffleSelect").value = rId;
@@ -321,6 +367,23 @@
     loadConfigForm(rId);
     updateDashboardStats();
     renderTicketsTable();
+    updatePaymentsNotificationBadge();
+  }
+
+  function updateDrawReelsDOM() {
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    const reelsRow = document.querySelector(".reels-row");
+    if (reelsRow) {
+      reelsRow.innerHTML = "";
+      for (let i = 0; i < digitCount; i++) {
+        const reelDiv = document.createElement("div");
+        reelDiv.className = "reel";
+        reelDiv.id = `reel${i}`;
+        reelDiv.textContent = "0";
+        reelsRow.appendChild(reelDiv);
+      }
+    }
   }
 
   // --- LOAD CONFIG FORM ---
@@ -332,6 +395,7 @@
     $("cfgPrize").value = conf.prize || "";
     $("cfgPrice").value = conf.price || "";
     $("cfgTotal").value = conf.total || "";
+    $("cfgTicketDigits").value = conf.ticketDigits !== undefined ? conf.ticketDigits : 5;
     $("cfgBlessedPct").value = conf.blessedPct !== undefined ? conf.blessedPct : 0.1;
     $("cfgBlessedPrize").value = conf.blessedPrize || "RD$5,000";
     $("cfgBlessedDrawInterval").value = conf.blessedDrawInterval !== undefined ? conf.blessedDrawInterval : 5;
@@ -458,12 +522,15 @@
       blessedNumbers.sort();
     }
 
+    const ticketDigits = Number($("cfgTicketDigits").value) || 5;
+
     configs[activeRaffleId] = {
       ...configs[activeRaffleId],
       title: $("cfgTitle").value.trim() || configs[activeRaffleId].title,
       prize: $("cfgPrize").value.trim() || configs[activeRaffleId].prize,
       price: $("cfgPrice").value.trim() || configs[activeRaffleId].price,
       total: total,
+      ticketDigits: ticketDigits,
       blessedPct: blessedPct,
       blessedPrize: blessedPrize,
       saleStatus: saleStatus,
@@ -528,6 +595,8 @@
     }
     blessedNumbers.sort();
 
+    const ticketDigits = Number($("newRaffleTicketDigits").value) || 5;
+
     RAFFLE_IDS.push(id);
     await setStorageItem("suerterd:raffle:ids", JSON.stringify(RAFFLE_IDS));
 
@@ -537,6 +606,7 @@
       prize,
       price,
       total,
+      ticketDigits,
       blessedPct,
       blessedPrize,
       saleStatus: "active",
@@ -633,6 +703,9 @@
       if (state === "pagado") {
         badgeClass = "badge-paid";
         badgeLabel = "Pagado";
+      } else if (state === "esperando_validacion") {
+        badgeClass = "badge-pending";
+        badgeLabel = "Validar Pago";
       } else if (state === "bloqueado") {
         badgeClass = "badge-blocked";
         badgeLabel = "Bloqueado";
@@ -646,8 +719,9 @@
         <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
         <td>
           <div style="display:flex; gap:6px;">
-            ${state !== "bloqueado" ? `<button class="btn btn-green btn-toggle-pay" data-number="${num}" style="padding:6px 10px; font-size:0.75rem;">${state === 'reservado' ? 'Marcar Pagado' : 'Marcar Reservado'}</button>` : ''}
-            <button class="btn btn-red btn-release" data-number="${num}" style="padding:6px 10px; font-size:0.75rem;"><i data-lucide="trash-2" style="width:12px;"></i> Liberar</button>
+            ${state !== "bloqueado" ? `<button class="btn btn-green btn-toggle-pay" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">${state === 'reservado' || state === 'esperando_validacion' ? 'Marcar Pagado' : 'Marcar Reservado'}</button>` : ''}
+            ${state === "esperando_validacion" && ticket.comprobante ? `<button class="btn btn-secondary btn-view-receipt-inline" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="image" style="width:12px;"></i> Recibo</button>` : ''}
+            <button class="btn btn-red btn-release" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="trash-2" style="width:12px;"></i> Liberar</button>
           </div>
         </td>
       `;
@@ -655,6 +729,8 @@
       tr.querySelector(".btn-release").addEventListener("click", () => releaseTicket(num));
       const payBtn = tr.querySelector(".btn-toggle-pay");
       if (payBtn) payBtn.addEventListener("click", () => toggleTicketPayment(num));
+      const receiptBtn = tr.querySelector(".btn-view-receipt-inline");
+      if (receiptBtn) receiptBtn.addEventListener("click", () => openReceiptViewer(activeRaffleId, num, ticket.comprobante));
 
       body.appendChild(tr);
       renderedCount++;
@@ -742,7 +818,12 @@
   async function cleanExpiredTickets() {
     showNotification("Liberando boletos expirados...", "info");
     try {
-      const res = await fetch("/api/admin/clean-expired", { method: "POST" });
+      const res = await fetch("/api/admin/clean-expired", {
+        method: "POST",
+        headers: {
+          "x-admin-pin": adminPin
+        }
+      });
       const data = await res.json();
       if (data.success) {
         showNotification(`Limpieza completada. Se liberaron ${data.count} boletos expirados.`, "success");
@@ -751,6 +832,8 @@
         const raw = await getStorageItem(tKey);
         allTickets[activeRaffleId] = raw ? JSON.parse(raw) : {};
         loadRaffleState(activeRaffleId);
+      } else {
+        showNotification("No autorizado o error al liberar.", "error");
       }
     } catch (e) {
       showNotification("Error ejecutando limpieza de expirados.", "error");
@@ -820,10 +903,19 @@
 
     showNotification("Eliminando mensaje...", "info");
     try {
-      const res = await fetch(`/api/support/delete?index=${idx}`, { method: "POST" });
+      const res = await fetch('/api/support/delete', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-pin": adminPin
+        },
+        body: JSON.stringify({ index: idx })
+      });
       if (res.ok) {
         showNotification("Mensaje eliminado.", "success");
         await fetchSupportMessages();
+      } else {
+        showNotification("No autorizado o error al eliminar.", "error");
       }
     } catch (e) {
       showNotification("Error eliminando mensaje.", "error");
@@ -854,7 +946,11 @@
     const winnerDetails = tickets[winningTicket];
 
     // Reels Animation
-    const reels = [$("reel0"), $("reel1"), $("reel2"), $("reel3"), $("reel4")];
+    const digitCount = conf.ticketDigits || 5;
+    const reels = [];
+    for (let i = 0; i < digitCount; i++) {
+      reels.push($(`reel${i}`));
+    }
     reels.forEach(r => r.classList.add("spinning"));
 
     reels.forEach((reel, i) => {
@@ -978,7 +1074,336 @@
     }, 4000);
   }
 
+  // --- SECURITY PIN AND LOGIN LOGIN LOGIC ---
+  async function updateAdminPinCode() {
+    const input = $("cfgAdminPin");
+    const newPin = input.value.trim();
+    if (!newPin) {
+      alert("Por favor ingresa un nuevo PIN.");
+      return;
+    }
+    if (newPin.length < 4) {
+      alert("El PIN debe tener al menos 4 caracteres.");
+      return;
+    }
+    
+    showNotification("Actualizando PIN...", "info");
+    try {
+      await setStorageItem('suerterd:admin:pin', newPin);
+      adminPin = newPin;
+      sessionStorage.setItem('admin_pin', newPin);
+      localStorage.setItem('suerterd_admin_logged', 'true');
+      input.value = "";
+      showNotification("¡PIN de acceso actualizado correctamente!", "success");
+    } catch (e) {
+      showNotification("Error al guardar el nuevo PIN.", "error");
+    }
+  }
+
+  async function checkAuthentication() {
+    const pin = sessionStorage.getItem('admin_pin');
+    if (pin) {
+      const isValid = await verifyPin(pin);
+      if (isValid) {
+        adminPin = pin;
+        localStorage.setItem('suerterd_admin_logged', 'true');
+        $("adminLoginOverlay").classList.remove("active");
+        await init();
+        return;
+      }
+    }
+    // If not authenticated or verification fails, show the login screen and listen to submit
+    $("adminLoginOverlay").classList.add("active");
+    
+    // Bind login submit buttons
+    $("btnAdminLoginSubmit").onclick = handleLoginSubmit;
+    $("adminLoginPinInput").onkeydown = (e) => {
+      if (e.key === "Enter") handleLoginSubmit();
+    };
+  }
+
+  async function verifyPin(pin) {
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+      const data = await res.json();
+      return data.success;
+    } catch(e) {
+      console.error("Error verifying pin", e);
+      return false;
+    }
+  }
+
+  async function handleLoginSubmit() {
+    const input = $("adminLoginPinInput");
+    const pin = input.value.trim();
+    if (!pin) {
+      showLoginError("Ingresa un PIN.");
+      return;
+    }
+    showLoginError(""); // clear error
+    const isValid = await verifyPin(pin);
+    if (isValid) {
+      adminPin = pin;
+      sessionStorage.setItem('admin_pin', pin);
+      localStorage.setItem('suerterd_admin_logged', 'true');
+      $("adminLoginOverlay").classList.remove("active");
+      await init();
+    } else {
+      showLoginError("PIN de seguridad incorrecto.");
+    }
+  }
+
+  function showLoginError(msg) {
+    const el = $("adminLoginErrorMsg");
+    if (!el) return;
+    if (msg) {
+      el.textContent = msg;
+      el.style.display = "block";
+    } else {
+      el.style.display = "none";
+    }
+  }
+
+  // --- PAYMENT VALIDATION CORE FUNCTIONS (Phase 6) ---
+  let activeReceiptRaffleId = null;
+  let activeReceiptTicketNum = null;
+
+  function getPendingPaymentsCount() {
+    let pendingCount = 0;
+    RAFFLE_IDS.forEach(rId => {
+      const tickets = allTickets[rId] || {};
+      Object.keys(tickets).forEach(num => {
+        if (tickets[num].estado === 'esperando_validacion') {
+          pendingCount++;
+        }
+      });
+    });
+    return pendingCount;
+  }
+
+  function updatePaymentsNotificationBadge() {
+    const count = getPendingPaymentsCount();
+    const badge = $("paymentNotificationBadge");
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+  }
+
+  function renderPaymentsTable() {
+    const tbody = $("paymentsTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    let rowsHtml = "";
+    let hasPending = false;
+
+    RAFFLE_IDS.forEach(rId => {
+      const conf = configs[rId];
+      const tickets = allTickets[rId] || {};
+      
+      const groups = {};
+      
+      Object.keys(tickets).forEach(tNum => {
+        const t = tickets[tNum];
+        if (t.estado === 'esperando_validacion') {
+          const groupKey = `${t.timestamp_comprobante || t.timestamp}_${t.whatsapp}`;
+          if (!groups[groupKey]) {
+            groups[groupKey] = {
+              raffleId: rId,
+              name: t.name,
+              whatsapp: t.whatsapp,
+              comprobante: t.comprobante,
+              timestamp: t.timestamp_comprobante || t.timestamp,
+              numbers: []
+            };
+          }
+          groups[groupKey].numbers.push(tNum);
+        }
+      });
+      
+      Object.keys(groups).forEach(gKey => {
+        const g = groups[gKey];
+        hasPending = true;
+        g.numbers.sort();
+        
+        const dateStr = g.timestamp ? new Date(g.timestamp).toLocaleDateString("es-DO") + " " + new Date(g.timestamp).toLocaleTimeString("es-DO", {hour: '2-digit', minute:'2-digit'}) : "N/A";
+        
+        let numbersDisplay = g.numbers.map(n => `#${n}`).join(", ");
+        if (g.numbers.length > 5) {
+          numbersDisplay = g.numbers.slice(0, 5).map(n => `#${n}`).join(", ") + `... y ${g.numbers.length - 5} más`;
+        }
+        
+        const allNumsStr = g.numbers.join(",");
+
+        rowsHtml += `
+          <tr data-raffle="${rId}" data-tickets="${allNumsStr}">
+            <td><strong>${escapeHtml(conf.title)}</strong></td>
+            <td>
+              <span class="badge" style="background:var(--cyan); color:#000; font-weight:800; font-family:var(--font-mono); font-size:0.85rem;" title="${g.numbers.join(', ')}">
+                ${g.numbers.length} boletos
+              </span>
+              <div style="font-size:0.75rem; color:var(--text-grey); margin-top:4px; font-family:var(--font-mono);">${numbersDisplay}</div>
+            </td>
+            <td>${escapeHtml(g.name)}</td>
+            <td>
+              <a href="https://wa.me/${g.whatsapp.replace(/\D/g, "")}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; border-color:#00E676; color:#00E676; display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
+                <i data-lucide="message-circle" style="width:12px;"></i> WhatsApp
+              </a>
+            </td>
+            <td>
+              ${g.comprobante ? `
+                <button class="btn btn-secondary btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
+                  <i data-lucide="image" style="width:12px;"></i> Ver Recibo
+                </button>
+              ` : `<span style="color:var(--text-muted); font-size:0.8rem;">Sin recibo</span>`}
+            </td>
+            <td style="font-size:0.8rem; color:var(--text-grey);">${dateStr}</td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-green btn-approve-group" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; font-weight:800; margin-bottom:0;">
+                  <i data-lucide="check" style="width:12px; vertical-align:middle;"></i> Aprobar
+                </button>
+                <button class="btn btn-red btn-reject-group" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; font-weight:800; margin-bottom:0;">
+                  <i data-lucide="x" style="width:12px; vertical-align:middle;"></i> Rechazar
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    });
+
+    if (hasPending) {
+      tbody.innerHTML = rowsHtml;
+      
+      tbody.querySelectorAll(".btn-view-receipt").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const rId = btn.getAttribute("data-raffle");
+          const numsStr = btn.getAttribute("data-tickets");
+          const firstNum = numsStr.split(",")[0];
+          const t = allTickets[rId][firstNum];
+          openReceiptViewer(rId, numsStr, t.comprobante);
+        });
+      });
+
+      tbody.querySelectorAll(".btn-approve-group").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const rId = btn.getAttribute("data-raffle");
+          const numsStr = btn.getAttribute("data-tickets");
+          approvePaymentGroup(rId, numsStr);
+        });
+      });
+
+      tbody.querySelectorAll(".btn-reject-group").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const rId = btn.getAttribute("data-raffle");
+          const numsStr = btn.getAttribute("data-tickets");
+          rejectPaymentGroup(rId, numsStr);
+        });
+      });
+    } else {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
+            No hay comprobantes pendientes de validación.
+          </td>
+        </tr>
+      `;
+    }
+    
+    lucide.createIcons();
+    updatePaymentsNotificationBadge();
+  }
+
+  async function approvePaymentGroup(rId, numsStr) {
+    const nums = numsStr.split(",");
+    if (!confirm(`¿Estás seguro de que deseas APROBAR el pago de los ${nums.length} boletos?`)) return;
+    showNotification("Aprobando pagos...", "info");
+    
+    const tickets = allTickets[rId] || {};
+    let countApprove = 0;
+    
+    nums.forEach(tNum => {
+      if (tickets[tNum]) {
+        tickets[tNum].estado = "pagado";
+        tickets[tNum].timestamp_pago = Date.now();
+        countApprove++;
+      }
+    });
+    
+    if (countApprove > 0) {
+      const key = `${TICKETS_KEY_PREFIX}:${rId}`;
+      await setStorageItem(key, JSON.stringify(tickets));
+      showNotification(`¡Se aprobaron ${countApprove} boletos con éxito!`, "success");
+      
+      renderPaymentsTable();
+      if (activeRaffleId === rId) {
+        renderTicketsTable();
+        updateDashboardStats();
+      }
+    }
+  }
+
+  async function rejectPaymentGroup(rId, numsStr) {
+    const nums = numsStr.split(",");
+    if (!confirm(`¿Estás seguro de que deseas RECHAZAR el pago de los ${nums.length} boletos? Los boletos serán liberados.`)) return;
+    showNotification("Rechazando y liberando boletos...", "info");
+    
+    const tickets = allTickets[rId] || {};
+    let countReject = 0;
+    
+    nums.forEach(tNum => {
+      if (tickets[tNum]) {
+        delete tickets[tNum];
+        countReject++;
+      }
+    });
+    
+    if (countReject > 0) {
+      const key = `${TICKETS_KEY_PREFIX}:${rId}`;
+      await setStorageItem(key, JSON.stringify(tickets));
+      showNotification(`¡Se liberaron ${countReject} boletos!`, "success");
+      
+      renderPaymentsTable();
+      if (activeRaffleId === rId) {
+        renderTicketsTable();
+        updateDashboardStats();
+      }
+    }
+  }
+
+  function openReceiptViewer(rId, tNum, base64) {
+    activeReceiptRaffleId = rId;
+    activeReceiptTicketNum = tNum;
+    
+    const modal = $("viewReceiptOverlay");
+    const img = $("viewReceiptImg");
+    if (modal && img) {
+      img.src = base64;
+      modal.classList.add("active");
+    }
+  }
+
+  function closeReceiptViewer() {
+    activeReceiptRaffleId = null;
+    activeReceiptTicketNum = null;
+    
+    const modal = $("viewReceiptOverlay");
+    if (modal) {
+      modal.classList.remove("active");
+    }
+  }
+
   // Run on startup
-  await init();
+  await checkAuthentication();
 
 })();
