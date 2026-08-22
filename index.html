@@ -283,9 +283,15 @@
 
     <!-- STEP 2: TICKET SELECTION & RESERVATION -->
     <div class="glass-card" id="step3Card">
-      <div class="step-card-header">
-        <div class="step-badge" id="step3Badge"><i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i></div>
-        <h3>Elige tu boleto de 5 dígitos</h3>
+      <div class="step-card-header" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+          <div class="step-badge" id="step3Badge"><i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i></div>
+          <h3>Elige tu boleto de 5 dígitos</h3>
+        </div>
+        <span style="color: var(--gold); font-weight: 800; font-size: 0.8rem; padding-left: 50px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+          <i data-lucide="alert-triangle" style="width:14px; height:14px; color: var(--gold);"></i>
+          Mínimo de compra obligatorio: 25 boletos
+        </span>
       </div>
 
       <div class="form-unlock-warning" id="step3Warning" style="display:none;">
@@ -396,6 +402,10 @@
 
       <!-- Shopping Cart section (Phase 4) -->
       <div class="cart-section" id="cartSection" style="margin-top: 25px; border-top: 1px solid var(--border-cyan); padding-top: 20px; display: none;">
+        <div style="margin-bottom: 12px; background: rgba(255, 193, 7, 0.15); border: 1px solid var(--gold); padding: 10px 12px; border-radius: 12px; font-size: 0.8rem; color: var(--gold); font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="info" style="width: 16px; height: 16px; color: var(--gold);"></i>
+          <span>Compra mínima obligatoria: 25 boletos. Agrega más números o usa el botón "Generar 25 Números Aleatorios".</span>
+        </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <h4 style="font-size:0.95rem; color:var(--cyan); text-transform:uppercase; font-weight:800; display:flex; align-items:center; gap:6px;">
             <i data-lucide="shopping-bag" style="width:16px;"></i> Boletos en tu Carrito
