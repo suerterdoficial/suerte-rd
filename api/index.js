@@ -5,32 +5,100 @@ const { kv } = require('@vercel/kv');
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, '..')));
 
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 
+const DEFAULT_CONFIGS = {
+  florida5: {
+    id: "florida5",
+    title: "Sorteo Especial iPhone 17 Pro Max 1TB",
+    prize: "iPhone 17 Pro Max 1TB",
+    price: "RD$3",
+    total: 100000,
+    ticketDigits: 5,
+    image: "./assets/suerte_rd_iphone17.jpg",
+    active: true,
+    brand: "Apple",
+    model: "iPhone 17 Pro Max 1TB",
+    year: "2026",
+    details: "¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.",
+    blessedPct: 0.1,
+    blessedPrize: "RD$5,000",
+    saleStatus: "active",
+    blessedDrawInterval: 5,
+    countdownTriggerPct: 80,
+    countdownDurationDays: 7,
+    blessedNumbers: [],
+    whatsapp: "18092800000"
+  }
+};
+
 // Helper to read database
 async function readDb() {
+  let db = null;
   if (useKV) {
     try {
       const data = await kv.get('suerterd_db');
-      return data || {};
+      db = data || {};
     } catch (e) {
       console.error("Error reading from Vercel KV, falling back to local file if available", e);
     }
   }
-  if (!fs.existsSync(DATA_FILE)) {
-    return {};
+  if (!db) {
+    if (!fs.existsSync(DATA_FILE)) {
+      db = {};
+    } else {
+      try {
+        const raw = fs.readFileSync(DATA_FILE, 'utf8');
+        db = JSON.parse(raw) || {};
+      } catch (e) {
+        console.error("Error reading data.json, returning empty object", e);
+        db = {};
+      }
+    }
   }
-  try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(raw) || {};
-  } catch (e) {
-    console.error("Error reading data.json, returning empty object", e);
-    return {};
+
+  let changed = false;
+  // Auto-initialize raffle IDs list
+  if (!db['suerterd:raffle:ids'] || db['suerterd:raffle:ids'] !== JSON.stringify(["florida5"])) {
+    db['suerterd:raffle:ids'] = JSON.stringify(["florida5"]);
+    changed = true;
   }
+
+  // Auto-initialize default configurations if they don't exist
+  for (const id in DEFAULT_CONFIGS) {
+    const key = `suerterd:config:v2:${id}`;
+    if (!db[key]) {
+      db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
+      changed = true;
+    } else {
+      try {
+        const parsedCfg = JSON.parse(db[key]);
+        if (parsedCfg.title === "Pick 5 Florida") {
+          db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
+          changed = true;
+        }
+      } catch (e) {
+        console.error("Error parsing config during migration check", e);
+      }
+    }
+    // Also ensure tickets databases are initialized empty if not present
+    const tKey = `suerterd:tickets:v2:${id}`;
+    if (!db[tKey]) {
+      db[tKey] = "{}";
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    await writeDb(db);
+  }
+
+  return db;
 }
 
 // Helper to write database
@@ -70,33 +138,122 @@ async function detectAndLogNotifications(key, oldValStr, newValStr) {
       messages.push(`Se reiniciaron las ventas del sorteo (${raffleId})`);
     } else {
       // 2. Check for additions or changes
+      const addedTickets = [];
+      const changedTickets = [];
+
       Object.keys(newTickets).forEach(tNum => {
         const oldT = oldTickets[tNum];
         const newT = newTickets[tNum];
 
         if (!oldT) {
-          if (newT.estado === 'esperando_validacion') {
-            messages.push(`¡Boleto #${tNum} apartado y en espera de validación de pago por ${newT.name}!`);
-          } else {
-            messages.push(`¡Boleto #${tNum} reservado por ${newT.name}!`);
-          }
+          addedTickets.push({ num: tNum, ...newT });
         } else if (oldT.estado !== newT.estado) {
-          if (newT.estado === 'pagado') {
-            messages.push(`Pago confirmado para el boleto #${tNum} (${newT.name})`);
-          } else if (newT.estado === 'esperando_validacion') {
-            messages.push(`Pago pendiente de validación para el boleto #${tNum} (${newT.name})`);
-          } else {
-            messages.push(`Boleto #${tNum} revertido a estado reservado (${newT.name})`);
-          }
+          changedTickets.push({ num: tNum, oldEstado: oldT.estado, newEstado: newT.estado, ...newT });
         }
       });
 
+      // Handle grouped additions
+      if (addedTickets.length > 0) {
+        const groups = {};
+        addedTickets.forEach(t => {
+          const key = `${t.timestamp || Date.now()}_${t.whatsapp || 'unknown'}`;
+          if (!groups[key]) {
+            groups[key] = [];
+          }
+          groups[key].push(t);
+        });
+
+        Object.keys(groups).forEach(gKey => {
+          const list = groups[gKey];
+          const name = list[0].name || list[0].nombre || "Cliente";
+          if (list.length >= 25) {
+            messages.push(`¡Paquete de ${list.length} boletos apartado por ${name}! En espera de validación.`);
+          } else if (list.length > 1) {
+            messages.push(`¡Grupo de ${list.length} boletos reservado por ${name}!`);
+          } else {
+            messages.push(`¡Boleto #${list[0].num} reservado por ${name}!`);
+          }
+        });
+      }
+
+      // Handle grouped changes
+      if (changedTickets.length > 0) {
+        const groups = {};
+        changedTickets.forEach(t => {
+          const timestamp = t.timestamp_comprobante || t.timestamp_pago || t.timestamp || Date.now();
+          const key = `${timestamp}_${t.whatsapp || 'unknown'}_${t.newEstado}`;
+          if (!groups[key]) {
+            groups[key] = {
+              state: t.newEstado,
+              name: t.name || t.nombre || "Cliente",
+              tickets: []
+            };
+          }
+          groups[key].tickets.push(t.num);
+        });
+
+        Object.keys(groups).forEach(gKey => {
+          const g = groups[gKey];
+          g.tickets.sort();
+          const count = g.tickets.length;
+          if (g.state === 'pagado') {
+            if (count >= 25) {
+              messages.push(`Pago confirmado para el paquete de ${count} boletos de ${g.name}`);
+            } else if (count > 1) {
+              messages.push(`Pago confirmado para el grupo de ${count} boletos de ${g.name}`);
+            } else {
+              messages.push(`Pago confirmado para el boleto #${g.tickets[0]} (${g.name})`);
+            }
+          } else if (g.state === 'esperando_validacion') {
+            if (count >= 25) {
+              messages.push(`Pago pendiente de validación para el paquete de ${count} boletos de ${g.name}`);
+            } else if (count > 1) {
+              messages.push(`Pago pendiente de validación para el grupo de ${count} boletos de ${g.name}`);
+            } else {
+              messages.push(`Pago pendiente de validación para el boleto #${g.tickets[0]} (${g.name})`);
+            }
+          } else {
+            if (count >= 25) {
+              messages.push(`Paquete de ${count} boletos de ${g.name} revertido a estado reservado`);
+            } else if (count > 1) {
+              messages.push(`Grupo de ${count} boletos de ${g.name} revertido a estado reservado`);
+            } else {
+              messages.push(`Boleto #${g.tickets[0]} revertido a estado reservado (${g.name})`);
+            }
+          }
+        });
+      }
+
       // 3. Check for deletions
+      const deletedTickets = [];
       Object.keys(oldTickets).forEach(tNum => {
         if (!newTickets[tNum]) {
-          messages.push(`Boleto #${tNum} liberado y disponible nuevamente`);
+          deletedTickets.push({ num: tNum, ...oldTickets[tNum] });
         }
       });
+
+      if (deletedTickets.length > 0) {
+        const groups = {};
+        deletedTickets.forEach(t => {
+          const key = `${t.whatsapp || 'admin'}`;
+          if (!groups[key]) {
+            groups[key] = [];
+          }
+          groups[key].push(t);
+        });
+
+        Object.keys(groups).forEach(gKey => {
+          const list = groups[gKey];
+          const name = list[0].name || list[0].nombre || "Cliente";
+          if (list.length >= 25) {
+            messages.push(`Paquete de ${list.length} boletos de ${name} liberado y disponible nuevamente`);
+          } else if (list.length > 1) {
+            messages.push(`Grupo de ${list.length} boletos de ${name} liberado y disponible nuevamente`);
+          } else {
+            messages.push(`Boleto #${list[0].num} liberado y disponible nuevamente`);
+          }
+        });
+      }
     }
 
     // 4. Algoritmo de hitos de ventas y cuenta regresiva
@@ -136,7 +293,7 @@ async function detectAndLogNotifications(key, oldValStr, newValStr) {
             config.blessedNumbers.sort();
             db[cfgKey] = JSON.stringify(config);
 
-            const buyerName = newTickets[winningTicket].nombre || "Cliente";
+            const buyerName = newTickets[winningTicket].name || newTickets[winningTicket].nombre || "Cliente";
             messages.push(`🎉 ¡Sorteo al instante! El boleto #${winningTicket} de ${buyerName} es un nuevo Número Bendecido de ${config.blessedPrize || 'RD$5,000'} por alcanzar el ${milestonePct.toFixed(0)}% de ventas!`);
           }
         }
@@ -363,6 +520,53 @@ app.post('/api/set', async (req, res) => {
   }
 
   db[key] = value;
+
+  // Auto-generate blessed numbers when milestones of 10,000 are reached
+  if (key.startsWith("suerterd:tickets:v2:")) {
+    const rId = key.substring("suerterd:tickets:v2:".length);
+    const cfgKey = `suerterd:config:v2:${rId}`;
+    if (db[cfgKey]) {
+      try {
+        const tickets = value ? JSON.parse(value) : {};
+        const totalSold = Object.keys(tickets).length;
+        const expectedBlessedCount = Math.min(10, Math.floor(totalSold / 10000));
+        
+        const conf = JSON.parse(db[cfgKey]);
+        if (!conf.blessedNumbers) conf.blessedNumbers = [];
+        
+        if (conf.blessedNumbers.length < expectedBlessedCount) {
+          const soldList = Object.keys(tickets);
+          const pool = soldList.filter(num => !conf.blessedNumbers.includes(num));
+          
+          let needed = expectedBlessedCount - conf.blessedNumbers.length;
+          let generatedAny = false;
+          while (needed > 0 && pool.length > 0) {
+            const randIdx = Math.floor(Math.random() * pool.length);
+            const chosen = pool[randIdx];
+            conf.blessedNumbers.push(chosen);
+            pool.splice(randIdx, 1);
+            needed--;
+            generatedAny = true;
+            
+            // Log a notification for the new blessed winner
+            const winnerInfo = tickets[chosen];
+            const winnerName = winnerInfo ? (winnerInfo.name || winnerInfo.nombre || "Cliente") : "Cliente";
+            if (!db.notifications) db.notifications = [];
+            db.notifications.unshift({
+              text: `🎉 ¡Boleto #${chosen} es un NÚMERO BENDECIDO! Ganador: ${winnerName}`,
+              timestamp: Date.now()
+            });
+          }
+          if (generatedAny) {
+            db[cfgKey] = JSON.stringify(conf);
+          }
+        }
+      } catch (e) {
+        console.error("Error generating auto blessed numbers", e);
+      }
+    }
+  }
+
   await writeDb(db);
   
   // Detect and log any notifications

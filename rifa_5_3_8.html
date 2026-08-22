@@ -2696,7 +2696,7 @@
     <div class="glass-card form-locked-state" id="step3Card">
       <div class="step-card-header">
         <div class="step-badge">3</div>
-        <h3>Elige tu boleto de 5 dígitos</h3>
+        <h3 id="step3Title">Elige tu boleto de 5 dígitos</h3>
       </div>
 
       <div class="form-unlock-warning" id="step3Warning">
@@ -3327,8 +3327,8 @@
                 <input type="text" id="winName" placeholder="Ej. Sofía Díaz">
               </div>
               <div class="field" style="flex:1;">
-                <label for="winNumber">Número Boleto (5 Dígitos)</label>
-                <input type="text" id="winNumber" placeholder="Ej. 08234" maxlength="5">
+                <label for="winNumber" id="winNumberLabel">Número Boleto (5 Dígitos)</label>
+                <input type="text" id="winNumber" placeholder="Ej. 08234">
               </div>
             </div>
             <div class="field">
@@ -3369,7 +3369,7 @@
   const TICKETS_KEY_PREFIX = "suerterd:tickets:v2";
   const WINNERS_KEY = "suerterd:winners:v2";
 
-  const RAFFLE_IDS = ["celular", "carro", "patineta"];
+  let RAFFLE_IDS = ["numero", "celular", "carro", "patineta"];
 
   // --- NUEVAS FUNCIONES DE INTERACTIVIDAD ---
   const DR_NAMES = ["Carlos M.", "Sofía D.", "Juan P.", "Mateo S.", "María G.", "José L.", "Luis A.", "Ana R.", "David C.", "Laura M.", "Diego V.", "Carmen T.", "Manuel R.", "Elena S.", "Ramón N.", "Altagracia M.", "Milagros D.", "Francisco H.", "Yolanda B.", "Pedro G.", "Giselle F.", "Nelson C.", "Patricia J.", "Franklin S.", "Mildred P."];
@@ -3533,13 +3533,44 @@
   }
 
   const DEFAULT_CONFIGS = {
+    numero: {
+      id: "numero",
+      title: "Sorteo de Números",
+      prize: "Gran Premio en Efectivo",
+      price: "RD$50",
+      total: 10000,
+      image: "./suerte_rd_banner.png",
+      active: true,
+      brand: "Suerte RD",
+      model: "Sorteo de Números Especial",
+      year: "2026",
+      details: "Sorteo general de números. ¡Compra tus números de la suerte y gana!",
+      blessedPct: 0.1,
+      blessedPrize: "RD$5,000",
+      saleStatus: "active",
+      blessedDrawInterval: 5,
+      countdownTriggerPct: 80,
+      countdownDurationDays: 7,
+      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
+      whatsapp: "18092800000"
+    },
     celular: {
       id: "celular",
       title: "Rifa Especial del Celular",
-      prize: "iPhone 16 Pro Max",
-      price: "RD$500",
-      total: 10000,
-      image: "./005.jpeg"
+      prize: "iPhone 17 Pro Max",
+      price: "RD$10",
+      total: 50000,
+      image: "./005.jpeg",
+      active: true,
+      brand: "Apple",
+      model: "iPhone 17 Pro Max Mamey",
+      year: "",
+      details: "iPhone 17 Pro Max Mamey de 512 GB. Rifa automática de RD$5,000 cada 5% de ventas.",
+      blessedPct: 0.05,
+      blessedPrize: "RD$5,000",
+      saleStatus: "locked",
+      blessedNumbers: [],
+      whatsapp: "18092800000"
     },
     carro: {
       id: "carro",
@@ -3547,7 +3578,20 @@
       prize: "Toyota Hilux 2026",
       price: "RD$1,000",
       total: 50000,
-      image: "./006.jpeg"
+      image: "./006.jpeg",
+      active: true,
+      brand: "Toyota",
+      model: "Hilux",
+      year: "2026",
+      details: "Doble Cabina, Transmisión Automática, Combustible Diesel.",
+      blessedPct: 0.05,
+      blessedPrize: "RD$5,000",
+      saleStatus: "locked",
+      blessedDrawInterval: 5,
+      countdownTriggerPct: 80,
+      countdownDurationDays: 7,
+      blessedNumbers: ["00123", "04567", "12345", "18442", "29402", "32947", "45678", "56789", "67890", "78901", "89012", "90123", "01196", "02061", "03628", "04527", "10452", "11946", "19068", "80312", "69819", "02234", "04321", "08976", "09876"],
+      whatsapp: "18092800000"
     },
     patineta: {
       id: "patineta",
@@ -3555,7 +3599,20 @@
       prize: "Patineta Dualtron Ultra",
       price: "RD$300",
       total: 5000,
-      image: "./007.jpeg"
+      image: "./007.jpeg",
+      active: true,
+      brand: "Dualtron",
+      model: "Ultra",
+      year: "",
+      details: "Velocidad máxima 80 km/h, Autonomía 100 km, Doble motor.",
+      blessedPct: 0.2,
+      blessedPrize: "RD$3,000",
+      saleStatus: "locked",
+      blessedDrawInterval: 5,
+      countdownTriggerPct: 80,
+      countdownDurationDays: 7,
+      blessedNumbers: ["00111", "00222", "00333", "00444", "00555", "00666", "00777", "00888", "00999", "01000"],
+      whatsapp: "18092800000"
     }
   };
 
@@ -3583,7 +3640,9 @@
   const $ = (id) => document.getElementById(id);
 
   function pad5(n) {
-    return String(n).padStart(5, "0");
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    return String(n).padStart(digitCount, "0");
   }
 
   // Sound Synth Synthesizer using Web Audio API
@@ -3749,20 +3808,78 @@
 
   // Inicialización de la aplicación
   async function init() {
-    // 1. Cargar Configuración de las 3 Rifas
+    // 0. Cargar IDs de Rifas dinámicas
+    try {
+      const idsRaw = await getStorageItem("suerterd:raffle:ids");
+      if (idsRaw) {
+        const parsed = JSON.parse(idsRaw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          RAFFLE_IDS.length = 0;
+          RAFFLE_IDS.push(...parsed);
+        }
+      } else {
+        await setStorageItem("suerterd:raffle:ids", JSON.stringify(RAFFLE_IDS));
+      }
+    } catch (e) {
+      console.warn("Failed loading raffle IDs", e);
+    }
+
+    // 1. Cargar Configuración de las Rifas
     for (const rId of RAFFLE_IDS) {
       try {
         const key = `${CFG_KEY_PREFIX}:${rId}`;
         const raw = await getStorageItem(key);
-        configs[rId] = raw ? JSON.parse(raw) : {...DEFAULT_CONFIGS[rId]};
-        // Siempre forzar la nueva imagen por defecto para reflejar los archivos de imagen actualizados
-        configs[rId].image = DEFAULT_CONFIGS[rId].image;
+        configs[rId] = raw ? JSON.parse(raw) : (DEFAULT_CONFIGS[rId] ? {...DEFAULT_CONFIGS[rId]} : {
+          id: rId,
+          title: "Nuevo Sorteo",
+          prize: "Premio Principal",
+          price: "RD$500",
+          total: 10000,
+          brand: "",
+          model: "",
+          year: "",
+          details: "Gran sorteo premium. Elige tu boleto.",
+          active: true,
+          image: "./suerte_rd_banner.png",
+          paymentInstructions: ""
+        });
       } catch (e) {
-        configs[rId] = {...DEFAULT_CONFIGS[rId]};
+        configs[rId] = DEFAULT_CONFIGS[rId] ? {...DEFAULT_CONFIGS[rId]} : {
+          id: rId,
+          title: "Nuevo Sorteo",
+          prize: "Premio Principal",
+          price: "RD$500",
+          total: 10000,
+          brand: "",
+          model: "",
+          year: "",
+          details: "Gran sorteo premium. Elige tu boleto.",
+          active: true,
+          image: "./suerte_rd_banner.png",
+          paymentInstructions: ""
+        };
+      }
+      
+      // Fallback para campos nuevos si no están definidos
+      if (configs[rId].blessedPct === undefined) configs[rId].blessedPct = DEFAULT_CONFIGS[rId]?.blessedPct ?? 0.1;
+      if (configs[rId].blessedPrize === undefined) configs[rId].blessedPrize = DEFAULT_CONFIGS[rId]?.blessedPrize ?? "RD$5,000";
+      if (configs[rId].saleStatus === undefined) configs[rId].saleStatus = DEFAULT_CONFIGS[rId]?.saleStatus ?? "active";
+      if (configs[rId].blessedNumbers === undefined || !Array.isArray(configs[rId].blessedNumbers)) {
+        configs[rId].blessedNumbers = DEFAULT_CONFIGS[rId]?.blessedNumbers ?? [];
       }
     }
 
-    // 2. Cargar Ventas de Boletos de las 3 Rifas
+    // Ensure activeRaffleId is an active raffle
+    const activeIds = RAFFLE_IDS.filter(id => configs[id] && configs[id].active !== false);
+    if (activeIds.length > 0) {
+      if (!activeIds.includes(activeRaffleId)) {
+        activeRaffleId = activeIds[0];
+      }
+    } else if (RAFFLE_IDS.length > 0) {
+      activeRaffleId = RAFFLE_IDS[0];
+    }
+
+    // 2. Cargar Ventas de Boletos de las Rifas
     for (const rId of RAFFLE_IDS) {
       try {
         const key = `${TICKETS_KEY_PREFIX}:${rId}`;
@@ -3892,21 +4009,43 @@
   // Cargar las opciones del selector directo de rifas
   function renderRaffleSelectorDropdown() {
     const select = $("ticketRaffleSelect");
-    select.innerHTML = "";
-    RAFFLE_IDS.forEach(rId => {
-      const conf = configs[rId];
-      const opt = document.createElement("option");
-      opt.value = rId;
-      opt.textContent = `${conf.title} (${conf.price})`;
-      select.appendChild(opt);
-    });
+    if (select) {
+      select.innerHTML = "";
+      RAFFLE_IDS.forEach(rId => {
+        const conf = configs[rId];
+        if (!conf || conf.active === false) return;
+        const opt = document.createElement("option");
+        opt.value = rId;
+        opt.textContent = `${conf.title} (${conf.price})`;
+        select.appendChild(opt);
+      });
+    }
+
+    const cfgSelect = $("cfgRaffleSelect");
+    if (cfgSelect) {
+      cfgSelect.innerHTML = "";
+      RAFFLE_IDS.forEach(rId => {
+        const conf = configs[rId];
+        if (!conf) return;
+        const opt = document.createElement("option");
+        opt.value = rId;
+        opt.textContent = `${conf.title} (${rId})`;
+        cfgSelect.appendChild(opt);
+      });
+    }
   }
 
   // Cargar estado de una Rifa
   function loadRaffleState(rId) {
+    const activeIds = RAFFLE_IDS.filter(id => configs[id] && configs[id].active !== false);
+    if (activeIds.length > 0 && !activeIds.includes(rId)) {
+      rId = activeIds[0];
+    }
     activeRaffleId = rId;
 
     const conf = configs[rId];
+    if (!conf) return;
+
     $("heroTitle").innerHTML = `${conf.title.split(" ").slice(0, -1).join(" ") || "Sorteo"} <span>${conf.title.split(" ").slice(-1)[0] || "RD"}</span>`;
     $("heroSubtitle").textContent = `Participa por nuestro gran premio: ${conf.prize}.`;
     
@@ -3921,6 +4060,78 @@
       $("ticketRaffleSelect").value = rId;
     }
 
+    const digitCount = conf.ticketDigits || 5;
+
+    // Reconstruir Digits Row
+    const digitsRow = $("digitsRow");
+    if (digitsRow) {
+      digitsRow.innerHTML = "";
+      const placeholderIcon = "🎰";
+      for (let i = 0; i < digitCount; i++) {
+        const cell = document.createElement("div");
+        cell.className = "digit-cell placeholder-icon";
+        cell.textContent = placeholderIcon;
+        digitsRow.appendChild(cell);
+      }
+    }
+
+    // Reconstruir Reel Row
+    const reelRow = $("reelRow");
+    if (reelRow) {
+      reelRow.innerHTML = "";
+      for (let i = 0; i < digitCount; i++) {
+        const reelCell = document.createElement("div");
+        reelCell.className = "reel-cell";
+        reelCell.textContent = "0";
+        reelRow.appendChild(reelCell);
+      }
+    }
+
+    // Reconstruir Draw Spinner Reels
+    const drawSpinnerReels = document.querySelector(".draw-spinner-reels");
+    if (drawSpinnerReels) {
+      drawSpinnerReels.innerHTML = "";
+      for (let i = 0; i < digitCount; i++) {
+        const reelDiv = document.createElement("div");
+        reelDiv.className = "draw-spinner-reel";
+        reelDiv.id = `drawReel${i}`;
+        reelDiv.textContent = "0";
+        drawSpinnerReels.appendChild(reelDiv);
+      }
+    }
+
+    const secretInput = $("secretInput");
+    if (secretInput) {
+      secretInput.setAttribute("maxlength", digitCount);
+    }
+
+    const explorerSearch = $("explorerSearch");
+    if (explorerSearch) {
+      explorerSearch.setAttribute("maxlength", digitCount);
+    }
+
+    const searchInput = $("searchInput");
+    if (searchInput) {
+      searchInput.setAttribute("maxlength", digitCount);
+      searchInput.placeholder = `Introduce ${digitCount} dígitos...`;
+    }
+
+    const step3Title = $("step3Title");
+    if (step3Title) {
+      step3Title.textContent = `Elige tu boleto de ${digitCount} dígitos`;
+    }
+
+    const winNumberLabel = $("winNumberLabel");
+    if (winNumberLabel) {
+      winNumberLabel.textContent = `Número Sorteado (${digitCount} Dígitos)`;
+    }
+
+    const winNumber = $("winNumber");
+    if (winNumber) {
+      winNumber.setAttribute("maxlength", digitCount);
+      winNumber.placeholder = "Ej. " + "0".repeat(digitCount);
+    }
+
     // Resetear tómbola
     currentNumber = null;
     currentStatus = null;
@@ -3929,7 +4140,7 @@
     $("btnActionReserve").disabled = true;
     $("btnExplorerReserve").disabled = true;
     
-    showStatus(mode === "random" ? "Presiona el botón para elegir un número aleatorio" : "Escribe un número de 5 dígitos...", "info");
+    showStatus(mode === "random" ? "Presiona el botón para elegir un número aleatorio" : `Escribe un número de ${digitCount} dígitos...`, "info");
 
     renderProgress();
     renderDrawResults();
@@ -3947,11 +4158,14 @@
   // Dibujar panel de selección de rifas
   function renderRaffleSelector() {
     const container = $("raffleGrid");
+    if (!container) return;
     container.innerHTML = "";
 
     RAFFLE_IDS.forEach(rId => {
       const conf = configs[rId];
-      const sold = Object.keys(allTickets[rId]).length;
+      if (!conf || conf.active === false) return;
+      const ticketsObj = allTickets[rId] || {};
+      const sold = Object.keys(ticketsObj).length;
       const total = Math.max(1, Number(conf.total) || 10000);
       const pct = Math.min(100, (sold / total) * 100);
 
@@ -4182,7 +4396,9 @@
     if (mode === "random") {
       showStatus("Presiona el botón para generar tu número aleatorio", "info");
     } else if (mode === "custom") {
-      showStatus("Escribe un número de 5 dígitos usando el teclado", "info");
+      const conf = configs[activeRaffleId];
+      const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+      showStatus(`Escribe un número de ${digitCount} dígitos usando el teclado`, "info");
       focusSecretInput();
     } else if (mode === "explore") {
       explorerPage = 0;
@@ -4197,12 +4413,14 @@
 
   // Manejar entrada de dígitos manual
   function handleSecretInput() {
-    const rawVal = $("secretInput").value.replace(/\D/g, "").slice(0, 5);
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    const rawVal = $("secretInput").value.replace(/\D/g, "").slice(0, digitCount);
     $("secretInput").value = rawVal;
 
-    if (rawVal.length < 5) {
+    if (rawVal.length < digitCount) {
       updateDigitsRow(rawVal, null);
-      showStatus(rawVal.length === 0 ? "Introduce 5 dígitos..." : `Escribiendo: ${rawVal.length}/5 dígitos`, "info");
+      showStatus(rawVal.length === 0 ? `Introduce ${digitCount} dígitos...` : `Escribiendo: ${rawVal.length}/${digitCount} dígitos`, "info");
       currentNumber = null;
       currentStatus = null;
       $("btnActionReserve").disabled = true;
@@ -4245,15 +4463,22 @@
 
   function updateDigitsRow(str, statusClass) {
     const cells = document.querySelectorAll("#digitsRow .digit-cell");
-    const arr = str.padEnd(5, " ").split("");
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    const arr = str.padEnd(digitCount, " ").split("");
+    const placeholderIcon = "🎰";
     cells.forEach((cell, idx) => {
       const char = arr[idx];
-      cell.textContent = char.trim() ? char : "–";
-      cell.className = "digit-cell";
-      if (char.trim()) {
-        cell.classList.add("filled");
-        if (statusClass) {
-          cell.classList.add(statusClass);
+      if (char !== undefined) {
+        if (char.trim()) {
+          cell.textContent = char;
+          cell.className = "digit-cell filled";
+          if (statusClass) {
+            cell.classList.add(statusClass);
+          }
+        } else {
+          cell.textContent = placeholderIcon;
+          cell.className = "digit-cell placeholder-icon";
         }
       }
     });
@@ -4545,15 +4770,18 @@
     const box = $("searchResults");
     box.innerHTML = "";
 
-    if (query.length < 3) {
-      box.innerHTML = `<div style="text-align:center; font-size:0.85rem; color:var(--text-muted);"><i data-lucide="alert-circle" style="width:14px; vertical-align:middle;"></i> Escribe al menos 3 dígitos...</div>`;
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    const minLen = Math.min(3, digitCount);
+
+    if (query.length < minLen) {
+      box.innerHTML = `<div style="text-align:center; font-size:0.85rem; color:var(--text-muted);"><i data-lucide="alert-circle" style="width:14px; vertical-align:middle;"></i> Escribe al menos ${minLen} dígitos...</div>`;
       lucide.createIcons({attrs: {class: "lucide"}});
       playSound("error");
       return;
     }
 
     const formatted = pad5(parseInt(query, 10));
-    const conf = configs[activeRaffleId];
     const maxVal = Math.max(1, Number(conf.total) || 10000);
 
     if (parseInt(formatted, 10) >= maxVal) {
@@ -4671,9 +4899,10 @@
   function updateStatsPane() {
     const rId = $("cfgRaffleSelect").value;
     const conf = configs[rId];
-    const tickets = allTickets[rId];
+    if (!conf) return;
+    const tickets = allTickets[rId] || {};
     
-    const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 500;
+    const ticketPrice = parseInt((conf.price || "0").replace(/\D/g, "")) || 500;
     const totalTicketsCount = Math.max(1, Number(conf.total) || 10000);
     
     let soldCount = 0;
@@ -4821,21 +5050,24 @@
   // Admin config sync
   function updateAdminForm(rId) {
     const conf = configs[rId];
-    $("cfgTitle").value = conf.title;
-    $("cfgPrize").value = conf.prize;
-    $("cfgPrice").value = conf.price;
-    $("cfgTotal").value = conf.total;
+    if (!conf) return;
+    $("cfgTitle").value = conf.title || "";
+    $("cfgPrize").value = conf.prize || "";
+    $("cfgPrice").value = conf.price || "";
+    $("cfgTotal").value = conf.total || "";
   }
 
   async function saveConfig() {
     const editId = $("cfgRaffleSelect").value;
-    const total = Math.max(10, Math.min(100000, parseInt($("cfgTotal").value, 10) || DEFAULT_CONFIGS[editId].total));
+    const conf = configs[editId];
+    if (!conf) return;
+    const total = Math.max(10, Math.min(100000, parseInt($("cfgTotal").value, 10) || conf.total || 10000));
 
     configs[editId] = {
-      ...configs[editId],
-      title: $("cfgTitle").value.trim() || DEFAULT_CONFIGS[editId].title,
-      prize: $("cfgPrize").value.trim() || DEFAULT_CONFIGS[editId].prize,
-      price: $("cfgPrice").value.trim() || DEFAULT_CONFIGS[editId].price,
+      ...conf,
+      title: $("cfgTitle").value.trim() || conf.title || "Nuevo Sorteo",
+      prize: $("cfgPrize").value.trim() || conf.prize || "Premio Principal",
+      price: $("cfgPrice").value.trim() || conf.price || "RD$500",
       total: total
     };
 
@@ -4856,9 +5088,11 @@
     const name = $("winName").value.trim();
     const number = $("winNumber").value.replace(/\D/g, "");
     const photoUrl = $("winPhoto").value.trim();
+    const conf = configs[activeRaffleId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
 
-    if (!name || number.length !== 5) {
-      showAdminMsg("Nombre y boleto válido son requeridos.", "bad");
+    if (!name || number.length !== digitCount) {
+      showAdminMsg(`Nombre y boleto de ${digitCount} dígitos son requeridos.`, "bad");
       showToast("Datos incompletos para agregar ganador.", "bad");
       playSound("error");
       return;
@@ -4972,16 +5206,16 @@
     const winnerDetails = tickets[winningTicket];
 
     // Trigger spinning animation in the dashboard draw UI
-    const reels = [
-      $("drawReel0"),
-      $("drawReel1"),
-      $("drawReel2"),
-      $("drawReel3"),
-      $("drawReel4")
-    ];
+    const conf = configs[rId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    const reels = [];
+    for (let i = 0; i < digitCount; i++) {
+      reels.push($(`drawReel${i}`));
+    }
 
     let intervals = [];
     reels.forEach((reel, i) => {
+      if (!reel) return;
       reel.className = "draw-spinner-reel spinning";
       const timer = setInterval(() => {
         reel.textContent = Math.floor(Math.random() * 10);
@@ -4990,7 +5224,7 @@
 
       setTimeout(() => {
         clearInterval(timer);
-        reel.textContent = winningTicket[i];
+        reel.textContent = winningTicket[i] !== undefined ? winningTicket[i] : "0";
         reel.className = "draw-spinner-reel";
         playSound("spin");
 

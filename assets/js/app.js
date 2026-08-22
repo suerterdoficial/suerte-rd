@@ -8,12 +8,9 @@
   let adminPin = sessionStorage.getItem('admin_pin') || '';
   let cart = [];
   
-  let RAFFLE_IDS = ["numero", "celular", "carro", "patineta"];
+  let RAFFLE_IDS = ["florida5"];
   const RAFFLE_ICONS = {
-    numero: "🍀",
-    celular: "📱",
-    carro: "🚗",
-    patineta: "🛴"
+    florida5: "🌴"
   };
 
   // --- NUEVAS FUNCIONES DE INTERACTIVIDAD ---
@@ -178,84 +175,30 @@
   }
 
   const DEFAULT_CONFIGS = {
-    numero: {
-      id: "numero",
-      title: "Sorteo de Números",
-      prize: "Gran Premio en Efectivo",
-      price: "RD$50",
-      total: 10000,
-      image: "./suerte_rd_banner.png",
+    florida5: {
+      id: "florida5",
+      title: "Sorteo Especial iPhone 17 Pro Max 1TB",
+      prize: "iPhone 17 Pro Max 1TB",
+      price: "RD$3",
+      total: 100000,
+      image: "./assets/suerte_rd_iphone17.jpg",
       active: true,
-      brand: "Suerte RD",
-      model: "Sorteo de Números Especial",
+      brand: "Apple",
+      model: "iPhone 17 Pro Max 1TB",
       year: "2026",
-      details: "Sorteo general de números. ¡Compra tus números de la suerte y gana!",
+      details: "¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.",
       blessedPct: 0.1,
       blessedPrize: "RD$5,000",
       saleStatus: "active",
       blessedDrawInterval: 5,
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
-      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
-      whatsapp: "18092800000"
-    },
-    celular: {
-      id: "celular",
-      title: "Rifa Especial del Celular",
-      prize: "iPhone 17 Pro Max",
-      price: "RD$10",
-      total: 50000,
-      image: "./005.jpeg",
-      active: true,
-      brand: "Apple",
-      model: "iPhone 17 Pro Max Mamey",
-      year: "",
-      details: "iPhone 17 Pro Max Mamey de 512 GB. Rifa automática de RD$5,000 cada 5% de ventas.",
-      blessedPct: 0.05,
-      blessedPrize: "RD$5,000",
-      saleStatus: "locked",
       blessedNumbers: [],
-      whatsapp: "18092800000"
-    },
-    carro: {
-      id: "carro",
-      title: "Gran Sorteo del Carro",
-      prize: "Toyota Hilux 2026",
-      price: "RD$1,000",
-      total: 50000,
-      image: "./006.jpeg",
-      active: true,
-      brand: "Toyota",
-      model: "Hilux",
-      year: "2026",
-      details: "Doble Cabina, Transmisión Automática, Combustible Diesel.",
-      blessedPct: 0.05,
-      blessedPrize: "RD$5,000",
-      saleStatus: "locked",
-      blessedNumbers: ["00123", "04567", "12345", "18442", "29402", "32947", "45678", "56789", "67890", "78901", "89012", "90123", "01196", "02061", "03628", "04527", "10452", "11946", "19068", "80312", "69819", "02234", "04321", "08976", "09876"],
-      whatsapp: "18092800000"
-    },
-    patineta: {
-      id: "patineta",
-      title: "Sorteo Patineta Eléctrica",
-      prize: "Patineta Dualtron Ultra",
-      price: "RD$300",
-      total: 5000,
-      image: "./007.jpeg",
-      active: true,
-      brand: "Dualtron",
-      model: "Ultra",
-      year: "",
-      details: "Velocidad máxima 80 km/h, Autonomía 100 km, Doble motor.",
-      blessedPct: 0.2,
-      blessedPrize: "RD$3,000",
-      saleStatus: "locked",
-      blessedNumbers: ["00111", "00222", "00333", "00444", "00555", "00666", "00777", "00888", "00999", "01000"],
       whatsapp: "18092800000"
     }
   };
 
-  let activeRaffleId = "numero";
+  let activeRaffleId = "florida5";
   let configs = {};
   let allTickets = {}; 
   let winners = [];
@@ -692,27 +635,10 @@
     lucide.createIcons({attrs: {class: "lucide"}});
   }
 
-  function renderCart() {
-    const list = $("cartItemsList");
-    const container = $("cartSection");
-    const countBadge = $("cartCountBadge");
-    const totalDisplay = $("cartTotalDisplay");
-    
-    if (cart.length === 0) {
-      container.style.display = "none";
-      list.innerHTML = "";
-      updateStep3Badge();
-      return;
-    }
-
-    container.style.display = "block";
-    countBadge.textContent = cart.length;
-    updateStep3Badge();
-
-    const conf = configs[activeRaffleId];
+  function calculateTotalAmount(count, conf) {
+    if (!conf) return 0;
     const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 100;
-    
-    let remaining = cart.length;
+    let remaining = count;
     let totalAmount = 0;
     
     if (remaining >= 500) {
@@ -736,6 +662,28 @@
       remaining = remaining % 50;
     }
     totalAmount += remaining * ticketPrice;
+    return totalAmount;
+  }
+
+  function renderCart() {
+    const list = $("cartItemsList");
+    const container = $("cartSection");
+    const countBadge = $("cartCountBadge");
+    const totalDisplay = $("cartTotalDisplay");
+    
+    if (cart.length === 0) {
+      container.style.display = "none";
+      list.innerHTML = "";
+      updateStep3Badge();
+      return;
+    }
+
+    container.style.display = "block";
+    countBadge.textContent = cart.length;
+    updateStep3Badge();
+
+    const conf = configs[activeRaffleId];
+    const totalAmount = calculateTotalAmount(cart.length, conf);
 
     totalDisplay.textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
 
@@ -1215,8 +1163,8 @@
         year: "",
         details: "Gran sorteo premium. Elige tu boleto.",
         active: true,
-        image: configs["celular"] ? configs["celular"].image : "./suerte_rd_banner.png",
-        paymentInstructions: configs["celular"] ? configs["celular"].paymentInstructions : ""
+        image: configs["florida5"] ? configs["florida5"].image : "./suerte_rd_banner.png",
+        paymentInstructions: configs["florida5"] ? configs["florida5"].paymentInstructions : ""
       };
       configs[id] = newConfig;
 
@@ -1290,15 +1238,9 @@
     let badgeText = `🎁 ¡SORTEO ${conf.prize.toUpperCase()}!`;
     let badgeColor = "var(--cyan)";
 
-    if (rId === "carro") {
-      badgeText = "🚗 ¡SÚPER VEHÍCULO!";
-      badgeColor = "var(--gold)";
-    } else if (rId === "patineta") {
-      badgeText = "🛴 ¡PATINETA PREMIUM!";
-      badgeColor = "var(--cyan)";
-    } else if (rId === "celular") {
-      badgeText = "📱 ¡CELULAR DE ÚLTIMA GENERACIÓN!";
-      badgeColor = "#FF5722";
+    if (rId === "florida5") {
+      badgeText = "🌴 ¡LOTERÍA DE FLORIDA!";
+      badgeColor = "var(--green)";
     }
 
     // Reset panel animation by cloning and replacing
@@ -1407,58 +1349,46 @@
     // Actualizar el título de la sección de bendecidos
     const titleEl = document.querySelector(".bendecidos-title");
     if (titleEl) {
-      titleEl.textContent = `${blessedList.length} NÚMEROS BENDECIDOS DE ${prize} CADA UNO`;
+      titleEl.textContent = `10 NÚMEROS BENDECIDOS DE ${prize} CADA UNO`;
     }
 
     // Actualizar el footer de bendecidos
     const footerEl = document.getElementById("bendecidosFooter");
     if (footerEl) {
-      footerEl.textContent = `Si uno de tus tickets coincide con alguno de estos números bendecidos, te ganas el premio de ${prize} de inmediato.`;
+      footerEl.textContent = `Cada vez que se vendan 10,000 boletos, se generará automáticamente un número bendecido de la lista de boletos vendidos y su dueño ganará ${prize} de inmediato.`;
     }
 
-    if (blessedList.length === 0) {
-      grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-grey); font-family: var(--font-mono); padding: 15px; background:rgba(0,0,0,0.2); border-radius:12px;">No hay números bendecidos configurados para esta rifa.</div>`;
-      return;
-    }
-
-    blessedList.forEach(num => {
-      const ticket = tickets[num];
-      const isSold = ticket && (ticket.estado === 'reservado' || ticket.estado === 'pagado');
+    for (let i = 0; i < 10; i++) {
+      const milestone = (i + 1) * 10000;
+      const num = blessedList[i]; // May be undefined
       
       const item = document.createElement("div");
       item.className = "bendecido-item";
       
-      if (isSold) {
+      if (num) {
+        // This slot is generated and has a winner!
+        const ticket = tickets[num];
+        const winnerName = ticket ? (ticket.name || ticket.nombre || "Cliente") : "Cliente";
+        
         item.innerHTML = `
-          <button class="bendecido-btn btn-black has-confetti" data-number="${num}">
-            ${num}
+          <button class="bendecido-btn btn-black has-confetti" data-number="${num}" style="border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.05); font-weight: 800; font-family: var(--font-mono); font-size: 1.2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80px; gap: 4px; padding: 10px; cursor: default;">
+            <span style="font-size: 1.1rem; letter-spacing: 1px;">#${num}</span>
+            <span style="font-size: 0.65rem; color: #FFF; font-weight: 700; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;" title="${escapeHtml(winnerName)}">👑 ${escapeHtml(winnerName)}</span>
           </button>
-          <span class="badge-status-red">YA SALIÓ</span>
+          <span class="badge-status-red" style="font-size: 0.65rem; padding: 2px 6px; margin-top: 4px; background: rgba(0, 230, 118, 0.15); color: var(--green); border: 1px solid var(--green);">¡GANADOR!</span>
         `;
       } else {
+        // This slot is locked
         item.innerHTML = `
-          <button class="bendecido-btn btn-teal" data-number="${num}">
-            ${num}
+          <button class="bendecido-btn btn-teal" disabled style="opacity: 0.5; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); color: var(--text-grey); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80px; gap: 4px; padding: 10px; cursor: not-allowed;">
+            <i data-lucide="lock" style="width:16px; height:16px; color: var(--text-grey);"></i>
+            <span style="font-size: 0.55rem; font-weight: 700; font-family: var(--font-mono); white-space: nowrap;">A los ${milestone.toLocaleString()} ventas</span>
           </button>
         `;
       }
-
-      const btn = item.querySelector(".bendecido-btn");
-      if (!isSold) {
-        btn.addEventListener("click", () => {
-          const input = $("secretInput");
-          if (input && !$("step3Card").classList.contains("form-locked-state")) {
-            input.value = num;
-            handleSecretInput();
-            playSound("click");
-            showToast(`Número bendecido #${num} seleccionado.`, "info");
-            $("step3Card").scrollIntoView({ behavior: 'smooth' });
-          }
-        });
-      }
-
       grid.appendChild(item);
-    });
+    }
+    lucide.createIcons();
   }
 
   let countdownIntervalId = null;
@@ -2118,6 +2048,7 @@
     cart.forEach(num => {
       latestTickets[num] = {
         name,
+        nombre: name, // support backend/admin compatibility
         whatsapp: phone,
         loteria: lottery,
         estado: "reservado",
@@ -2161,8 +2092,7 @@
     $("receiptName").textContent = name;
     $("receiptPhone").textContent = phone;
     
-    const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 500;
-    const totalAmount = ticketPrice * count;
+    const totalAmount = calculateTotalAmount(count, conf);
     $("receiptPrice").textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
     
     $("receiptLottery").textContent = lottery;
@@ -2822,7 +2752,7 @@
     // Show preview if exists
     const preview = $("cfgImagePreview");
     const placeholder = $("cfgImagePlaceholder");
-    const imgUrl = conf.image || DEFAULT_CONFIGS[rId].image;
+    const imgUrl = conf.image || (DEFAULT_CONFIGS[rId] ? DEFAULT_CONFIGS[rId].image : "./suerte_rd_banner.png");
     if (imgUrl) {
       preview.src = imgUrl;
       preview.style.display = "block";
@@ -2841,14 +2771,14 @@
 
   async function saveConfig() {
     const editId = $("cfgRaffleSelect").value;
-    const total = Math.max(10, Math.min(100000, parseInt($("cfgTotal").value, 10) || DEFAULT_CONFIGS[editId].total));
+    const total = Math.max(10, Math.min(100000, parseInt($("cfgTotal").value, 10) || (configs[editId] ? configs[editId].total : (DEFAULT_CONFIGS[editId] ? DEFAULT_CONFIGS[editId].total : 10000))));
     const blessedPct = parseFloat($("cfgBlessedPct").value) || 0.1;
     const blessedPrize = $("cfgBlessedPrize").value.trim() || "RD$5,000";
     const saleStatus = $("cfgSaleStatus").value || "active";
 
     // Get the base64 string from the preview image if uploaded, otherwise keep existing
     const previewSrc = $("cfgImagePreview").src;
-    const finalImage = (previewSrc && previewSrc.startsWith("data:")) ? previewSrc : (configs[editId].image || DEFAULT_CONFIGS[editId].image);
+    const finalImage = (previewSrc && previewSrc.startsWith("data:")) ? previewSrc : (configs[editId].image || (DEFAULT_CONFIGS[editId] ? DEFAULT_CONFIGS[editId].image : "./suerte_rd_banner.png"));
 
     // Regenerar números bendecidos si cambió el total o el porcentaje o no existen
     let blessedNumbers = configs[editId].blessedNumbers || [];
@@ -2871,9 +2801,9 @@
 
     configs[editId] = {
       ...configs[editId],
-      title: $("cfgTitle").value.trim() || DEFAULT_CONFIGS[editId].title,
-      prize: $("cfgPrize").value.trim() || DEFAULT_CONFIGS[editId].prize,
-      price: $("cfgPrice").value.trim() || DEFAULT_CONFIGS[editId].price,
+      title: $("cfgTitle").value.trim() || (configs[editId] ? configs[editId].title : (DEFAULT_CONFIGS[editId] ? DEFAULT_CONFIGS[editId].title : "Nuevo Sorteo")),
+      prize: $("cfgPrize").value.trim() || (configs[editId] ? configs[editId].prize : (DEFAULT_CONFIGS[editId] ? DEFAULT_CONFIGS[editId].prize : "Premio")),
+      price: $("cfgPrice").value.trim() || (configs[editId] ? configs[editId].price : (DEFAULT_CONFIGS[editId] ? DEFAULT_CONFIGS[editId].price : "RD$500")),
       total: total,
       blessedPct: blessedPct,
       blessedPrize: blessedPrize,
@@ -2973,7 +2903,7 @@
     soldKeys.sort().forEach(k => {
       const details = tickets[k];
       const date = new Date(details.timestamp).toLocaleString("es-DO");
-      const loteria = details.loteria || "LOTEKA";
+      const loteria = details.loteria || "Pick 5 Florida";
       const estado = details.estado || "reservado";
       csvContent += `${k},"${details.name.replace(/"/g, '""')}",${details.whatsapp},"${loteria}","${estado}","${date}"\r\n`;
     });

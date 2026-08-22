@@ -1,133 +1,57 @@
 {
-  "testKey": "testValue",
-  "suerterd:tickets:v2:celular": "{}",
+  "suerterd:raffle:ids": "[\"florida5\"]",
+  "suerterd:config:v2:florida5": "{\"id\":\"florida5\",\"title\":\"Sorteo Especial iPhone 17 Pro Max 1TB\",\"prize\":\"iPhone 17 Pro Max 1TB\",\"price\":\"RD$3\",\"total\":100000,\"ticketDigits\":5,\"image\":\"./assets/suerte_rd_iphone17.jpg\",\"active\":true,\"brand\":\"Apple\",\"model\":\"iPhone 17 Pro Max 1TB\",\"year\":\"2026\",\"details\":\"¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.\",\"blessedPct\":0.1,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedDrawInterval\":5,\"countdownTriggerPct\":80,\"countdownDurationDays\":7,\"blessedNumbers\":[],\"whatsapp\":\"18092800000\"}",
+  "suerterd:tickets:v2:florida5": "{\"10023\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"11031\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"12133\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"13460\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"13580\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"13833\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"15443\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"16169\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"16232\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"16655\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"18601\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"19636\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"20062\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"20489\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"20631\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"21245\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"21630\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"22516\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"22535\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"23423\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"23786\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"24451\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"25516\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"26246\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"27392\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"28092\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"28740\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"29934\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"30736\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"31259\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"31521\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"31523\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"31910\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"32352\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"32483\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"32562\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"33109\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"33986\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"34114\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"36650\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"36843\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"37766\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"39610\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"41305\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"41306\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"41570\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"41820\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"42393\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"43324\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"43516\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"43579\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"43687\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"43738\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"45269\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"46108\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"47144\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"47812\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"49420\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"49432\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"49856\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"50793\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"51010\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"51840\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"52252\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"52700\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"53132\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"53549\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"54069\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"54988\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"55553\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"55575\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"55843\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"55916\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"57613\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"57813\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"58223\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"59051\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"59167\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"59255\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"59463\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"59966\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"62799\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"63677\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"64212\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"64475\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"64955\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"65127\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"65564\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"66357\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"66909\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"66930\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"67049\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"67192\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"67676\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"68190\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"71069\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"72101\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"72919\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"73419\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"73740\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"74878\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"74904\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"75141\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"76116\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"77645\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"77663\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"78825\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"79536\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"79929\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"81127\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"81742\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"82142\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"82821\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"83198\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"83342\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"83662\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"83673\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"84737\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"85892\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"86091\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"86392\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"87984\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"89656\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"91314\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"91908\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"92173\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"92448\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"93600\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"93852\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"93982\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"94122\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625},\"94173\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"94971\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"96025\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787364123937},\"97329\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363897910},\"99788\":{\"name\":\"carlos\",\"nombre\":\"carlos\",\"whatsapp\":\"5095052433\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1787363307625}}",
   "notifications": [
     {
-      "text": "Se reiniciaron las ventas del sorteo (celular)",
-      "timestamp": 1785887414829
+      "text": "🎉 ¡Boleto #04199 es un NÚMERO BENDECIDO! Ganador: Cliente #4199",
+      "timestamp": 1787365206698
     },
     {
-      "text": "Configuración de rifa actualizada: \"Rifa Especial del Celular\"",
-      "timestamp": 1785887414827
+      "text": "🎉 ¡Sorteo al instante! El boleto #01135 de Cliente #1135 es un nuevo Número Bendecido de RD$5,000 por alcanzar el 10% de ventas!",
+      "timestamp": 1787365158532
     },
     {
-      "text": "ℹ️ Cuenta regresiva del sorteo (celular) desactivada al disminuir las ventas por debajo de 80%.",
-      "timestamp": 1785887414824
+      "text": "¡Paquete de 1919 boletos apartado por Cliente #6142! En espera de validación.",
+      "timestamp": 1787365158532
     },
     {
-      "text": "Boleto #00007 liberado y disponible nuevamente",
-      "timestamp": 1785887414824
+      "text": "¡Paquete de 1635 boletos apartado por Cliente #4505! En espera de validación.",
+      "timestamp": 1787365158532
     },
     {
-      "text": "⏰ ¡Atención! Las ventas de (celular) alcanzaron el 80%. Se ha activado la cuenta regresiva final.",
-      "timestamp": 1785887414820
+      "text": "¡Paquete de 2808 boletos apartado por Cliente #1693! En espera de validación.",
+      "timestamp": 1787365158532
     },
     {
-      "text": "¡Boleto #00007 reservado por undefined!",
-      "timestamp": 1785887414820
+      "text": "¡Paquete de 1678 boletos apartado por Cliente #12! En espera de validación.",
+      "timestamp": 1787365158532
     },
     {
-      "text": "¡Boleto #00006 reservado por undefined!",
-      "timestamp": 1785887414820
+      "text": "¡Grupo de 12 boletos reservado por Cliente #0!",
+      "timestamp": 1787365158532
     },
     {
-      "text": "¡Boleto #00005 reservado por undefined!",
-      "timestamp": 1785887414820
+      "text": "¡Paquete de 1939 boletos apartado por Cliente #10000! En espera de validación.",
+      "timestamp": 1787365158532
     },
     {
-      "text": "🚨 ALERTA ADMIN: El sorteo (celular) alcanzó el 50% de ventas. Favor realizar el sorteo del número bendecido.",
-      "timestamp": 1785887414816
+      "text": "🎉 ¡Boleto #06403 es un NÚMERO BENDECIDO! Ganador: Cliente #6403",
+      "timestamp": 1787365158500
     },
     {
-      "text": "¡Boleto #00004 reservado por undefined!",
-      "timestamp": 1785887414816
+      "text": "¡Paquete de 50 boletos apartado por carlos! En espera de validación.",
+      "timestamp": 1787364123951
     },
     {
-      "text": "¡Boleto #00003 reservado por undefined!",
-      "timestamp": 1785887414805
+      "text": "¡Paquete de 50 boletos apartado por carlos! En espera de validación.",
+      "timestamp": 1787363897913
     },
     {
-      "text": "¡Boleto #00002 reservado por undefined!",
-      "timestamp": 1785887414805
-    },
-    {
-      "text": "¡Boleto #00001 reservado por undefined!",
-      "timestamp": 1785887414805
-    },
-    {
-      "text": "¡Boleto #00000 reservado por undefined!",
-      "timestamp": 1785887414805
-    },
-    {
-      "text": "Configuración de rifa actualizada: \"Rifa Especial del Celular\"",
-      "timestamp": 1785887414800
-    },
-    {
-      "text": "Se reiniciaron las ventas del sorteo (celular)",
-      "timestamp": 1785887375966
-    },
-    {
-      "text": "Configuración de rifa actualizada: \"Rifa Especial del Celular\"",
-      "timestamp": 1785887375965
-    },
-    {
-      "text": "Boleto #00007 liberado y disponible nuevamente",
-      "timestamp": 1785887375961
-    },
-    {
-      "text": "¡Boleto #00007 reservado por undefined!",
-      "timestamp": 1785887375957
-    },
-    {
-      "text": "¡Boleto #00006 reservado por undefined!",
-      "timestamp": 1785887375957
-    },
-    {
-      "text": "¡Boleto #00005 reservado por undefined!",
-      "timestamp": 1785887375957
-    },
-    {
-      "text": "¡Boleto #00004 reservado por undefined!",
-      "timestamp": 1785887375954
-    },
-    {
-      "text": "¡Boleto #00003 reservado por undefined!",
-      "timestamp": 1785887375952
-    },
-    {
-      "text": "¡Boleto #00002 reservado por undefined!",
-      "timestamp": 1785887375952
-    },
-    {
-      "text": "¡Boleto #00001 reservado por undefined!",
-      "timestamp": 1785887375952
-    },
-    {
-      "text": "¡Boleto #00000 reservado por undefined!",
-      "timestamp": 1785887375952
-    },
-    {
-      "text": "Configuración de rifa actualizada: \"Rifa Especial del Celular\"",
-      "timestamp": 1785887375948
-    },
-    {
-      "text": "Se reiniciaron las ventas del sorteo (celular)",
-      "timestamp": 1784867443539
-    },
-    {
-      "text": "Configuración de rifa actualizada: \"Rifa Especial del Celular\"",
-      "timestamp": 1784867425737
-    },
-    {
-      "text": "¡Boleto #07048 reservado por juan p!",
-      "timestamp": 1784866225732
-    },
-    {
-      "text": "¡Boleto #04352 reservado por juan f!",
-      "timestamp": 1784865902917
+      "text": "¡Paquete de 50 boletos apartado por carlos! En espera de validación.",
+      "timestamp": 1787363307649
     }
   ],
-  "suerterd:config:v2:celular": "{\"id\":\"celular\",\"title\":\"Rifa Especial del Celular\",\"prize\":\"iPhone 17 Pro Max\",\"price\":\"RD$10\",\"total\":50000,\"image\":\"./005.jpeg\",\"active\":true,\"brand\":\"Apple\",\"model\":\"iPhone 17 Pro Max Mamey\",\"year\":\"\",\"details\":\"iPhone 17 Pro Max Mamey de 512 GB. Rifa automática de RD$5,000 cada 5% de ventas.\",\"blessedPct\":0.05,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"locked\",\"blessedNumbers\":[]}",
-  "suerterd:config:v2:numero": "{\"id\":\"numero\",\"title\":\"Sorteo de Números\",\"prize\":\"Gran Premio en Efectivo\",\"price\":\"RD$50\",\"total\":10000,\"image\":\"./suerte_rd_banner.png\",\"active\":true,\"brand\":\"Suerte RD\",\"model\":\"Sorteo de Números Especial\",\"year\":\"2026\",\"details\":\"Sorteo general de números. ¡Compra tus números de la suerte y gana!\",\"blessedPct\":0.1,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedNumbers\":[\"01196\",\"02061\",\"03628\",\"04527\",\"10452\",\"11946\",\"18442\",\"19068\",\"29402\",\"32947\"],\"whatsapp\":\"18092800000\"}",
-  "suerterd:raffle:ids": "[\"numero\",\"celular\",\"carro\",\"patineta\"]"
+  "supportMessages": [],
+  "suerterd:winners:v2": "[]"
 }

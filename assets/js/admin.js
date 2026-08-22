@@ -9,102 +9,53 @@
   const TICKETS_KEY_PREFIX = "suerterd:tickets:v2";
   const WINNERS_KEY = "suerterd:winners:v2";
 
-  const RAFFLE_IDS = ["numero", "celular", "carro", "patineta"];
+  const RAFFLE_IDS = ["florida5"];
 
   const DEFAULT_CONFIGS = {
-    numero: {
-      id: "numero",
-      title: "Sorteo de Números",
-      prize: "Gran Premio en Efectivo",
-      price: "RD$50",
-      total: 10000,
-      image: "./suerte_rd_banner.png",
+    florida5: {
+      id: "florida5",
+      title: "Sorteo Especial iPhone 17 Pro Max 1TB",
+      prize: "iPhone 17 Pro Max 1TB",
+      price: "RD$3",
+      total: 100000,
+      image: "./assets/suerte_rd_iphone17.jpg",
       active: true,
-      brand: "Suerte RD",
-      model: "Sorteo de Números Especial",
+      brand: "Apple",
+      model: "iPhone 17 Pro Max 1TB",
       year: "2026",
-      details: "Sorteo general de números. ¡Compra tus números de la suerte y gana!",
+      details: "¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.",
       blessedPct: 0.1,
       blessedPrize: "RD$5,000",
       saleStatus: "active",
       blessedDrawInterval: 5,
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
-      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
-      whatsapp: "18092800000"
-    },
-    celular: {
-      id: "celular",
-      title: "Rifa Especial del Celular",
-      prize: "iPhone 17 Pro Max",
-      price: "RD$500",
-      total: 10000,
-      image: "./005.jpeg",
-      active: true,
-      brand: "Apple",
-      model: "iPhone 17 Pro Max",
-      year: "",
-      details: "Capacidad 256GB, Color mamaey, Cámara de 48MP.",
-      blessedPct: 0.1,
-      blessedPrize: "RD$5,000",
-      blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
-      whatsapp: "18092800000",
-      saleStatus: "locked"
-    },
-    carro: {
-      id: "carro",
-      title: "Gran Sorteo del Carro",
-      prize: "Toyota Hilux 2026",
-      price: "RD$1,000",
-      total: 50000,
-      image: "./006.jpeg",
-      active: true,
-      brand: "Toyota",
-      model: "Hilux",
-      year: "2026",
-      details: "Doble Cabina, Transmisión Automática, Combustible Diesel.",
-      blessedPct: 0.05,
-      blessedPrize: "RD$5,000",
-      saleStatus: "locked",
-      blessedDrawInterval: 5,
-      countdownTriggerPct: 80,
-      countdownDurationDays: 7,
-      blessedNumbers: ["00123", "04567", "12345", "18442", "29402", "32947", "45678", "56789", "67890", "78901", "89012", "90123", "01196", "02061", "03628", "04527", "10452", "11946", "19068", "80312", "69819", "02234", "04321", "08976", "09876"],
-      whatsapp: "18092800000"
-    },
-    patineta: {
-      id: "patineta",
-      title: "Sorteo Patineta Eléctrica",
-      prize: "Patineta Dualtron Ultra",
-      price: "RD$300",
-      total: 5000,
-      image: "./007.jpeg",
-      active: true,
-      brand: "Dualtron",
-      model: "Ultra",
-      year: "",
-      details: "Velocidad máxima 80 km/h, Autonomía 100 km, Doble motor.",
-      blessedPct: 0.2,
-      blessedPrize: "RD$3,000",
-      saleStatus: "locked",
-      blessedDrawInterval: 5,
-      countdownTriggerPct: 80,
-      countdownDurationDays: 7,
-      blessedNumbers: ["00111", "00222", "00333", "00444", "00555", "00666", "00777", "00888", "00999", "01000"],
+      blessedNumbers: [],
       whatsapp: "18092800000"
     }
   };
 
-  let activeRaffleId = "numero";
+  let activeRaffleId = "florida5";
   let adminPin = sessionStorage.getItem('admin_pin') || '';
   let configs = {};
   let allTickets = {};
   let winners = [];
   let supportMessages = [];
   let statsChart = null;
+  let lastNotificationTime = Date.now();
 
   // --- API HELPERS ---
   const $ = (id) => document.getElementById(id);
+
+  function escapeHtml(s) {
+    if (!s) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
   async function getStorageItem(key) {
     try {
@@ -240,6 +191,23 @@
     setupNavigation();
     setupEventListeners();
     loadRaffleState(activeRaffleId);
+
+    // Initialize notification baseline
+    try {
+      const res = await fetch('/api/notifications');
+      if (res.ok) {
+        const data = await res.json();
+        const notificationsList = data.value || [];
+        if (notificationsList.length > 0) {
+          lastNotificationTime = Math.max(...notificationsList.map(n => n.timestamp));
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to fetch notification baseline", e);
+    }
+
+    // Start background polling
+    setInterval(pollUpdates, 10000);
   }
 
   // --- POPULATE DROPDOWNS ---
@@ -527,24 +495,8 @@
     const previewSrc = $("cfgImgPreview").src;
     const finalImage = (previewSrc && previewSrc.startsWith("data:")) ? previewSrc : (configs[activeRaffleId].image || "./suerte_rd_banner.png");
 
-    // Dynamic generation of blessed numbers if total or pct changed
+    // Preserve existing blessed numbers (they are generated automatically on sales milestones)
     let blessedNumbers = configs[activeRaffleId].blessedNumbers || [];
-    const targetCount = Math.round(total * (blessedPct / 100));
-    
-    if (blessedNumbers.length !== targetCount || configs[activeRaffleId].blessedPct !== blessedPct || configs[activeRaffleId].total !== total) {
-      blessedNumbers = [];
-      const used = new Set();
-      const countToGen = Math.min(targetCount, total);
-      while (blessedNumbers.length < countToGen) {
-        const rand = Math.floor(Math.random() * total);
-        const formatted = pad5(rand);
-        if (!used.has(formatted)) {
-          used.add(formatted);
-          blessedNumbers.push(formatted);
-        }
-      }
-      blessedNumbers.sort();
-    }
 
     const ticketDigits = Number($("cfgTicketDigits").value) || 5;
 
@@ -605,20 +557,7 @@
 
     showNotification("Creando sorteo...", "info");
 
-    // Blessed numbers list
     const blessedNumbers = [];
-    const used = new Set();
-    const targetCount = Math.round(total * (blessedPct / 100));
-    const countToGen = Math.min(targetCount, total);
-    while (blessedNumbers.length < countToGen) {
-      const rand = Math.floor(Math.random() * total);
-      const formatted = pad5(rand);
-      if (!used.has(formatted)) {
-        used.add(formatted);
-        blessedNumbers.push(formatted);
-      }
-    }
-    blessedNumbers.sort();
 
     const ticketDigits = Number($("newRaffleTicketDigits").value) || 5;
 
@@ -644,9 +583,9 @@
       year: "",
       details: "Gran sorteo premium. Elige tu boleto.",
       active: true,
-      image: configs["celular"] ? configs["celular"].image : "./suerte_rd_banner.png",
-      whatsapp: configs["celular"] ? configs["celular"].whatsapp : "18092800000",
-      paymentInstructions: configs["celular"] ? configs["celular"].paymentInstructions : ""
+      image: configs["florida5"] ? configs["florida5"].image : "./suerte_rd_banner.png",
+      whatsapp: configs["florida5"] ? configs["florida5"].whatsapp : "18092800000",
+      paymentInstructions: configs["florida5"] ? configs["florida5"].paymentInstructions : ""
     };
     configs[id] = newConfig;
 
@@ -711,7 +650,7 @@
 
     for (const num of ticketNums) {
       const ticket = tickets[num];
-      const name = ticket.nombre || "";
+      const name = ticket.name || ticket.nombre || "";
       const whatsapp = ticket.whatsapp || "";
       const lottery = ticket.loteria || "Por asignar";
       const state = ticket.estado || "reservado";
@@ -825,6 +764,7 @@
     }
 
     tickets[num] = {
+      name: "BLOQUEADO ADMIN",
       nombre: "BLOQUEADO ADMIN",
       whatsapp: "",
       loteria: "Manual",
@@ -1012,7 +952,7 @@
   async function saveWinner(num, details) {
     winners.push({
       raffleId: activeRaffleId,
-      name: details.nombre,
+      name: details.name || details.nombre || "Cliente",
       number: parseInt(num, 10),
       prize: configs[activeRaffleId].prize,
       photoUrl: "",
@@ -1074,7 +1014,7 @@
     list.forEach(num => {
       const t = tickets[num];
       const date = t.timestamp ? new Date(t.timestamp).toISOString() : "";
-      csvContent += `"${num}","${t.nombre}","${t.whatsapp}","${t.loteria}","${t.estado}","${date}"\r\n`;
+      csvContent += `"${num}","${t.name || t.nombre || ""}","${t.whatsapp}","${t.loteria}","${t.estado}","${date}"\r\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
@@ -1087,17 +1027,149 @@
   }
 
   // --- NOTIFICATION UTILITIES ---
-  function showNotification(txt, type) {
-    const el = $("statusMessage");
-    if (!el) return;
+  // Inject toast container style & element programmatically
+  const toastStyle = document.createElement("style");
+  toastStyle.textContent = `
+    .admin-toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .admin-toast {
+      background: rgba(2, 12, 16, 0.95);
+      border: 1px solid var(--cyan);
+      color: #FFF;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 229, 255, 0.2);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-toast.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .admin-toast.info { border-color: var(--cyan); box-shadow: 0 5px 15px rgba(0, 229, 255, 0.15); }
+    .admin-toast.success { border-color: var(--green); box-shadow: 0 5px 15px rgba(0, 230, 118, 0.15); }
+    .admin-toast.error { border-color: var(--red); box-shadow: 0 5px 15px rgba(255, 77, 94, 0.15); }
+  `;
+  document.head.appendChild(toastStyle);
 
-    el.textContent = txt;
-    el.className = `status-msg ${type}`;
-    el.style.display = "block";
+  const toastContainer = document.createElement("div");
+  toastContainer.className = "admin-toast-container";
+  document.body.appendChild(toastContainer);
 
+  let audioCtx = null;
+  function playSound(type) {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } else if (type === 'chime') {
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now); // D5
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880, now + 0.1); // A5
+        gain2.gain.setValueAtTime(0.08, now + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        
+        osc.start(now);
+        osc.stop(now + 0.4);
+        osc2.start(now + 0.1);
+        osc2.stop(now + 0.5);
+      } else if (type === 'success') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.08);
+        osc.frequency.setValueAtTime(783.99, now + 0.16);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      } else if (type === 'error') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(130, now);
+        osc.frequency.linearRampToValueAtTime(70, now + 0.22);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      }
+    } catch(e) {
+      console.warn("AudioContext block", e);
+    }
+  }
+
+  function showToast(msg, type = "info") {
+    const toast = document.createElement("div");
+    toast.className = `admin-toast ${type}`;
+    
+    let icon = "info";
+    if (type === "success") icon = "check-circle";
+    else if (type === "error") icon = "alert-circle";
+    
+    toast.innerHTML = `<i data-lucide="${icon}" style="width:16px; height:16px;"></i> <span>${msg}</span>`;
+    toastContainer.appendChild(toast);
+    
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    
+    setTimeout(() => toast.classList.add("active"), 10);
+    
     setTimeout(() => {
-      el.style.display = "none";
+      toast.classList.remove("active");
+      setTimeout(() => toast.remove(), 300);
     }, 4000);
+  }
+
+  function showNotification(txt, type) {
+    let tType = "info";
+    if (type === "success") tType = "success";
+    else if (type === "error" || type === "bad") tType = "error";
+    
+    showToast(txt, tType);
+    
+    if (type === "success") playSound("success");
+    else if (type === "error" || type === "bad") playSound("error");
   }
 
   // --- SECURITY PIN AND LOGIN LOGIN LOGIC ---
@@ -1199,16 +1271,20 @@
   let activeReceiptTicketNum = null;
 
   function getPendingPaymentsCount() {
-    let pendingCount = 0;
+    let pendingGroups = 0;
     RAFFLE_IDS.forEach(rId => {
       const tickets = allTickets[rId] || {};
-      Object.keys(tickets).forEach(num => {
-        if (tickets[num].estado === 'esperando_validacion') {
-          pendingCount++;
+      const groups = {};
+      Object.keys(tickets).forEach(tNum => {
+        const t = tickets[tNum];
+        if (t.estado === 'esperando_validacion' || t.estado === 'reservado') {
+          const groupKey = `${t.timestamp_comprobante || t.timestamp}_${t.whatsapp}`;
+          groups[groupKey] = true;
         }
       });
+      pendingGroups += Object.keys(groups).length;
     });
-    return pendingCount;
+    return pendingGroups;
   }
 
   function updatePaymentsNotificationBadge() {
@@ -1240,19 +1316,23 @@
       
       Object.keys(tickets).forEach(tNum => {
         const t = tickets[tNum];
-        if (t.estado === 'esperando_validacion') {
+        if (t.estado === 'esperando_validacion' || t.estado === 'reservado') {
           const groupKey = `${t.timestamp_comprobante || t.timestamp}_${t.whatsapp}`;
           if (!groups[groupKey]) {
             groups[groupKey] = {
               raffleId: rId,
-              name: t.name,
+              name: t.name || t.nombre || "Cliente",
               whatsapp: t.whatsapp,
               comprobante: t.comprobante,
+              estado: t.estado,
               timestamp: t.timestamp_comprobante || t.timestamp,
               numbers: []
             };
           }
           groups[groupKey].numbers.push(tNum);
+          if (t.estado === 'esperando_validacion') {
+            groups[groupKey].estado = 'esperando_validacion';
+          }
         }
       });
       
@@ -1270,11 +1350,18 @@
         
         const allNumsStr = g.numbers.join(",");
 
+        let statusBadge = "";
+        if (g.estado === 'esperando_validacion') {
+          statusBadge = `<span class="badge" style="background:rgba(0, 229, 255, 0.1); color:var(--cyan); border:1px solid var(--cyan);">Recibo Subido</span>`;
+        } else {
+          statusBadge = `<span class="badge" style="background:rgba(255, 215, 0, 0.1); color:var(--gold); border:1px solid var(--gold);">Reservado (S.C.)</span>`;
+        }
+
         rowsHtml += `
           <tr data-raffle="${rId}" data-tickets="${allNumsStr}">
             <td><strong>${escapeHtml(conf.title)}</strong></td>
             <td>
-              <span class="badge" style="background:var(--cyan); color:#000; font-weight:800; font-family:var(--font-mono); font-size:0.85rem;" title="${g.numbers.join(', ')}">
+              <span class="badge" style="background:rgba(255,255,255,0.05); color:#FFF; font-weight:800; font-family:var(--font-mono); font-size:0.85rem;" title="${g.numbers.join(', ')}">
                 ${g.numbers.length} boletos
               </span>
               <div style="font-size:0.75rem; color:var(--text-grey); margin-top:4px; font-family:var(--font-mono);">${numbersDisplay}</div>
@@ -1292,6 +1379,7 @@
                 </button>
               ` : `<span style="color:var(--text-muted); font-size:0.8rem;">Sin recibo</span>`}
             </td>
+            <td>${statusBadge}</td>
             <td style="font-size:0.8rem; color:var(--text-grey);">${dateStr}</td>
             <td>
               <div style="display:flex; gap:6px;">
@@ -1339,7 +1427,7 @@
     } else {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
+          <td colspan="8" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
             No hay comprobantes pendientes de validación.
           </td>
         </tr>
@@ -1376,10 +1464,10 @@
       const tInfo = tickets[firstNum];
       const conf = configs[rId];
       if (tInfo && tInfo.whatsapp && conf) {
-        const clientName = tInfo.name || "Cliente";
+        const clientName = tInfo.name || tInfo.nombre || "Cliente";
         const raffleTitle = conf.title;
         const formattedNums = nums.map(n => `#${n}`).join(", ");
-        const textMsg = `¡Hola ${clientName}! Te informamos de parte de Suerte RD que tus ${nums.length} boletos (${formattedNums}) para el sorteo "${raffleTitle}" han sido validados y activados de manera oficial para participar. ¡Mucho éxito! 🍀`;
+        const textMsg = `¡Hola ${clientName}! Te informamos de parte de Suerte RD que tu pago ha sido recibido y tus ${nums.length} boletos (${formattedNums}) para el sorteo "${raffleTitle}" han sido validados y ya se encuentran activos participando en la rifa. ¡Te deseamos mucha suerte! 🍀`;
         const encoded = encodeURIComponent(textMsg);
         const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
         window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
@@ -1440,6 +1528,73 @@
     const modal = $("viewReceiptOverlay");
     if (modal) {
       modal.classList.remove("active");
+    }
+  }
+
+  async function pollUpdates() {
+    try {
+      // 1. Reload tickets in background
+      for (const rId of RAFFLE_IDS) {
+        try {
+          const tKey = `${TICKETS_KEY_PREFIX}:${rId}`;
+          const raw = await getStorageItem(tKey);
+          if (raw) {
+            allTickets[rId] = JSON.parse(raw);
+          }
+        } catch (e) {}
+      }
+
+      // 2. Fetch Support Messages in background
+      try {
+        const raw = await getStorageItem("supportMessages");
+        if (raw) {
+          supportMessages = JSON.parse(raw);
+        }
+      } catch (e) {}
+
+      // 3. Check notifications list on server
+      try {
+        const res = await fetch('/api/notifications');
+        if (res.ok) {
+          const data = await res.json();
+          const notificationsList = data.value || [];
+          
+          // Check for new notifications
+          let newNotifFound = false;
+          notificationsList.forEach(n => {
+            if (n.timestamp > lastNotificationTime) {
+              showToast(n.text, "info");
+              newNotifFound = true;
+            }
+          });
+          
+          if (newNotifFound) {
+            playSound("chime");
+            if (notificationsList.length > 0) {
+              lastNotificationTime = Math.max(...notificationsList.map(n => n.timestamp));
+            }
+          }
+        }
+      } catch (e) {}
+
+      // 4. Update UI elements dynamically based on active pane
+      updatePaymentsNotificationBadge();
+      
+      const activePane = document.querySelector(".pane.active");
+      if (activePane) {
+        const paneId = activePane.id;
+        if (paneId === "paneStats") {
+          updateDashboardStats();
+        } else if (paneId === "paneTickets") {
+          renderTicketsTable();
+        } else if (paneId === "panePayments") {
+          renderPaymentsTable();
+        } else if (paneId === "paneSupport") {
+          renderSupportTable();
+        }
+      }
+    } catch(e) {
+      console.error("Polling error", e);
     }
   }
 
