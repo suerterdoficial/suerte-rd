@@ -20,7 +20,7 @@ const DEFAULT_CONFIGS = {
     price: "RD$3",
     total: 100000,
     ticketDigits: 5,
-    image: "./assets/suerte_rd_iphone17.jpg",
+    image: "./assets/suerte_rd_iphone17_banner.png",
     active: true,
     brand: "Apple",
     model: "iPhone 17 Pro Max 1TB",
@@ -78,7 +78,7 @@ async function readDb() {
     } else {
       try {
         const parsedCfg = JSON.parse(db[key]);
-        if (parsedCfg.title === "Pick 5 Florida") {
+        if (parsedCfg.title === "Pick 5 Florida" || parsedCfg.image === "./assets/suerte_rd_iphone17.jpg") {
           db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
           changed = true;
         }

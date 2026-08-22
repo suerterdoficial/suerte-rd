@@ -18,7 +18,7 @@
       prize: "iPhone 17 Pro Max 1TB",
       price: "RD$3",
       total: 100000,
-      image: "./assets/suerte_rd_iphone17.jpg",
+      image: "./assets/suerte_rd_iphone17_banner.png",
       active: true,
       brand: "Apple",
       model: "iPhone 17 Pro Max 1TB",
