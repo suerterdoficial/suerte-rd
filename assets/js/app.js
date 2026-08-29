@@ -202,6 +202,14 @@
   let configs = {};
   let allTickets = {}; 
   let winners = [];
+  let bankAccounts = [];
+
+  const DEFAULT_BANK_ACCOUNTS = [
+    { bank: "Banco Qik", type: "Cuenta de Ahorro", number: "1000490608", owner: "Luis Fernando Alvarez" },
+    { bank: "Banreservas", type: "Cuenta de Ahorro", number: "9602059888", owner: "Cristhofer Sosa" },
+    { bank: "Banco Popular", type: "Cuenta de Ahorro", number: "823386362", owner: "Erika Santos Francisco" },
+    { bank: "Scotiabank", type: "Cuenta corriente", number: "03100039851", owner: "Luis Fernando Alvarez" }
+  ];
   
   // Modes: random, custom, explore
   let mode = "random";
@@ -844,6 +852,18 @@
       winners = [];
     }
 
+    // Cargar Cuentas Bancarias / Métodos de Pago
+    try {
+      const bankAccountsRaw = await getStorageItem("suerterd:payment:methods");
+      if (bankAccountsRaw) {
+        bankAccounts = JSON.parse(bankAccountsRaw);
+      } else {
+        bankAccounts = [...DEFAULT_BANK_ACCOUNTS];
+      }
+    } catch (e) {
+      bankAccounts = [...DEFAULT_BANK_ACCOUNTS];
+    }
+
     // 4. Configurar FAQ Acordeón
     document.querySelectorAll(".faq-question").forEach(q => {
       q.addEventListener("click", () => {
@@ -886,6 +906,7 @@
     renderRaffleSelector();
     loadRaffleState(activeRaffleId);
     renderWinnersCarousel();
+    renderFaqBankAccounts();
     updateStatsCountdown();
     
     const winCarousel = $("winnersCarousel");
@@ -2102,32 +2123,7 @@
     $("receiptBarcodeText").textContent = `SRD-${firstNum}-${count}tix`;
 
     // Render structured bank details
-    const bankAccounts = [
-      {
-        bank: "Banco Qik",
-        type: "Cuenta de Ahorro",
-        number: "1000490608",
-        owner: "Luis Fernando Alvarez"
-      },
-      {
-        bank: "Banreservas",
-        type: "Cuenta de Ahorro",
-        number: "9602059888",
-        owner: "Cristhofer Sosa"
-      },
-      {
-        bank: "Banco Popular",
-        type: "Cuenta de Ahorro",
-        number: "823386362",
-        owner: "Erika Santos Francisco"
-      },
-      {
-        bank: "Scotiabank",
-        type: "Cuenta corriente",
-        number: "03100039851",
-        owner: "Luis Fernando Alvarez"
-      }
-    ];
+
 
     const bankGrid = $("receiptBankAccounts");
     if (bankGrid) {
@@ -3242,6 +3238,38 @@
       $("winnersSection").scrollIntoView({behavior: "smooth"});
     }, 100);
   });
+
+  function renderFaqBankAccounts() {
+    const list = $("faqBankAccountsList");
+    if (!list) return;
+    list.innerHTML = "";
+
+    bankAccounts.forEach(acc => {
+      const card = document.createElement("div");
+      card.style.cssText = "background: rgba(255,255,255,0.02); border: 1px solid rgba(0,229,255,0.15); padding: 14px; border-radius: 12px;";
+      card.innerHTML = `
+        <strong style="color:var(--cyan); font-size: 0.95rem; display: block; margin-bottom: 4px;">${escapeHtml(acc.bank)}</strong>
+        <span style="font-size: 0.8rem; color: var(--text-grey); display: block; margin-bottom: 2px;">${escapeHtml(acc.type)}</span>
+        <span style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: #FFF; display: block; margin-bottom: 4px;">${escapeHtml(acc.number)}</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Titular: ${escapeHtml(acc.owner)}</span>
+      `;
+      list.appendChild(card);
+    });
+
+    if (bankAccounts.length === 0) {
+      list.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:15px; color:var(--text-grey); font-size:0.8rem; font-family:var(--font-mono)">No hay cuentas configuradas en este momento.</div>`;
+    }
+  }
+
+  function escapeHtml(s) {
+    if (!s) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
   function copyToClipboard(text, label) {
     navigator.clipboard.writeText(text).then(() => {

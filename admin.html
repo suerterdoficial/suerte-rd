@@ -614,6 +614,12 @@
           <i data-lucide="wallet"></i> Validar Pagos
           <span class="badge" id="paymentNotificationBadge" style="display:none; background:var(--red); color:#FFF; border-radius:50%; font-size:0.65rem; padding: 2px 6px; margin-left: auto;">0</span>
         </button>
+        <button class="nav-btn" data-target="paneWinners">
+          <i data-lucide="trophy"></i> Historial Ganadores
+        </button>
+        <button class="nav-btn" data-target="panePaymentsConfig">
+          <i data-lucide="wallet"></i> Cuentas de Pago
+        </button>
       </nav>
 
       <div class="sidebar-footer" style="display:flex; flex-direction:column; gap:10px;">
@@ -677,6 +683,13 @@
           
           <div style="display:flex; gap:12px; margin-bottom: 20px; align-items:center;">
             <input type="text" id="ticketSearchInput" placeholder="Buscar por número de boleto, nombre o WhatsApp..." style="flex:1;">
+            <select id="ticketStatusFilter" style="width: 220px; background:#05141b; font-weight:700; height:45px; border:1px solid var(--border-cyan); border-radius:10px; color:#FFF; padding:0 10px;">
+              <option value="">Todos los Estados</option>
+              <option value="reservado">Reservados</option>
+              <option value="pagado">Pagados</option>
+              <option value="esperando_validacion">Esperando Validación</option>
+              <option value="bloqueado">Bloqueados</option>
+            </select>
             <button class="btn btn-red" id="btnReleaseExpired" style="white-space:nowrap;">
               <i data-lucide="clock"></i> Liberar Expirados
             </button>
@@ -963,6 +976,99 @@
                 <tr>
                   <td colspan="8" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
                     No hay comprobantes pendientes de validación.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+      </div>
+
+      <!-- PANE 7: WINNERS HISTORY -->
+      <div class="pane" id="paneWinners">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="trophy" style="color:var(--gold)"></i> Historial de Ganadores Registrados
+          </div>
+          <p style="color: var(--text-grey); font-size: 0.85rem; margin-bottom: 20px;">
+            Lista de ganadores oficiales registrados en el sistema, obtenidos de forma aleatoria por la tómbola o agregados manualmente.
+          </p>
+          
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sorteo</th>
+                  <th>Premio</th>
+                  <th>Boleto</th>
+                  <th>Ganador</th>
+                  <th>Foto</th>
+                  <th>Fecha</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="winnersTableBody">
+                <tr>
+                  <td colspan="7" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
+                    No hay ganadores registrados en el sistema.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+      </div>
+
+      <!-- PANE 8: PAYMENTS CONFIGURATION -->
+      <div class="pane" id="panePaymentsConfig">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="wallet" style="color:var(--cyan)"></i> Cuentas Bancarias y Métodos de Pago
+          </div>
+          <p style="color: var(--text-grey); font-size: 0.85rem; margin-bottom: 20px;">
+            Registra las cuentas bancarias donde los clientes realizarán los depósitos. Se mostrarán dinámicamente en el recibo y en la sección de preguntas frecuentes de la portada.
+          </p>
+
+          <!-- Add Account Form -->
+          <div style="background: rgba(0, 229, 255, 0.03); border: 1px solid var(--border-cyan); padding: 20px; border-radius: 16px; margin-bottom: 25px;">
+            <span style="color: var(--cyan); font-weight:700; font-size:0.9rem; display:block; margin-bottom:15px;"><i data-lucide="plus-circle" style="width:16px; vertical-align:middle; margin-right:4px;"></i> Agregar Nueva Cuenta Bancaria:</span>
+            <div class="form-grid">
+              <div class="field">
+                <label for="bankNameInput">Nombre del Banco</label>
+                <input type="text" id="bankNameInput" placeholder="Ej: Banreservas, Banco Popular">
+              </div>
+              <div class="field">
+                <label for="bankTypeInput">Tipo de Cuenta</label>
+                <input type="text" id="bankTypeInput" placeholder="Ej: Cuenta de Ahorro, Cuenta Corriente">
+              </div>
+              <div class="field">
+                <label for="bankNumInput">Número de Cuenta</label>
+                <input type="text" id="bankNumInput" placeholder="Ej: 9602059888">
+              </div>
+              <div class="field">
+                <label for="bankOwnerInput">Titular de la Cuenta</label>
+                <input type="text" id="bankOwnerInput" placeholder="Ej: Cristhofer Sosa">
+              </div>
+              <div class="field full-width" style="margin-bottom:0;">
+                <button class="btn btn-primary" id="btnAddBankAccount" style="width:100%;">Registrar Cuenta Bancaria</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Accounts Table -->
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Banco</th>
+                  <th>Tipo</th>
+                  <th>Número de Cuenta</th>
+                  <th>Titular</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="bankAccountsTableBody">
+                <tr>
+                  <td colspan="5" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
+                    No hay cuentas bancarias configuradas.
                   </td>
                 </tr>
               </tbody>

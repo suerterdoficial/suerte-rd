@@ -41,8 +41,16 @@
   let allTickets = {};
   let winners = [];
   let supportMessages = [];
+  let bankAccounts = [];
   let statsChart = null;
   let lastNotificationTime = Date.now();
+
+  const DEFAULT_BANK_ACCOUNTS = [
+    { bank: "Banco Qik", type: "Cuenta de Ahorro", number: "1000490608", owner: "Luis Fernando Alvarez" },
+    { bank: "Banreservas", type: "Cuenta de Ahorro", number: "9602059888", owner: "Cristhofer Sosa" },
+    { bank: "Banco Popular", type: "Cuenta de Ahorro", number: "823386362", owner: "Erika Santos Francisco" },
+    { bank: "Scotiabank", type: "Cuenta corriente", number: "03100039851", owner: "Luis Fernando Alvarez" }
+  ];
 
   // --- API HELPERS ---
   const $ = (id) => document.getElementById(id);
@@ -183,6 +191,19 @@
       winners = [];
     }
 
+    // Load Bank Accounts / Payment Methods
+    try {
+      const bankAccountsRaw = await getStorageItem("suerterd:payment:methods");
+      if (bankAccountsRaw) {
+        bankAccounts = JSON.parse(bankAccountsRaw);
+      } else {
+        bankAccounts = [...DEFAULT_BANK_ACCOUNTS];
+        await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
+      }
+    } catch (e) {
+      bankAccounts = [...DEFAULT_BANK_ACCOUNTS];
+    }
+
     // Fetch Support Messages
     await fetchSupportMessages();
 
@@ -207,7 +228,7 @@
     }
 
     // Start background polling
-    setInterval(pollUpdates, 10000);
+    setInterval(pollUpdates, 5000);
   }
 
   // --- POPULATE DROPDOWNS ---
@@ -257,6 +278,10 @@
           renderChart();
         } else if (target === "panePayments") {
           renderPaymentsTable();
+        } else if (target === "paneWinners") {
+          renderWinnersTable();
+        } else if (target === "panePaymentsConfig") {
+          renderBankAccountsTable();
         }
       });
     });
@@ -304,9 +329,15 @@
     // Draw
     $("btnStartDraw").addEventListener("click", startOfficialDraw);
     $("btnAddWinner").addEventListener("click", addWinnerManual);
+    if ($("btnAddBankAccount")) {
+      $("btnAddBankAccount").addEventListener("click", addBankAccount);
+    }
 
     // Ticket search filter
     $("ticketSearchInput").addEventListener("input", renderTicketsTable);
+    if ($("ticketStatusFilter")) {
+      $("ticketStatusFilter").addEventListener("change", renderTicketsTable);
+    }
 
     // Change PIN
     $("btnUpdatePin").addEventListener("click", updateAdminPinCode);
@@ -643,6 +674,7 @@
     body.innerHTML = "";
 
     const query = $("ticketSearchInput").value.trim().toLowerCase();
+    const statusFilter = $("ticketStatusFilter") ? $("ticketStatusFilter").value : "";
     const tickets = allTickets[activeRaffleId] || {};
     const ticketNums = Object.keys(tickets).sort();
 
@@ -656,6 +688,9 @@
       const state = ticket.estado || "reservado";
 
       // Filter check
+      if (statusFilter && state !== statusFilter) {
+        continue;
+      }
       if (query) {
         const matchesQuery = num.includes(query) || name.toLowerCase().includes(query) || whatsapp.includes(query);
         if (!matchesQuery) continue;
@@ -714,13 +749,30 @@
     const tickets = allTickets[activeRaffleId] || {};
     if (!tickets[num]) return;
 
-    tickets[num].estado = tickets[num].estado === "reservado" ? "pagado" : "reservado";
+    const oldEstado = tickets[num].estado;
+    const newEstado = (oldEstado === "reservado" || oldEstado === "esperando_validacion") ? "pagado" : "reservado";
+    tickets[num].estado = newEstado;
     
     showNotification("Actualizando estado de pago...", "info");
     const tKey = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
     await setStorageItem(tKey, JSON.stringify(tickets));
     
     showNotification(`¡Boleto #${num} actualizado!`, "success");
+
+    // Open WhatsApp link automatically if changed to paid
+    if (newEstado === "pagado") {
+      const tInfo = tickets[num];
+      const conf = configs[activeRaffleId];
+      if (tInfo && tInfo.whatsapp && conf) {
+        const clientName = tInfo.name || tInfo.nombre || "Cliente";
+        const raffleTitle = conf.title;
+        const textMsg = `¡Hola ${clientName}! Te informamos de parte de Suerte RD que tu pago ha sido recibido y tu boleto #${num} para el sorteo "${raffleTitle}" ha sido validado y ya se encuentra activo participando en la rifa. ¡Te deseamos mucha suerte! 🍀`;
+        const encoded = encodeURIComponent(textMsg);
+        const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
+        window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
+      }
+    }
+
     loadRaffleState(activeRaffleId);
   }
 
@@ -843,6 +895,7 @@
       const txt = msg.message || "";
       const date = msg.timestamp ? new Date(msg.timestamp).toLocaleString("es-DO") : "";
 
+      const waMessage = encodeURIComponent(`Hola ${name}, te escribimos de Suerte RD en respuesta a tu consulta sobre "${cat}": `);
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td style="font-weight:700;">${name}</td>
@@ -851,7 +904,12 @@
         <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${txt}">${txt}</td>
         <td style="font-size:0.8rem; color:var(--text-grey);">${date}</td>
         <td>
-          <button class="btn btn-red btn-del-support" style="padding:6px 10px; font-size:0.75rem;">Eliminar</button>
+          <div style="display:flex; gap:6px;">
+            <a href="https://wa.me/${phone.replace(/\D/g, "")}?text=${waMessage}" target="_blank" class="btn btn-green" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+              <i data-lucide="message-circle" style="width:12px;"></i> Responder
+            </a>
+            <button class="btn btn-red btn-del-support" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">Eliminar</button>
+          </div>
         </td>
       `;
 
@@ -861,6 +919,9 @@
 
     if (supportMessages.length === 0) {
       body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-grey); padding: 20px;">No hay mensajes de soporte en la bandeja.</td></tr>`;
+    }
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
     }
   }
 
@@ -961,6 +1022,9 @@
 
     await setStorageItem(WINNERS_KEY, JSON.stringify(winners));
     showNotification(`¡Ganador registrado! #${num} - ${details.nombre}`, "success");
+    if (document.querySelector(".pane.active") && document.querySelector(".pane.active").id === "paneWinners") {
+      renderWinnersTable();
+    }
   }
 
   async function addWinnerManual() {
@@ -996,6 +1060,166 @@
     photoInput.value = "";
 
     showNotification("¡Ganador registrado correctamente!", "success");
+    if (document.querySelector(".pane.active") && document.querySelector(".pane.active").id === "paneWinners") {
+      renderWinnersTable();
+    }
+  }
+
+  function padRaffleNum(num, rId) {
+    const conf = configs[rId];
+    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
+    return String(num).padStart(digitCount, "0");
+  }
+
+  function renderWinnersTable() {
+    const body = $("winnersTableBody");
+    if (!body) return;
+    body.innerHTML = "";
+
+    // Reverse array to show most recent winners first, keeping track of original indices
+    const indexedWinners = winners.map((w, index) => ({ ...w, originalIndex: index }));
+    indexedWinners.reverse();
+
+    indexedWinners.forEach((w) => {
+      const rId = w.raffleId || "desconocido";
+      const conf = configs[rId] || {};
+      const raffleTitle = conf.title || `Sorteo (${rId})`;
+      const prize = w.prize || "Premio";
+      const numberStr = padRaffleNum(w.number, rId);
+      const name = w.name || "Ganador";
+      const photo = w.photoUrl ? `<a href="${w.photoUrl}" target="_blank" style="color:var(--cyan); text-decoration:none;">Ver Foto</a>` : '<span style="color:var(--text-muted)">N/A</span>';
+      const date = w.date ? new Date(w.date).toLocaleString("es-DO") : "N/A";
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(raffleTitle)}</strong></td>
+        <td>${escapeHtml(prize)}</td>
+        <td style="font-family:var(--font-mono); font-weight:800; color:var(--gold);">#${numberStr}</td>
+        <td>${escapeHtml(name)}</td>
+        <td>${photo}</td>
+        <td style="font-size:0.8rem; color:var(--text-grey);">${date}</td>
+        <td>
+          <button class="btn btn-red btn-del-winner" data-index="${w.originalIndex}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">
+            <i data-lucide="trash-2" style="width:12px;"></i> Eliminar
+          </button>
+        </td>
+      `;
+
+      tr.querySelector(".btn-del-winner").addEventListener("click", () => deleteWinner(w.originalIndex));
+      body.appendChild(tr);
+    });
+
+    if (winners.length === 0) {
+      body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-grey); padding: 20px;">No hay ganadores registrados en el sistema.</td></tr>`;
+    }
+
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  }
+
+  async function deleteWinner(originalIndex) {
+    if (!confirm("¿Estás seguro de que deseas eliminar permanentemente a este ganador del historial?")) {
+      return;
+    }
+
+    showNotification("Eliminando ganador...", "info");
+    winners.splice(originalIndex, 1);
+
+    try {
+      await setStorageItem(WINNERS_KEY, JSON.stringify(winners));
+      showNotification("Ganador eliminado correctamente.", "success");
+      renderWinnersTable();
+    } catch (e) {
+      showNotification("Error al eliminar el ganador.", "error");
+    }
+  }
+
+  function renderBankAccountsTable() {
+    const body = $("bankAccountsTableBody");
+    if (!body) return;
+    body.innerHTML = "";
+
+    bankAccounts.forEach((acc, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="font-weight:700;">${escapeHtml(acc.bank)}</td>
+        <td><span class="badge" style="background:rgba(0, 229, 255, 0.05); color:var(--cyan); border:1px solid var(--border-cyan);">${escapeHtml(acc.type)}</span></td>
+        <td style="font-family:var(--font-mono); font-weight:700; color:#FFF;">${escapeHtml(acc.number)}</td>
+        <td>${escapeHtml(acc.owner)}</td>
+        <td>
+          <button class="btn btn-red btn-del-bank" data-index="${index}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">
+            <i data-lucide="trash-2" style="width:12px;"></i> Eliminar
+          </button>
+        </td>
+      `;
+
+      tr.querySelector(".btn-del-bank").addEventListener("click", () => deleteBankAccount(index));
+      body.appendChild(tr);
+    });
+
+    if (bankAccounts.length === 0) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-grey); padding: 20px;">No hay cuentas bancarias configuradas.</td></tr>`;
+    }
+
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  }
+
+  async function addBankAccount() {
+    const bankName = $("bankNameInput").value.trim();
+    const bankType = $("bankTypeInput").value.trim();
+    const bankNum = $("bankNumInput").value.trim();
+    const bankOwner = $("bankOwnerInput").value.trim();
+
+    if (!bankName || !bankType || !bankNum || !bankOwner) {
+      alert("Por favor completa todos los campos de la cuenta bancaria.");
+      return;
+    }
+
+    showNotification("Guardando cuenta de pago...", "info");
+
+    const newAcc = {
+      bank: bankName,
+      type: bankType,
+      number: bankNum,
+      owner: bankOwner
+    };
+
+    bankAccounts.push(newAcc);
+
+    try {
+      await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
+      
+      // Clear inputs
+      $("bankNameInput").value = "";
+      $("bankTypeInput").value = "";
+      $("bankNumInput").value = "";
+      $("bankOwnerInput").value = "";
+
+      showNotification("¡Cuenta bancaria registrada con éxito!", "success");
+      renderBankAccountsTable();
+    } catch (e) {
+      showNotification("Error al guardar la cuenta bancaria.", "error");
+    }
+  }
+
+  async function deleteBankAccount(index) {
+    if (!confirm("¿Estás seguro de que deseas eliminar esta cuenta bancaria? Los clientes ya no la verán como opción de pago.")) {
+      return;
+    }
+
+    showNotification("Eliminando cuenta...", "info");
+    bankAccounts.splice(index, 1);
+
+    try {
+      await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
+      showNotification("Cuenta bancaria eliminada.", "success");
+      renderBankAccountsTable();
+    } catch (e) {
+      showNotification("Error al eliminar la cuenta bancaria.", "error");
+    }
   }
 
   // --- EXPORT CSV ---
@@ -1552,6 +1776,22 @@
         }
       } catch (e) {}
 
+      // Fetch Winners in background
+      try {
+        const rawWinners = await getStorageItem(WINNERS_KEY);
+        if (rawWinners) {
+          winners = JSON.parse(rawWinners);
+        }
+      } catch (e) {}
+
+      // Fetch Bank Accounts in background
+      try {
+        const rawBankAccounts = await getStorageItem("suerterd:payment:methods");
+        if (rawBankAccounts) {
+          bankAccounts = JSON.parse(rawBankAccounts);
+        }
+      } catch (e) {}
+
       // 3. Check notifications list on server
       try {
         const res = await fetch('/api/notifications');
@@ -1591,6 +1831,10 @@
           renderPaymentsTable();
         } else if (paneId === "paneSupport") {
           renderSupportTable();
+        } else if (paneId === "paneWinners") {
+          renderWinnersTable();
+        } else if (paneId === "panePaymentsConfig") {
+          renderBankAccountsTable();
         }
       }
     } catch(e) {
