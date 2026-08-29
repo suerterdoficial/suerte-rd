@@ -368,6 +368,17 @@
         }
       });
     }
+    
+    // Receipt Modal Reject (Phase 6)
+    const rejectBtnModal = $("btnRejectReceiptModal");
+    if (rejectBtnModal) {
+      rejectBtnModal.addEventListener("click", () => {
+        if (activeReceiptRaffleId && activeReceiptTicketNum) {
+          rejectPaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum);
+          closeReceiptViewer();
+        }
+      });
+    }
   }
 
   // --- STATE LOADER ---
