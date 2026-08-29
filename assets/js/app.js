@@ -2346,20 +2346,37 @@
             const isPaid = m.estado === 'pagado';
             const statusLabel = isPaid ? 'PAGADO' : 'COMPRADO';
             const statusColor = isPaid ? 'var(--green)' : 'var(--red)';
+            const uploadBtn = !isPaid ? `
+              <button class="btn btn-secondary btn-upload-receipt-search" data-num="${m.num}" data-name="${escapeHtml(m.name)}" data-phone="${escapeHtml(m.whatsapp)}" data-lottery="${escapeHtml(m.loteria || 'Florida')}" style="padding: 4px 8px; font-size: 0.7rem; border-color:var(--cyan); color:var(--cyan); margin-bottom: 0;">
+                Subir Recibo
+              </button>
+            ` : '';
             return `
-              <div class="result-item-card ${isPaid ? 'paid' : 'sold'}" style="padding:10px; margin:0;">
-                <div class="result-item-info">
+              <div class="result-item-card ${isPaid ? 'paid' : 'sold'}" style="padding:10px; margin:0; display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div class="result-item-info" style="display:flex; align-items:center; gap:10px;">
                   <div class="mono" style="font-weight:900; font-size:1.1rem; color:var(--cyan);">#${m.num}</div>
                   <div style="text-align:left; line-height:1.2;">
                     <div style="font-size:0.85rem; font-weight:700; color:#FFF;">${escapeHtml(m.name)}</div>
                     <small style="color:var(--text-muted); font-size:0.7rem;">Estado: <span style="color:${statusColor}; font-weight:700;">${statusLabel}</span> | Tel: ${escapeHtml(m.whatsapp)}</small>
                   </div>
                 </div>
+                ${uploadBtn}
               </div>
             `;
           }).join("")}
         </div>
       `;
+
+      box.querySelectorAll(".btn-upload-receipt-search").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const num = btn.getAttribute("data-num");
+          const name = btn.getAttribute("data-name");
+          const phone = btn.getAttribute("data-phone");
+          const lottery = btn.getAttribute("data-lottery");
+          showReceipt(num, name, phone, lottery, 1);
+        });
+      });
+
       playSound("success");
       lucide.createIcons();
     }
