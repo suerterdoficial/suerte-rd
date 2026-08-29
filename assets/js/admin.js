@@ -44,6 +44,8 @@
   let bankAccounts = [];
   let statsChart = null;
   let lastNotificationTime = Date.now();
+  let editingBankAccountIndex = null;
+  let selectedWinnerPhotoBase64 = null;
 
   const DEFAULT_BANK_ACCOUNTS = [
     { bank: "Banco Qik", type: "Cuenta de Ahorro", number: "1000490608", owner: "Luis Fernando Alvarez" },
@@ -337,6 +339,28 @@
     $("btnAddWinner").addEventListener("click", addWinnerManual);
     if ($("btnAddBankAccount")) {
       $("btnAddBankAccount").addEventListener("click", addBankAccount);
+    }
+
+    // Winner photo upload listener
+    const winImageInput = $("winImageUpload");
+    if (winImageInput) {
+      winImageInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            selectedWinnerPhotoBase64 = evt.target.result;
+            const preview = $("winImgPreview");
+            const placeholder = $("winImgPlaceholder");
+            if (preview && placeholder) {
+              preview.src = selectedWinnerPhotoBase64;
+              preview.style.display = "block";
+              placeholder.style.display = "none";
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
     }
 
     // Ticket search filter
@@ -1051,7 +1075,7 @@
 
     const name = nameInput.value.trim();
     const num = numInput.value.trim();
-    const photo = photoInput.value.trim();
+    const photo = selectedWinnerPhotoBase64 || photoInput.value.trim();
 
     if (!name || num.length !== 5 || isNaN(num)) {
       alert("Por favor ingresa un nombre y un número de boleto de 5 dígitos.");
@@ -1075,6 +1099,18 @@
     nameInput.value = "";
     numInput.value = "";
     photoInput.value = "";
+
+    // Reset file upload
+    selectedWinnerPhotoBase64 = null;
+    const fileInput = $("winImageUpload");
+    if (fileInput) fileInput.value = "";
+    const preview = $("winImgPreview");
+    const placeholder = $("winImgPlaceholder");
+    if (preview && placeholder) {
+      preview.src = "";
+      preview.style.display = "none";
+      placeholder.style.display = "block";
+    }
 
     showNotification("¡Ganador registrado correctamente!", "success");
     if (document.querySelector(".pane.active") && document.querySelector(".pane.active").id === "paneWinners") {
@@ -1165,12 +1201,18 @@
         <td style="font-family:var(--font-mono); font-weight:700; color:#FFF;">${escapeHtml(acc.number)}</td>
         <td>${escapeHtml(acc.owner)}</td>
         <td>
-          <button class="btn btn-red btn-del-bank" data-index="${index}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">
-            <i data-lucide="trash-2" style="width:12px;"></i> Eliminar
-          </button>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary btn-edit-bank" data-index="${index}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0; border-color:var(--cyan); color:var(--cyan);">
+              <i data-lucide="edit-2" style="width:12px;"></i> Editar
+            </button>
+            <button class="btn btn-red btn-del-bank" data-index="${index}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">
+              <i data-lucide="trash-2" style="width:12px;"></i> Eliminar
+            </button>
+          </div>
         </td>
       `;
 
+      tr.querySelector(".btn-edit-bank").addEventListener("click", () => editBankAccount(index));
       tr.querySelector(".btn-del-bank").addEventListener("click", () => deleteBankAccount(index));
       body.appendChild(tr);
     });
@@ -1182,6 +1224,20 @@
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
     }
+  }
+
+  function editBankAccount(index) {
+    const acc = bankAccounts[index];
+    if (!acc) return;
+    editingBankAccountIndex = index;
+    $("bankNameInput").value = acc.bank;
+    $("bankTypeInput").value = acc.type;
+    $("bankNumInput").value = acc.number;
+    $("bankOwnerInput").value = acc.owner;
+    $("btnAddBankAccount").textContent = "Guardar Cambios";
+    
+    // Focus the input
+    $("bankNameInput").focus();
   }
 
   async function addBankAccount() {
@@ -1204,7 +1260,13 @@
       owner: bankOwner
     };
 
-    bankAccounts.push(newAcc);
+    if (editingBankAccountIndex !== null) {
+      bankAccounts[editingBankAccountIndex] = newAcc;
+      editingBankAccountIndex = null;
+      $("btnAddBankAccount").textContent = "Registrar Cuenta Bancaria";
+    } else {
+      bankAccounts.push(newAcc);
+    }
 
     try {
       await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
@@ -1215,7 +1277,7 @@
       $("bankNumInput").value = "";
       $("bankOwnerInput").value = "";
 
-      showNotification("¡Cuenta bancaria registrada con éxito!", "success");
+      showNotification("¡Cuenta bancaria guardada con éxito!", "success");
       renderBankAccountsTable();
     } catch (e) {
       showNotification("Error al guardar la cuenta bancaria.", "error");

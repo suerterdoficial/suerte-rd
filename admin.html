@@ -916,8 +916,18 @@
                 <input type="text" id="winNumber" placeholder="Ej: 03412" maxlength="5">
               </div>
               <div class="field full-width">
-                <label for="winPhoto">URL de la Foto de Entrega (Opcional)</label>
-                <input type="text" id="winPhoto" placeholder="https://...">
+                <label>Foto de la Entrega (Opcional)</label>
+                <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
+                  <div style="width:45px; height:45px; border-radius:8px; border:1px solid var(--border-cyan); overflow:hidden; background:#000; display:flex; align-items:center; justify-content:center;">
+                    <img id="winImgPreview" style="width:100%; height:100%; object-fit:cover; display:none;">
+                    <i id="winImgPlaceholder" data-lucide="image" style="width:18px; color:var(--text-muted);"></i>
+                  </div>
+                  <label for="winImageUpload" class="btn" style="padding:8px 12px; font-size:0.8rem; border-color:var(--cyan); color:var(--cyan); cursor:pointer; margin-bottom:0;">
+                    <i data-lucide="upload" style="width:12px; margin-right:4px;"></i> Subir Foto Local
+                  </label>
+                  <input type="file" id="winImageUpload" accept="image/*" style="display:none;">
+                </div>
+                <input type="text" id="winPhoto" placeholder="O pega la URL de la foto (https://...)">
               </div>
               <div class="field full-width">
                 <button class="btn" id="btnAddWinner"><i data-lucide="plus-circle"></i> Registrar Ganador</button>
@@ -1068,7 +1078,7 @@
                   <th>Tipo</th>
                   <th>Número de Cuenta</th>
                   <th>Titular</th>
-                  <th>Acción</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="bankAccountsTableBody">
