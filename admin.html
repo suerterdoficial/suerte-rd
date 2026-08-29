@@ -391,6 +391,7 @@
       padding: 14px 18px;
       border-bottom: 1px solid rgba(255,255,255,0.03);
       color: var(--text-main);
+      vertical-align: middle;
     }
 
     tr:hover td {
@@ -398,11 +399,16 @@
     }
 
     .badge {
-      padding: 4px 8px;
-      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border-radius: 8px;
       font-size: 0.75rem;
       font-weight: 800;
       text-transform: uppercase;
+      white-space: nowrap;
+      line-height: 1;
     }
 
     .badge-paid {

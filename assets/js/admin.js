@@ -1620,7 +1620,7 @@
                 </button>
               ` : `<span style="color:var(--text-muted); font-size:0.8rem;">Sin recibo</span>`}
             </td>
-            <td>${statusBadge}</td>
+            <td style="white-space: nowrap;">${statusBadge}</td>
             <td style="font-size:0.8rem; color:var(--text-grey);">${dateStr}</td>
             <td>
               <div style="display:flex; gap:6px;">
