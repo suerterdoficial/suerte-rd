@@ -275,7 +275,13 @@
         if (activePane) activePane.classList.add("active");
         
         if (target === "paneStats") {
-          renderChart();
+          updateDashboardStats();
+        } else if (target === "paneTickets") {
+          renderTicketsTable();
+        } else if (target === "paneConfigs") {
+          loadConfigForm(activeRaffleId);
+        } else if (target === "paneSupport") {
+          renderSupportTable();
         } else if (target === "panePayments") {
           renderPaymentsTable();
         } else if (target === "paneWinners") {
