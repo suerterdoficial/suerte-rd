@@ -2005,6 +2005,25 @@
     }
   });
 
+  function formatTicketChips(numbersInput, isReceipt = false) {
+    let list = [];
+    if (Array.isArray(numbersInput)) {
+      list = numbersInput;
+    } else if (typeof numbersInput === "string") {
+      list = numbersInput.split(",").map(s => s.trim()).filter(Boolean);
+    }
+    
+    if (!list || list.length === 0) {
+      list = ["00000"];
+    }
+
+    const chipClass = isReceipt ? "receipt-chip" : "ticket-chip";
+    const gridClass = isReceipt ? "receipt-chips-grid" : "ticket-chips-grid";
+
+    const chipsHtml = list.map(num => `<span class="${chipClass}">#${num.replace(/^#/, "")}</span>`).join("");
+    return `<div class="${gridClass}">${chipsHtml}</div>`;
+  }
+
   function openReserveForm() {
     if (cart.length === 0) return;
     if (cart.length < 25) {
@@ -2013,7 +2032,10 @@
       return;
     }
     
-    $("reserveConfirmNumberDisplay").textContent = cart.join(", ");
+    const displayEl = $("reserveConfirmNumberDisplay");
+    const rawString = cart.join(", ");
+    displayEl.setAttribute("data-tickets", rawString);
+    displayEl.innerHTML = formatTicketChips(cart, false);
     
     $("reserveConfirmErrorMsg").textContent = "";
     $("reserveConfirmOverlay").classList.add("active");
@@ -2117,14 +2139,16 @@
     $("receiptPrice").textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
     
     $("receiptLottery").textContent = lottery;
-    $("receiptTicketNum").textContent = num;
+    
+    const receiptNumEl = $("receiptTicketNum");
+    const rawTicketsStr = (typeof num === "string") ? num : (Array.isArray(num) ? num.join(", ") : String(num));
+    receiptNumEl.setAttribute("data-tickets", rawTicketsStr);
+    receiptNumEl.innerHTML = formatTicketChips(num, true);
 
-    const firstNum = num.split(", ")[0];
+    const firstNum = rawTicketsStr.split(", ")[0].replace(/#/g, "");
     $("receiptBarcodeText").textContent = `SRD-${firstNum}-${count}tix`;
 
     // Render structured bank details
-
-
     const bankGrid = $("receiptBankAccounts");
     if (bankGrid) {
       bankGrid.innerHTML = bankAccounts.map((acc, idx) => `
@@ -2151,7 +2175,7 @@
 
   async function handleSendWhatsApp() {
     const conf = configs[activeRaffleId];
-    const num = $("receiptTicketNum").textContent;
+    const num = $("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent;
     const name = $("receiptName").textContent;
     const lottery = $("receiptLottery").textContent;
 
@@ -2162,7 +2186,7 @@
 
     showToast("Registrando comprobante...", "info");
 
-    const ticketNums = num.split(", ");
+    const ticketNums = num.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
     try {
       const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
       const raw = await getStorageItem(key);
@@ -2229,10 +2253,10 @@
   }
 
   $("btnCopyReceipt").addEventListener("click", () => {
-    const num = $("receiptTicketNum").textContent;
+    const num = $("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent;
     const name = $("receiptName").textContent;
     const lottery = $("receiptLottery").textContent;
-    const text = `Sorteo: Suerte RD\nBoleto: #${num}\nComprador: ${name}\nLotería combinada: ${lottery}\nEstado: Comprado`;
+    const text = `Sorteo: Suerte RD\nBoleto(s): #${num}\nComprador: ${name}\nLotería combinada: ${lottery}\nEstado: Comprado`;
     navigator.clipboard.writeText(text).then(() => {
       playSound("click");
       showToast("Datos del recibo copiados al portapapeles.", "ok");

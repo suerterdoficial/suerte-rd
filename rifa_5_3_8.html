@@ -2480,6 +2480,94 @@
     line-height: 1.4;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
   }
+
+  /* Organized Ticket Number Chips (5-digit number boxes) */
+  .ticket-chips-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid var(--border-cyan);
+    border-radius: 16px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .ticket-chips-grid::-webkit-scrollbar,
+  .receipt-chips-grid::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .ticket-chips-grid::-webkit-scrollbar-thumb,
+  .receipt-chips-grid::-webkit-scrollbar-thumb {
+    background: var(--cyan);
+    border-radius: 10px;
+  }
+
+  .ticket-chip {
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.18) 0%, rgba(1, 20, 25, 0.75) 100%);
+    border: 1.5px solid var(--cyan);
+    color: #00E5FF;
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 10px;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(0, 229, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .ticket-chip:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 14px rgba(0, 229, 255, 0.4);
+    border-color: #FFFFFF;
+    color: #FFFFFF;
+  }
+
+  .receipt-chips-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 190px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #F1F5F9;
+    border: 1px solid #CBD5E1;
+    border-radius: 14px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 6px;
+  }
+
+  .receipt-chip {
+    background: linear-gradient(135deg, #054C54 0%, #032A2F 100%);
+    border: 1px solid #00E5FF;
+    color: #FFFFFF;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 8px;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+  }
+
+  .receipt-chip:hover {
+    transform: scale(1.04);
+  }
 </style>
 </head>
 <body>
@@ -4611,6 +4699,25 @@
     }
   });
 
+  function formatTicketChips(numbersInput, isReceipt = false) {
+    let list = [];
+    if (Array.isArray(numbersInput)) {
+      list = numbersInput;
+    } else if (typeof numbersInput === "string") {
+      list = numbersInput.split(",").map(s => s.trim()).filter(Boolean);
+    }
+    
+    if (!list || list.length === 0) {
+      list = ["00000"];
+    }
+
+    const chipClass = isReceipt ? "receipt-chip" : "ticket-chip";
+    const gridClass = isReceipt ? "receipt-chips-grid" : "ticket-chips-grid";
+
+    const chipsHtml = list.map(num => `<span class="${chipClass}">#${num.replace(/^#/, "")}</span>`).join("");
+    return `<div class="${gridClass}">${chipsHtml}</div>`;
+  }
+
   // Modal: Formulario de Reserva (Checkout dialog confirm)
   function openReserveForm() {
     if (!currentNumber || currentStatus !== "ok") return;
@@ -4618,9 +4725,11 @@
     const name = $("buyerNameInput").value.trim();
     const whatsapp = $("buyerWhatsappInput").value.trim();
 
-    $("reserveConfirmNumberDisplay").textContent = currentNumber;
-    $("reserveConfirmNameDisplay").textContent = name;
-    $("reserveConfirmWhatsappDisplay").textContent = whatsapp;
+    const displayEl = $("reserveConfirmNumberDisplay");
+    displayEl.setAttribute("data-tickets", currentNumber);
+    displayEl.innerHTML = formatTicketChips(currentNumber, false);
+    if ($("reserveConfirmNameDisplay")) $("reserveConfirmNameDisplay").textContent = name;
+    if ($("reserveConfirmWhatsappDisplay")) $("reserveConfirmWhatsappDisplay").textContent = whatsapp;
     
     $("reserveConfirmErrorMsg").textContent = "";
     $("reserveConfirmOverlay").classList.add("active");
@@ -4704,15 +4813,21 @@
     $("receiptPhone").textContent = phone;
     $("receiptPrice").textContent = conf.price;
     $("receiptLottery").textContent = lottery;
-    $("receiptTicketNum").textContent = num;
-    $("receiptBarcodeText").textContent = `SRD-${num}`;
+    
+    const receiptNumEl = $("receiptTicketNum");
+    const rawTicketsStr = (typeof num === "string") ? num : (Array.isArray(num) ? num.join(", ") : String(num));
+    receiptNumEl.setAttribute("data-tickets", rawTicketsStr);
+    receiptNumEl.innerHTML = formatTicketChips(num, true);
+
+    const firstNum = rawTicketsStr.split(", ")[0].replace(/#/g, "");
+    $("receiptBarcodeText").textContent = `SRD-${firstNum}`;
 
     $("receiptOverlay").classList.add("active");
   }
 
   function handleSendWhatsApp() {
     const conf = configs[activeRaffleId];
-    const num = $("receiptTicketNum").textContent;
+    const num = $("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent;
     const name = $("receiptName").textContent;
     const lottery = $("receiptLottery").textContent;
 
@@ -4747,7 +4862,7 @@
 
   // Copiar datos del recibo
   $("btnCopyReceipt").addEventListener("click", () => {
-    const num = $("receiptTicketNum").textContent;
+    const num = $("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent;
     const name = $("receiptName").textContent;
     const lottery = $("receiptLottery").textContent;
     const text = `Sorteo: Suerte RD\nBoleto: #${num}\nComprador: ${name}\nLotería combinada: ${lottery}\nEstado: Reservado`;

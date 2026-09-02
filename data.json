@@ -1,8 +1,12 @@
 {
   "suerterd:raffle:ids": "[\"florida5\"]",
   "suerterd:config:v2:florida5": "{\"id\":\"florida5\",\"title\":\"Sorteo Especial iPhone 17 Pro Max 1TB\",\"prize\":\"iPhone 17 Pro Max 1TB\",\"price\":\"RD$3\",\"total\":100000,\"ticketDigits\":5,\"image\":\"./assets/suerte_rd_iphone17_banner.png\",\"active\":true,\"brand\":\"Apple\",\"model\":\"iPhone 17 Pro Max 1TB\",\"year\":\"2026\",\"details\":\"¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.\",\"blessedPct\":0.1,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedDrawInterval\":5,\"countdownTriggerPct\":80,\"countdownDurationDays\":7,\"blessedNumbers\":[],\"whatsapp\":\"18092800000\"}",
-  "suerterd:tickets:v2:florida5": "{\"00007\":{\"name\":\"Juan Pérez\",\"nombre\":\"Juan Pérez\",\"whatsapp\":\"18095551234\",\"loteria\":\"Florida\",\"estado\":\"esperando_validacion\",\"timestamp\":1787967290962,\"timestamp_comprobante\":1787967290962,\"comprobante\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAD1JREFUeNrswQENAAAAwqD3T20ON6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF4M4gABGGCR5QAAAABJRU5ErkJggg==\"},\"00025\":{\"name\":\"María Rodríguez\",\"nombre\":\"María Rodríguez\",\"whatsapp\":\"18295556789\",\"loteria\":\"New York\",\"estado\":\"reservado\",\"timestamp\":1787967290962},\"00077\":{\"name\":\"Carlos Gómez\",\"nombre\":\"Carlos Gómez\",\"whatsapp\":\"18495559876\",\"loteria\":\"Florida\",\"estado\":\"pagado\",\"timestamp\":1787967290962,\"timestamp_pago\":1787967290962}}",
+  "suerterd:tickets:v2:florida5": "{\"00007\":{\"name\":\"Juan Pérez\",\"nombre\":\"Juan Pérez\",\"whatsapp\":\"18095551234\",\"loteria\":\"Florida\",\"estado\":\"esperando_validacion\",\"timestamp\":1787967290962,\"timestamp_comprobante\":1787967290962,\"comprobante\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAD1JREFUeNrswQENAAAAwqD3T20ON6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF4M4gABGGCR5QAAAABJRU5ErkJggg==\"},\"00077\":{\"name\":\"Carlos Gómez\",\"nombre\":\"Carlos Gómez\",\"whatsapp\":\"18495559876\",\"loteria\":\"Florida\",\"estado\":\"pagado\",\"timestamp\":1787967290962,\"timestamp_pago\":1787967290962}}",
   "notifications": [
+    {
+      "text": "Boleto #00025 liberado automáticamente tras 24 horas sin pago (Cliente: María Rodríguez)",
+      "timestamp": 1788365876057
+    },
     {
       "text": "Boleto #06858 liberado automáticamente tras 24 horas sin pago (Cliente: Juan Perez Test)",
       "timestamp": 1787967290962
@@ -197,10 +201,6 @@
     },
     {
       "text": "Boleto #72919 liberado automáticamente tras 24 horas sin pago (Cliente: carlos)",
-      "timestamp": 1787967290962
-    },
-    {
-      "text": "Boleto #72101 liberado automáticamente tras 24 horas sin pago (Cliente: carlos)",
       "timestamp": 1787967290962
     }
   ],
