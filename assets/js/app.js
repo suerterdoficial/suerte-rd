@@ -1365,6 +1365,7 @@
     const conf = configs[activeRaffleId] || {};
     const blessedList = conf.blessedNumbers || [];
     const tickets = allTickets[activeRaffleId] || {};
+    const soldCount = Object.keys(tickets).length;
     const prize = conf.blessedPrize || "RD$5,000";
     
     // Actualizar el título de la sección de bendecidos
@@ -1376,7 +1377,7 @@
     // Actualizar el footer de bendecidos
     const footerEl = document.getElementById("bendecidosFooter");
     if (footerEl) {
-      footerEl.textContent = `Cada vez que se vendan 10,000 boletos, se generará automáticamente un número bendecido de la lista de boletos vendidos y su dueño ganará ${prize} de inmediato.`;
+      footerEl.textContent = `Cada número bendecido aumentará su porcentaje (%) según las ventas de boletos. Al llegar al 100%, se generará automáticamente el número bendecido ganador y su dueño obtendrá ${prize} de inmediato.`;
     }
 
     for (let i = 0; i < 10; i++) {
@@ -1392,18 +1393,30 @@
         const winnerName = ticket ? (ticket.name || ticket.nombre || "Cliente") : "Cliente";
         
         item.innerHTML = `
-          <button class="bendecido-btn btn-black has-confetti" data-number="${num}" style="border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.05); font-weight: 800; font-family: var(--font-mono); font-size: 1.2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80px; gap: 4px; padding: 10px; cursor: default;">
+          <button class="bendecido-btn btn-black has-confetti" data-number="${num}" style="border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.05); font-weight: 800; font-family: var(--font-mono); font-size: 1.2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80px; gap: 4px; padding: 10px; cursor: default; width: 100%;">
             <span style="font-size: 1.1rem; letter-spacing: 1px;">#${num}</span>
-            <span style="font-size: 0.65rem; color: #FFF; font-weight: 700; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;" title="${escapeHtml(winnerName)}">👑 ${escapeHtml(winnerName)}</span>
+            <span style="font-size: 0.65rem; color: #FFF; font-weight: 700; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px;" title="${escapeHtml(winnerName)}">👑 ${escapeHtml(winnerName)}</span>
           </button>
           <span class="badge-status-red" style="font-size: 0.65rem; padding: 2px 6px; margin-top: 4px; background: rgba(0, 230, 118, 0.15); color: var(--green); border: 1px solid var(--green);">¡GANADOR!</span>
         `;
       } else {
-        // This slot is locked
+        // Calculate percentage progress toward milestone
+        const pct = Math.min(100, Math.floor((soldCount / milestone) * 100));
+        const formattedPct = String(pct).padStart(2, "0");
+        const isCompleted = pct >= 100;
+
         item.innerHTML = `
-          <button class="bendecido-btn btn-teal" disabled style="opacity: 0.5; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); color: var(--text-grey); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80px; gap: 4px; padding: 10px; cursor: not-allowed;">
-            <i data-lucide="lock" style="width:16px; height:16px; color: var(--text-grey);"></i>
-            <span style="font-size: 0.55rem; font-weight: 700; font-family: var(--font-mono); white-space: nowrap;">A los ${milestone.toLocaleString()} ventas</span>
+          <button class="bendecido-btn btn-teal" disabled style="opacity: 0.95; background: linear-gradient(180deg, rgba(5, 76, 84, 0.6) 0%, rgba(2, 35, 39, 0.8) 100%); border: 1.5px solid ${isCompleted ? 'var(--gold)' : 'var(--border-cyan)'}; color: ${isCompleted ? 'var(--gold)' : 'var(--cyan)'}; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80px; gap: 4px; padding: 8px 10px; cursor: not-allowed; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="${isCompleted ? 'sparkles' : 'lock'}" style="width: 15px; height: 15px; color: ${isCompleted ? 'var(--gold)' : 'var(--cyan)'};"></i>
+              <span style="font-size: 1.25rem; font-weight: 900; font-family: var(--font-mono); letter-spacing: 0.5px;">${formattedPct}%</span>
+            </div>
+            <div style="width: 85%; height: 5px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; border: 1px solid rgba(0, 229, 255, 0.2); margin-top: 2px;">
+              <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--gold)); border-radius: 10px; transition: width 0.4s ease;"></div>
+            </div>
+            <span style="font-size: 0.6rem; font-weight: 700; color: var(--text-grey); text-transform: uppercase; font-family: var(--font-mono); margin-top: 1px;">
+              ${isCompleted ? '¡Desbloqueando...!' : 'Progreso de Ventas'}
+            </span>
           </button>
         `;
       }
