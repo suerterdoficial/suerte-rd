@@ -763,7 +763,7 @@
           <div style="display:flex; gap:6px;">
             ${state !== "bloqueado" ? `<button class="btn btn-green btn-toggle-pay" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">${state === 'reservado' || state === 'esperando_validacion' ? 'Marcar Pagado' : 'Marcar Reservado'}</button>` : ''}
             ${whatsapp ? `<button class="btn btn-secondary btn-send-wa-single" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0; border-color:#00E676; color:#00E676;"><i data-lucide="message-circle" style="width:12px;"></i> WhatsApp</button>` : ''}
-            ${state === "esperando_validacion" && ticket.comprobante ? `<button class="btn btn-secondary btn-view-receipt-inline" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="image" style="width:12px;"></i> Recibo</button>` : ''}
+            ${ticket.comprobante ? `<button class="btn btn-secondary btn-view-receipt-inline" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="image" style="width:12px;"></i> Recibo</button>` : ''}
             <button class="btn btn-red btn-release" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="trash-2" style="width:12px;"></i> Liberar</button>
           </div>
         </td>
@@ -1674,11 +1674,14 @@ ESTADO: ${estadoBadge}
               raffleId: rId,
               name: t.name || t.nombre || "Cliente",
               whatsapp: t.whatsapp,
-              comprobante: t.comprobante,
+              comprobante: t.comprobante || null,
               estado: t.estado,
               timestamp: t.timestamp_comprobante || t.timestamp,
               numbers: []
             };
+          }
+          if (t.comprobante && !groups[groupKey].comprobante) {
+            groups[groupKey].comprobante = t.comprobante;
           }
           groups[groupKey].numbers.push(tNum);
           if (t.estado === 'esperando_validacion') {
@@ -1754,9 +1757,15 @@ ESTADO: ${estadoBadge}
         btn.addEventListener("click", () => {
           const rId = btn.getAttribute("data-raffle");
           const numsStr = btn.getAttribute("data-tickets");
-          const firstNum = numsStr.split(",")[0];
-          const t = allTickets[rId][firstNum];
-          openReceiptViewer(rId, numsStr, t.comprobante);
+          const nums = numsStr.split(",");
+          let receiptImg = null;
+          for (const n of nums) {
+            if (allTickets[rId] && allTickets[rId][n] && allTickets[rId][n].comprobante) {
+              receiptImg = allTickets[rId][n].comprobante;
+              break;
+            }
+          }
+          openReceiptViewer(rId, numsStr, receiptImg);
         });
       });
 
@@ -1886,10 +1895,21 @@ ${formattedNumsText}
     
     const modal = $("viewReceiptOverlay");
     const img = $("viewReceiptImg");
-    if (modal && img) {
-      img.src = base64;
+    const noImgMsg = $("viewReceiptNoImgMsg");
 
-      const firstNum = String(tNum).split(",")[0].trim();
+    if (modal && img) {
+      if (base64) {
+        img.src = base64;
+        img.style.display = "block";
+        if (noImgMsg) noImgMsg.style.display = "none";
+      } else {
+        img.src = "";
+        img.style.display = "none";
+        if (noImgMsg) noImgMsg.style.display = "block";
+      }
+
+      const nums = String(tNum).split(",");
+      const firstNum = nums[0].trim();
       const tInfo = (allTickets[rId] && allTickets[rId][firstNum]) || {};
       
       const metaName = $("viewReceiptMetaName");
@@ -1898,7 +1918,7 @@ ${formattedNumsText}
 
       if (metaName) metaName.textContent = tInfo.name || tInfo.nombre || "Cliente";
       if (metaPhone) metaPhone.textContent = tInfo.whatsapp || "Sin número";
-      if (metaTickets) metaTickets.textContent = String(tNum).split(",").map(n => `#${n.trim()}`).join(", ");
+      if (metaTickets) metaTickets.textContent = nums.map(n => `#${n.trim()}`).join(", ");
 
       modal.classList.add("active");
     }
