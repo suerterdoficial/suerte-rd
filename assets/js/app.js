@@ -2184,6 +2184,9 @@
       }
     }
 
+    const btnWa = $("btnSendWhatsApp");
+    if (btnWa) btnWa.disabled = false;
+
     $("receiptOverlay").classList.add("active");
   }
 
@@ -2193,12 +2196,11 @@
     const name = $("receiptName").textContent;
     const lottery = $("receiptLottery").textContent;
 
-    if (!selectedPaymentReceiptBase64) {
-      showToast("Por favor selecciona una imagen del comprobante de pago.", "bad");
-      return;
+    if (selectedPaymentReceiptBase64) {
+      showToast("Registrando comprobante...", "info");
+    } else {
+      showToast("Registrando apartado para validación...", "info");
     }
-
-    showToast("Registrando comprobante...", "info");
 
     const ticketNums = num.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
     try {
@@ -2208,19 +2210,21 @@
 
       ticketNums.forEach(tNum => {
         if (latestTickets[tNum]) {
-          latestTickets[tNum].estado = "esperando_validacion";
-          latestTickets[tNum].comprobante = selectedPaymentReceiptBase64;
-          latestTickets[tNum].timestamp_comprobante = Date.now();
+          latestTickets[tNum].estado = selectedPaymentReceiptBase64 ? "esperando_validacion" : "reservado";
+          if (selectedPaymentReceiptBase64) {
+            latestTickets[tNum].comprobante = selectedPaymentReceiptBase64;
+            latestTickets[tNum].timestamp_comprobante = Date.now();
+          }
         }
       });
 
       allTickets[activeRaffleId] = latestTickets;
       await setStorageItem(key, JSON.stringify(latestTickets));
 
-      showToast("¡Comprobante registrado!", "ok");
+      showToast(selectedPaymentReceiptBase64 ? "¡Comprobante registrado!" : "¡Apartado registrado!", "ok");
     } catch(e) {
       console.error("Failed to upload receipt", e);
-      showToast("Error al subir comprobante. Reintenta.", "bad");
+      showToast("Error al registrar apartado. Reintenta.", "bad");
       return;
     }
 
@@ -2243,7 +2247,7 @@
     const textMsg = 
 `🎰 *SUERTE RD* | *RECIBO DE COMPRA DIGITAL* 🎰
 ═════════════════════════════
-✨ *¡COMPROBANTE DE PAGO ENVIADO!* ✨
+✨ *¡NUEVO APARTADO REGISTRADO!* ✨
 
 👤 *CLIENTE:* ${name}
 📱 *CONTACTO:* ${phone}
@@ -2256,11 +2260,11 @@
 ${formattedNumsText}
 
 💵 *MONTO TOTAL:* ${priceText}
-🟡 *ESTADO DE PAGO:* *Esperando Validación*
+🟡 *ESTADO DE PAGO:* *${selectedPaymentReceiptBase64 ? 'Esperando Validación (Recibo Adjunto)' : 'Reservado / Pendiente de Pago'}*
 
 🔒 *CÓDIGO VERIFICADOR:* \`${barcodeText}\`
 ═════════════════════════════
-📩 *MENSAJE:* He adjuntado mi comprobante de transferencia bancaria. Por favor validar mi(s) boleto(s) para la participación oficial. ¡Muchas gracias y buena suerte! 🍀✨`;
+📩 *MENSAJE:* ${selectedPaymentReceiptBase64 ? 'He adjuntado mi comprobante de transferencia bancaria. Por favor validar mi(s) boleto(s) para la participación oficial. ¡Muchas gracias y buena suerte! 🍀✨' : 'Hola, he realizado la reserva de mis boletos. Por favor facilíteme los detalles para validar el pago. ¡Muchas gracias! 🍀✨'}`;
 
     const encoded = encodeURIComponent(textMsg);
 
@@ -2275,7 +2279,6 @@ ${formattedNumsText}
     if (fileNameEl) fileNameEl.textContent = "Sin archivo seleccionado";
     const previewCont = $("paymentReceiptPreviewContainer");
     if (previewCont) previewCont.style.display = "none";
-    $("btnSendWhatsApp").disabled = true;
 
     clearTicketSelection();
     $("receiptOverlay").classList.remove("active");

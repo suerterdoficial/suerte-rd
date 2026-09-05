@@ -500,15 +500,24 @@ app.post('/api/set', async (req, res) => {
         needsAdmin = true; // Deleting (releasing) ticket requires admin
         break;
       }
-      if (oldTickets[tNum].estado !== newTickets[tNum].estado) {
-        needsAdmin = true; // Modifying state requires admin
-        break;
+      const oldEst = oldTickets[tNum].estado;
+      const newEst = newTickets[tNum].estado;
+      if (oldEst !== newEst) {
+        if (oldEst === 'reservado' && newEst === 'esperando_validacion') {
+          // Allowed for customer uploading payment receipt
+        } else {
+          needsAdmin = true; // Modifying state to pagado/bloqueado or reverting requires admin
+          break;
+        }
       }
     }
     for (const tNum in newTickets) {
-      if (!oldTickets[tNum] && newTickets[tNum].estado === 'pagado') {
-        needsAdmin = true; // Adding directly as paid requires admin
-        break;
+      if (!oldTickets[tNum]) {
+        const newEst = newTickets[tNum].estado;
+        if (newEst === 'pagado' || newEst === 'bloqueado') {
+          needsAdmin = true; // Adding directly as paid/blocked requires admin
+          break;
+        }
       }
     }
   } else {
