@@ -1781,7 +1781,13 @@
       if (tInfo && tInfo.whatsapp && conf) {
         const clientName = tInfo.name || tInfo.nombre || "Cliente";
         const raffleTitle = conf.title;
-        const formattedList = nums.map(n => `🎫 *#${n}*`).join("\n  ");
+        const formattedLines = [];
+        for (let i = 0; i < nums.length; i += 4) {
+          const chunk = nums.slice(i, i + 4).map(n => `#${n}`).join(", ");
+          formattedLines.push(chunk);
+        }
+        const formattedNumsText = formattedLines.join("\n");
+
         const textMsg = 
 `✅ *SUERTE RD* | *CONFIRMACIÓN DE PAGO OFICIAL* ✅
 ═════════════════════════════
@@ -1792,11 +1798,11 @@
 📊 *CANTIDAD DE BOLETOS:* ${nums.length} boletos
 
 🎟️ *BOLETOS ACTIVOS:*
-  ${formattedList}
+${formattedNumsText}
 
 🟢 *ESTADO:* *PAGADOS Y ACTIVOS* 🟢
 ═════════════════════════════
-✨ Tus boletos ya están oficialmente registrados participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
+✨ ¡Tus boletos ya están oficialmente registrados participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
         const encoded = encodeURIComponent(textMsg);
         const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
         window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");

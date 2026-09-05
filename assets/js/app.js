@@ -2230,9 +2230,15 @@
     const barcodeText = $("receiptBarcodeText").textContent;
     const prizeTitle = conf.prize || conf.title || "Gran Sorteo Suerte RD";
 
-    const formattedNums = num.includes(",") 
-      ? num.split(", ").map(n => `🎫 *#${n.replace(/^#/, "")}*`).join("\n  ") 
-      : `🎫 *#${num.replace(/^#/, "")}*`;
+    const ticketListRaw = num.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
+    const ticketCount = ticketListRaw.length;
+
+    const formattedLines = [];
+    for (let i = 0; i < ticketListRaw.length; i += 4) {
+      const chunk = ticketListRaw.slice(i, i + 4).map(n => `#${n}`).join(", ");
+      formattedLines.push(chunk);
+    }
+    const formattedNumsText = formattedLines.join("\n");
 
     const textMsg = 
 `🎰 *SUERTE RD* | *RECIBO DE COMPRA DIGITAL* 🎰
@@ -2246,8 +2252,8 @@
 🏆 *SORTEO:* ${prizeTitle}
 🎯 *LOTERÍA OFICIAL:* ${lottery}
 
-🎟️ *BOLETO(S) APARTADO(S):*
-  ${formattedNums}
+🎟️ *BOLETO(S) APARTADO(S) (${ticketCount}):*
+${formattedNumsText}
 
 💵 *MONTO TOTAL:* ${priceText}
 🟡 *ESTADO DE PAGO:* *Esperando Validación*
@@ -2308,9 +2314,15 @@
     const conf = configs[activeRaffleId];
     const prizeTitle = conf.prize || conf.title || "Gran Sorteo Suerte RD";
 
-    const formattedNums = num.includes(",") 
-      ? num.split(", ").map(n => `🎫 #${n.replace(/^#/, "")}`).join("\n  ") 
-      : `🎫 #${num.replace(/^#/, "")}`;
+    const ticketListRaw = num.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
+    const ticketCount = ticketListRaw.length;
+
+    const formattedLines = [];
+    for (let i = 0; i < ticketListRaw.length; i += 4) {
+      const chunk = ticketListRaw.slice(i, i + 4).map(n => `#${n}`).join(", ");
+      formattedLines.push(chunk);
+    }
+    const formattedNumsText = formattedLines.join("\n");
 
     const text = 
 `🎰 SUERTE RD | RECIBO DE COMPRA DIGITAL 🎰
@@ -2321,8 +2333,9 @@
 
 🏆 SORTEO: ${prizeTitle}
 🎯 LOTERÍA: ${lottery}
-🎟️ BOLETO(S):
-  ${formattedNums}
+
+🎟️ BOLETO(S) (${ticketCount}):
+${formattedNumsText}
 
 💵 TOTAL: ${priceText}
 🟡 ESTADO: Esperando Validación
