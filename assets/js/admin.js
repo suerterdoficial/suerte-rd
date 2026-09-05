@@ -51,7 +51,8 @@
     { bank: "Banco Qik", type: "Cuenta de Ahorro", number: "1000490608", owner: "Luis Fernando Alvarez" },
     { bank: "Banreservas", type: "Cuenta de Ahorro", number: "9602059888", owner: "Cristhofer Sosa" },
     { bank: "Banco Popular", type: "Cuenta de Ahorro", number: "823386362", owner: "Erika Santos Francisco" },
-    { bank: "Scotiabank", type: "Cuenta corriente", number: "03100039851", owner: "Luis Fernando Alvarez" }
+    { bank: "Scotiabank", type: "Cuenta corriente", number: "03100039851", owner: "Luis Fernando Alvarez" },
+    { bank: "Banco BHD", type: "Cuenta de Ahorro", number: "29848790017", owner: "Katherine Daniela Rodriguez Roque" }
   ];
 
   // --- API HELPERS ---
