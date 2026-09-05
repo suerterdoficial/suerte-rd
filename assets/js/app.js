@@ -2115,8 +2115,23 @@
 
     allTickets[activeRaffleId] = latestTickets;
 
-    const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-    await setStorageItem(key, JSON.stringify(latestTickets));
+    try {
+      await fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raffleId: activeRaffleId,
+          name,
+          whatsapp: phone,
+          loteria: lottery,
+          tickets: cart,
+          estado: 'reservado'
+        })
+      });
+    } catch(e) {
+      const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
+      await setStorageItem(key, JSON.stringify(latestTickets));
+    }
     
     renderProgress();
     
@@ -2203,27 +2218,25 @@
     }
 
     const ticketNums = num.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
+    const phone = $("receiptPhone").textContent;
+
     try {
-      const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-      const raw = await getStorageItem(key);
-      const latestTickets = raw ? JSON.parse(raw) : {};
-
-      ticketNums.forEach((tNum, index) => {
-        if (latestTickets[tNum]) {
-          latestTickets[tNum].estado = selectedPaymentReceiptBase64 ? "esperando_validacion" : "reservado";
-          if (selectedPaymentReceiptBase64) {
-            latestTickets[tNum].comprobante = (index === 0) ? selectedPaymentReceiptBase64 : true;
-            latestTickets[tNum].timestamp_comprobante = Date.now();
-          }
-        }
+      await fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raffleId: activeRaffleId,
+          name,
+          whatsapp: phone,
+          loteria: lottery,
+          tickets: ticketNums,
+          comprobante: selectedPaymentReceiptBase64,
+          estado: selectedPaymentReceiptBase64 ? "esperando_validacion" : "reservado"
+        })
       });
-
-      allTickets[activeRaffleId] = latestTickets;
-      await setStorageItem(key, JSON.stringify(latestTickets));
-
       showToast(selectedPaymentReceiptBase64 ? "¡Comprobante registrado!" : "¡Apartado registrado!", "ok");
     } catch(e) {
-      console.error("Failed to upload receipt", e);
+      console.error("Failed to upload receipt via reserve API", e);
       showToast("Error al registrar apartado. Reintenta.", "bad");
       return;
     }

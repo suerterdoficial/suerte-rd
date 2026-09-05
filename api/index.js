@@ -472,6 +472,64 @@ app.post('/api/admin/clean-expired', async (req, res) => {
   }
 });
 
+// Public Ticket Reservation Endpoint for Customers
+app.post('/api/tickets/reserve', async (req, res) => {
+  try {
+    const { raffleId, name, whatsapp, loteria, tickets, comprobante, estado } = req.body;
+    if (!raffleId || !name || !whatsapp || !tickets || !Array.isArray(tickets) || tickets.length === 0) {
+      return res.status(400).json({ error: "Campos incompletos para reservar boletos." });
+    }
+
+    const rId = raffleId || "florida5";
+    const db = await readDb();
+    const key = `suerterd:tickets:v2:${rId}`;
+    let ticketsObj = db[key] ? JSON.parse(db[key]) : {};
+
+    const now = Date.now();
+    const targetState = estado || (comprobante ? "esperando_validacion" : "reservado");
+
+    tickets.forEach((tNum, index) => {
+      const existing = ticketsObj[tNum] || {};
+      if (existing.estado === 'pagado') return;
+
+      ticketsObj[tNum] = {
+        ...existing,
+        name: name,
+        nombre: name,
+        whatsapp: whatsapp,
+        loteria: loteria || "Pick 5 Florida",
+        estado: targetState,
+        timestamp: existing.timestamp || now
+      };
+
+      if (comprobante) {
+        ticketsObj[tNum].comprobante = (index === 0) ? comprobante : true;
+        ticketsObj[tNum].timestamp_comprobante = now;
+      }
+    });
+
+    db[key] = JSON.stringify(ticketsObj);
+
+    // Create notification
+    if (!db.notifications) db.notifications = [];
+    const notifMsg = comprobante 
+      ? `¡Paquete de ${tickets.length} boletos enviado con comprobante por ${name}! Pendiente de validación.`
+      : `¡Paquete de ${tickets.length} boletos reservado por ${name}! En espera de comprobante.`;
+    
+    db.notifications.unshift({
+      text: notifMsg,
+      timestamp: now
+    });
+    if (db.notifications.length > 50) db.notifications = db.notifications.slice(0, 50);
+
+    await writeDb(db);
+    res.json({ success: true, count: tickets.length });
+  } catch (e) {
+    console.error("Error in /api/tickets/reserve:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Cron Endpoint for Vercel Cron
 app.get('/api/cron/release-tickets', async (req, res) => {
   try {
