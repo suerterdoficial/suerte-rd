@@ -4,11 +4,12 @@
   "suerterd:tickets:v2:florida5": "{}",
   "notifications": [
     {
-      "text": "Sistema listo para recibir ventas de boletos oficiales.",
-      "timestamp": 1788649561948
+      "text": "Base de datos limpia y sincronizada correctamente en Vercel KV.",
+      "timestamp": 1788649720475
     }
   ],
   "supportMessages": "[{\"name\":\"Lucas Peralta\",\"whatsapp\":\"18095550011\",\"category\":\"Error en la web\",\"message\":\"No puedo ver mis boletos comprados en el historial.\",\"timestamp\":1787967290962}]",
   "suerterd:winners:v2": "[]",
-  "suerterd:payment:methods": "[{\"bank\":\"Banco Qik\",\"type\":\"Cuenta de Ahorro\",\"number\":\"1000490608\",\"owner\":\"Luis Fernando Alvarez\"},{\"bank\":\"Banreservas\",\"type\":\"Cuenta de Ahorro\",\"number\":\"9602059888\",\"owner\":\"Cristhofer Sosa\"},{\"bank\":\"Banco Popular\",\"type\":\"Cuenta de Ahorro\",\"number\":\"823386362\",\"owner\":\"Erika Santos Francisco\"},{\"bank\":\"Scotiabank\",\"type\":\"Cuenta corriente\",\"number\":\"03100039851\",\"owner\":\"Luis Fernando Alvarez\"},{\"bank\":\"Banco BHD\",\"type\":\"Cuenta de Ahorro\",\"number\":\"29848790017\",\"owner\":\"Katherine Daniela Rodriguez Roque\"}]"
+  "suerterd:payment:methods": "[{\"bank\":\"Banco Qik\",\"type\":\"Cuenta de Ahorro\",\"number\":\"1000490608\",\"owner\":\"Luis Fernando Alvarez\"},{\"bank\":\"Banreservas\",\"type\":\"Cuenta de Ahorro\",\"number\":\"9602059888\",\"owner\":\"Cristhofer Sosa\"},{\"bank\":\"Banco Popular\",\"type\":\"Cuenta de Ahorro\",\"number\":\"823386362\",\"owner\":\"Erika Santos Francisco\"},{\"bank\":\"Scotiabank\",\"type\":\"Cuenta corriente\",\"number\":\"03100039851\",\"owner\":\"Luis Fernando Alvarez\"},{\"bank\":\"Banco BHD\",\"type\":\"Cuenta de Ahorro\",\"number\":\"29848790017\",\"owner\":\"Katherine Daniela Rodriguez Roque\"}]",
+  "_db_version": 5
 }

@@ -63,6 +63,25 @@ async function readDb() {
   }
 
   let changed = false;
+
+  // Force migration sync to overwrite stale KV snapshots with fresh data.json
+  const CURRENT_DB_VERSION = 5;
+  if (!db._db_version || db._db_version < CURRENT_DB_VERSION) {
+    if (fs.existsSync(DATA_FILE)) {
+      try {
+        const raw = fs.readFileSync(DATA_FILE, 'utf8');
+        const localDb = JSON.parse(raw);
+        if (localDb) {
+          db = localDb;
+          db._db_version = CURRENT_DB_VERSION;
+          changed = true;
+        }
+      } catch (e) {
+        console.error("Error reading DATA_FILE for migration sync", e);
+      }
+    }
+  }
+
   // Auto-initialize raffle IDs list
   if (!db['suerterd:raffle:ids'] || db['suerterd:raffle:ids'] !== JSON.stringify(["florida5"])) {
     db['suerterd:raffle:ids'] = JSON.stringify(["florida5"]);
