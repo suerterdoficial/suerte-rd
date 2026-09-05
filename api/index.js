@@ -44,9 +44,9 @@ const DEFAULT_CONFIGS = {
 };
 
 // Helper to read database
-async function readDb() {
+async function readDb(forceFresh = false) {
   const now = Date.now();
-  if (cachedDb && (now - lastDbFetchTime) < CACHE_TTL_MS) {
+  if (!forceFresh && cachedDb && (now - lastDbFetchTime) < CACHE_TTL_MS) {
     return cachedDb;
   }
 
@@ -535,7 +535,7 @@ app.post('/api/tickets/reserve', async (req, res) => {
     }
 
     const rId = raffleId || "florida5";
-    const db = await readDb();
+    const db = await readDb(true);
     const key = `suerterd:tickets:v2:${rId}`;
     let ticketsObj = db[key] ? JSON.parse(db[key]) : {};
 
@@ -604,7 +604,7 @@ app.get('/api/get', async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
   }
-  const db = await readDb();
+  const db = await readDb(true);
   res.json({ value: db[key] || null });
 });
 
@@ -613,7 +613,7 @@ app.post('/api/set', async (req, res) => {
   if (!key) {
     return res.status(400).json({ error: "Missing key in request body" });
   }
-  const db = await readDb();
+  const db = await readDb(true);
   const oldValue = db[key] || null;
   
   // Security validation (Phase 1)
