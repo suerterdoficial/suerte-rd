@@ -762,6 +762,7 @@
         <td>
           <div style="display:flex; gap:6px;">
             ${state !== "bloqueado" ? `<button class="btn btn-green btn-toggle-pay" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">${state === 'reservado' || state === 'esperando_validacion' ? 'Marcar Pagado' : 'Marcar Reservado'}</button>` : ''}
+            ${whatsapp ? `<button class="btn btn-secondary btn-send-wa-single" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0; border-color:#00E676; color:#00E676;"><i data-lucide="message-circle" style="width:12px;"></i> WhatsApp</button>` : ''}
             ${state === "esperando_validacion" && ticket.comprobante ? `<button class="btn btn-secondary btn-view-receipt-inline" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="image" style="width:12px;"></i> Recibo</button>` : ''}
             <button class="btn btn-red btn-release" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="trash-2" style="width:12px;"></i> Liberar</button>
           </div>
@@ -771,6 +772,8 @@
       tr.querySelector(".btn-release").addEventListener("click", () => releaseTicket(num));
       const payBtn = tr.querySelector(".btn-toggle-pay");
       if (payBtn) payBtn.addEventListener("click", () => toggleTicketPayment(num));
+      const waBtn = tr.querySelector(".btn-send-wa-single");
+      if (waBtn) waBtn.addEventListener("click", () => sendWhatsAppTicketInfo(num));
       const receiptBtn = tr.querySelector(".btn-view-receipt-inline");
       if (receiptBtn) receiptBtn.addEventListener("click", () => openReceiptViewer(activeRaffleId, num, ticket.comprobante));
 
@@ -787,6 +790,39 @@
   }
 
   // --- ACTIONS FOR TICKETS ---
+  function sendWhatsAppTicketInfo(num) {
+    const tickets = allTickets[activeRaffleId] || {};
+    const tInfo = tickets[num];
+    const conf = configs[activeRaffleId];
+    if (!tInfo || !tInfo.whatsapp || !conf) {
+      alert("No hay número de WhatsApp registrado para este boleto.");
+      return;
+    }
+
+    const clientName = tInfo.name || tInfo.nombre || "Cliente";
+    const raffleTitle = conf.title;
+    const lottery = tInfo.loteria || "Pick 5 Florida";
+    const estadoBadge = tInfo.estado === 'pagado' ? '🟢 PAGADO Y ACTIVO' : (tInfo.estado === 'esperando_validacion' ? '🟡 EN VALIDACIÓN' : '🔵 RESERVADO');
+
+    const textMsg = 
+`🎰 *SUERTE RD* | *INFORMACIÓN OFICIAL DE BOLETO* 🎰
+═════════════════════════════
+👤 *CLIENTE:* ${clientName}
+📱 *WHATSAPP:* ${tInfo.whatsapp}
+
+🏆 *SORTEO:* ${raffleTitle}
+🎯 *LOTERÍA OFICIAL:* ${lottery}
+🎟️ *BOLETO:* *#${num}*
+
+ESTADO: ${estadoBadge}
+═════════════════════════════
+✨ ¡Muchas gracias por participar en Suerte RD! Te deseamos la mayor de las suertes. 🍀🔥`;
+
+    const encoded = encodeURIComponent(textMsg);
+    const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
+    window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
+  }
+
   async function toggleTicketPayment(num) {
     const tickets = allTickets[activeRaffleId] || {};
     if (!tickets[num]) return;
