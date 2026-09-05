@@ -808,7 +808,18 @@
       if (tInfo && tInfo.whatsapp && conf) {
         const clientName = tInfo.name || tInfo.nombre || "Cliente";
         const raffleTitle = conf.title;
-        const textMsg = `¡Hola ${clientName}! Te informamos de parte de Suerte RD que tu pago ha sido recibido y tu boleto #${num} para el sorteo "${raffleTitle}" ha sido validado y ya se encuentra activo participando en la rifa. ¡Te deseamos mucha suerte! 🍀`;
+        const textMsg = 
+`✅ *SUERTE RD* | *CONFIRMACIÓN DE PAGO OFICIAL* ✅
+═════════════════════════════
+🎉 *¡TU PAGO HA SIDO VALIDADO CON ÉXITO!* 🎉
+
+👤 *CLIENTE:* ${clientName}
+🏆 *SORTEO:* ${raffleTitle}
+🎟️ *BOLETO ACTIVO:* *#${num}*
+
+🟢 *ESTADO:* *PAGADO Y ACTIVO* 🟢
+═════════════════════════════
+✨ ¡Tu boleto ya está oficialmente registrado participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
         const encoded = encodeURIComponent(textMsg);
         const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
         window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
@@ -1770,8 +1781,22 @@
       if (tInfo && tInfo.whatsapp && conf) {
         const clientName = tInfo.name || tInfo.nombre || "Cliente";
         const raffleTitle = conf.title;
-        const formattedNums = nums.map(n => `#${n}`).join(", ");
-        const textMsg = `¡Hola ${clientName}! Te informamos de parte de Suerte RD que tu pago ha sido recibido y tus ${nums.length} boletos (${formattedNums}) para el sorteo "${raffleTitle}" han sido validados y ya se encuentran activos participando en la rifa. ¡Te deseamos mucha suerte! 🍀`;
+        const formattedList = nums.map(n => `🎫 *#${n}*`).join("\n  ");
+        const textMsg = 
+`✅ *SUERTE RD* | *CONFIRMACIÓN DE PAGO OFICIAL* ✅
+═════════════════════════════
+🎉 *¡TU PAGO HA SIDO VALIDADO CON ÉXITO!* 🎉
+
+👤 *CLIENTE:* ${clientName}
+🏆 *SORTEO:* ${raffleTitle}
+📊 *CANTIDAD DE BOLETOS:* ${nums.length} boletos
+
+🎟️ *BOLETOS ACTIVOS:*
+  ${formattedList}
+
+🟢 *ESTADO:* *PAGADOS Y ACTIVOS* 🟢
+═════════════════════════════
+✨ Tus boletos ya están oficialmente registrados participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
         const encoded = encodeURIComponent(textMsg);
         const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
         window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");

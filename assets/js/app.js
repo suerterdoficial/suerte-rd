@@ -2224,7 +2224,38 @@
       return;
     }
 
-    const textMsg = `Hola Suerte RD, he subido mi comprobante de pago para el/los boleto(s) digital(es) #${num} en combinación con ${lottery} para el sorteo del "${conf.prize}" a nombre de ${name}. Quedo a la espera de la validación.`;
+    const phone = $("receiptPhone").textContent;
+    const priceText = $("receiptPrice").textContent;
+    const dateText = $("receiptDate").textContent;
+    const barcodeText = $("receiptBarcodeText").textContent;
+    const prizeTitle = conf.prize || conf.title || "Gran Sorteo Suerte RD";
+
+    const formattedNums = num.includes(",") 
+      ? num.split(", ").map(n => `🎫 *#${n.replace(/^#/, "")}*`).join("\n  ") 
+      : `🎫 *#${num.replace(/^#/, "")}*`;
+
+    const textMsg = 
+`🎰 *SUERTE RD* | *RECIBO DE COMPRA DIGITAL* 🎰
+═════════════════════════════
+✨ *¡COMPROBANTE DE PAGO ENVIADO!* ✨
+
+👤 *CLIENTE:* ${name}
+📱 *CONTACTO:* ${phone}
+📅 *FECHA DE REGISTRO:* ${dateText}
+
+🏆 *SORTEO:* ${prizeTitle}
+🎯 *LOTERÍA OFICIAL:* ${lottery}
+
+🎟️ *BOLETO(S) APARTADO(S):*
+  ${formattedNums}
+
+💵 *MONTO TOTAL:* ${priceText}
+🟡 *ESTADO DE PAGO:* *Esperando Validación*
+
+🔒 *CÓDIGO VERIFICADOR:* \`${barcodeText}\`
+═════════════════════════════
+📩 *MENSAJE:* He adjuntado mi comprobante de transferencia bancaria. Por favor validar mi(s) boleto(s) para la participación oficial. ¡Muchas gracias y buena suerte! 🍀✨`;
+
     const encoded = encodeURIComponent(textMsg);
 
     const whatsappNum = conf.whatsapp || "18099838626";
@@ -2269,8 +2300,35 @@
   $("btnCopyReceipt").addEventListener("click", () => {
     const num = $("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent;
     const name = $("receiptName").textContent;
+    const phone = $("receiptPhone").textContent;
     const lottery = $("receiptLottery").textContent;
-    const text = `Sorteo: Suerte RD\nBoleto(s): #${num}\nComprador: ${name}\nLotería combinada: ${lottery}\nEstado: Comprado`;
+    const priceText = $("receiptPrice").textContent;
+    const dateText = $("receiptDate").textContent;
+    const barcodeText = $("receiptBarcodeText").textContent;
+    const conf = configs[activeRaffleId];
+    const prizeTitle = conf.prize || conf.title || "Gran Sorteo Suerte RD";
+
+    const formattedNums = num.includes(",") 
+      ? num.split(", ").map(n => `🎫 #${n.replace(/^#/, "")}`).join("\n  ") 
+      : `🎫 #${num.replace(/^#/, "")}`;
+
+    const text = 
+`🎰 SUERTE RD | RECIBO DE COMPRA DIGITAL 🎰
+═════════════════════════════
+👤 COMPRADOR: ${name}
+📱 WHATSAPP: ${phone}
+📅 FECHA: ${dateText}
+
+🏆 SORTEO: ${prizeTitle}
+🎯 LOTERÍA: ${lottery}
+🎟️ BOLETO(S):
+  ${formattedNums}
+
+💵 TOTAL: ${priceText}
+🟡 ESTADO: Esperando Validación
+🔒 VERIFICADOR: ${barcodeText}
+═════════════════════════════`;
+
     navigator.clipboard.writeText(text).then(() => {
       playSound("click");
       showToast("Datos del recibo copiados al portapapeles.", "ok");
