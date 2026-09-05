@@ -194,7 +194,7 @@
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
       blessedNumbers: [],
-      whatsapp: "18092800000"
+      whatsapp: "18099838626"
     }
   };
 
@@ -2227,7 +2227,7 @@
     const textMsg = `Hola Suerte RD, he subido mi comprobante de pago para el/los boleto(s) digital(es) #${num} en combinación con ${lottery} para el sorteo del "${conf.prize}" a nombre de ${name}. Quedo a la espera de la validación.`;
     const encoded = encodeURIComponent(textMsg);
 
-    const whatsappNum = conf.whatsapp || "18092800000";
+    const whatsappNum = conf.whatsapp || "18099838626";
     window.open(`https://wa.me/${whatsappNum}?text=${encoded}`, "_blank");
 
     // Reset selected file fields

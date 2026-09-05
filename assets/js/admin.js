@@ -31,7 +31,7 @@
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
       blessedNumbers: [],
-      whatsapp: "18092800000"
+      whatsapp: "18099838626"
     }
   };
 
@@ -657,7 +657,7 @@
       details: "Gran sorteo premium. Elige tu boleto.",
       active: true,
       image: configs["florida5"] ? configs["florida5"].image : "./suerte_rd_banner.png",
-      whatsapp: configs["florida5"] ? configs["florida5"].whatsapp : "18092800000",
+      whatsapp: configs["florida5"] ? configs["florida5"].whatsapp : "18099838626",
       paymentInstructions: configs["florida5"] ? configs["florida5"].paymentInstructions : ""
     };
     configs[id] = newConfig;
