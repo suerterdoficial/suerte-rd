@@ -481,6 +481,29 @@ if (!process.env.VERCEL) {
   }, 5000);
 }
 
+// Debug API
+app.get('/api/debug-db', async (req, res) => {
+  const token = process.env.BLOB_READ_WRITE_TOKEN ? "present" : "missing";
+  let blobCount = 0;
+  let blobError = null;
+  let blobContentSample = null;
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      const { blobs } = await list({ prefix: 'suerterd_db.json', token: process.env.BLOB_READ_WRITE_TOKEN });
+      blobCount = blobs.length;
+      if (blobs.length > 0) {
+        const fetchRes = await fetch(blobs[0].url, {
+          headers: { 'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+        });
+        blobContentSample = await fetchRes.text();
+      }
+    } catch (e) {
+      blobError = e.message;
+    }
+  }
+  res.json({ token, blobCount, blobError, blobContentSample: blobContentSample ? blobContentSample.substring(0, 100) : null });
+});
+
 // API Endpoints
 app.post('/api/admin/verify', async (req, res) => {
   const { pin } = req.body;
