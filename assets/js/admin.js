@@ -487,6 +487,36 @@
     }
   }
 
+  function calculateTotalAmount(count, conf) {
+    if (!conf) return 0;
+    const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 3;
+    let remaining = count;
+    let totalAmount = 0;
+    
+    if (remaining >= 500) {
+      const packs = Math.floor(remaining / 500);
+      totalAmount += packs * 1500;
+      remaining = remaining % 500;
+    }
+    if (remaining >= 250) {
+      const packs = Math.floor(remaining / 250);
+      totalAmount += packs * 750;
+      remaining = remaining % 250;
+    }
+    if (remaining >= 150) {
+      const packs = Math.floor(remaining / 150);
+      totalAmount += packs * 450;
+      remaining = remaining % 150;
+    }
+    if (remaining >= 50) {
+      const packs = Math.floor(remaining / 50);
+      totalAmount += packs * 150;
+      remaining = remaining % 50;
+    }
+    totalAmount += remaining * ticketPrice;
+    return totalAmount;
+  }
+
   // --- DASHBOARD AND STATS ---
   function updateDashboardStats() {
     const conf = configs[activeRaffleId];
@@ -496,14 +526,30 @@
     const soldList = Object.values(tickets);
     
     const soldCount = soldList.length;
-    const reservedCount = soldList.filter(t => t.estado === "reservado").length;
+    const reservedCount = soldList.filter(t => t.estado === "reservado" || t.estado === "esperando_validacion").length;
     const paidCount = soldList.filter(t => t.estado === "pagado").length;
     
-    // Estimate income: ticket price * paidCount
-    const priceNum = parseFloat(conf.price.replace(/[^\d.]/g, "")) || 0;
-    const income = priceNum * paidCount;
+    // Group paid tickets by buyer/timestamp to calculate package pricing accurately
+    const paidGroups = {};
+    Object.keys(tickets).forEach(tNum => {
+      const t = tickets[tNum];
+      if (t.estado === "pagado") {
+        const key = `${t.timestamp || 0}_${t.whatsapp || 'unknown'}`;
+        if (!paidGroups[key]) paidGroups[key] = 0;
+        paidGroups[key]++;
+      }
+    });
 
-    $("statIncome").textContent = `RD$${income.toLocaleString("es-DO")}`;
+    let totalPaidIncome = 0;
+    Object.values(paidGroups).forEach(count => {
+      totalPaidIncome += calculateTotalAmount(count, conf);
+    });
+
+    if (Object.keys(paidGroups).length === 0 && paidCount > 0) {
+      totalPaidIncome = calculateTotalAmount(paidCount, conf);
+    }
+
+    $("statIncome").textContent = `RD$ ${totalPaidIncome.toLocaleString("es-DO")}`;
     $("statSold").textContent = `${soldCount.toLocaleString("es-DO")} / ${totalCount.toLocaleString("es-DO")}`;
     $("statRatio").textContent = `${reservedCount.toLocaleString("es-DO")} Res. / ${paidCount.toLocaleString("es-DO")} Pag.`;
 
@@ -518,7 +564,7 @@
     const tickets = allTickets[activeRaffleId] || {};
     const totalCount = conf.total;
     const soldList = Object.values(tickets);
-    const reservedCount = soldList.filter(t => t.estado === "reservado").length;
+    const reservedCount = soldList.filter(t => t.estado === "reservado" || t.estado === "esperando_validacion").length;
     const paidCount = soldList.filter(t => t.estado === "pagado").length;
     const availableCount = Math.max(0, totalCount - soldList.length);
 
