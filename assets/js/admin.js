@@ -106,6 +106,15 @@
     return String(num).padStart(digitCount, "0");
   }
 
+  function formatWhatsAppPhone(phoneStr) {
+    if (!phoneStr) return "";
+    let clean = String(phoneStr).replace(/\D/g, "");
+    if (clean.length === 10 && (clean.startsWith("809") || clean.startsWith("829") || clean.startsWith("849") || clean.startsWith("8") || clean.startsWith("9"))) {
+      clean = "1" + clean;
+    }
+    return clean;
+  }
+
   // --- INITIALIZATION ---
   async function init() {
     // Load IDs
@@ -802,7 +811,7 @@
       tr.innerHTML = `
         <td style="font-family:var(--font-mono); font-weight:700;">#${num}</td>
         <td>${name || '<span style="color:var(--text-muted)">N/A</span>'}</td>
-        <td>${whatsapp ? `<a href="https://wa.me/${whatsapp.replace(/\D/g, "")}" target="_blank" style="color:var(--cyan); text-decoration:none;">${whatsapp}</a>` : '<span style="color:var(--text-muted)">N/A</span>'}</td>
+        <td>${whatsapp ? `<a href="https://wa.me/${formatWhatsAppPhone(whatsapp)}" target="_blank" style="color:var(--cyan); text-decoration:none;">${whatsapp}</a>` : '<span style="color:var(--text-muted)">N/A</span>'}</td>
         <td>${lottery}</td>
         <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
         <td>
@@ -865,7 +874,7 @@ ESTADO: ${estadoBadge}
 ✨ ¡Muchas gracias por participar en Suerte RD! Te deseamos la mayor de las suertes. 🍀🔥`;
 
     const encoded = encodeURIComponent(textMsg);
-    const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
+    const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
     window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
   }
 
@@ -903,7 +912,7 @@ ESTADO: ${estadoBadge}
 ═════════════════════════════
 ✨ ¡Tu boleto ya está oficialmente registrado participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
         const encoded = encodeURIComponent(textMsg);
-        const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
+        const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
         window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
       }
     }
@@ -1768,7 +1777,7 @@ ESTADO: ${estadoBadge}
             </td>
             <td>${escapeHtml(g.name)}</td>
             <td>
-              <a href="https://wa.me/${g.whatsapp.replace(/\D/g, "")}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; border-color:#00E676; color:#00E676; display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
+              <a href="https://wa.me/${formatWhatsAppPhone(g.whatsapp)}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; border-color:#00E676; color:#00E676; display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
                 <i data-lucide="message-circle" style="width:12px;"></i> WhatsApp
               </a>
             </td>
@@ -1895,7 +1904,7 @@ ${formattedNumsText}
 ═════════════════════════════
 ✨ ¡Tus boletos ya están oficialmente registrados participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
         const encoded = encodeURIComponent(textMsg);
-        const cleanPhone = tInfo.whatsapp.replace(/\D/g, "");
+        const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
         window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
       }
 
