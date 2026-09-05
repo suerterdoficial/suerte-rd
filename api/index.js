@@ -145,6 +145,7 @@ async function writeDb(db) {
       await put('suerterd_db.json', JSON.stringify(db), {
         access: 'private',
         addRandomSuffix: false,
+        allowOverwrite: true,
         token
       });
     } catch (e) {
