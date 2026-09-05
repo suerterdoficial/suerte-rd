@@ -1888,6 +1888,18 @@ ${formattedNumsText}
     const img = $("viewReceiptImg");
     if (modal && img) {
       img.src = base64;
+
+      const firstNum = String(tNum).split(",")[0].trim();
+      const tInfo = (allTickets[rId] && allTickets[rId][firstNum]) || {};
+      
+      const metaName = $("viewReceiptMetaName");
+      const metaPhone = $("viewReceiptMetaPhone");
+      const metaTickets = $("viewReceiptMetaTickets");
+
+      if (metaName) metaName.textContent = tInfo.name || tInfo.nombre || "Cliente";
+      if (metaPhone) metaPhone.textContent = tInfo.whatsapp || "Sin número";
+      if (metaTickets) metaTickets.textContent = String(tNum).split(",").map(n => `#${n.trim()}`).join(", ");
+
       modal.classList.add("active");
     }
   }
