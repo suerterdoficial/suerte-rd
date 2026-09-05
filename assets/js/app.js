@@ -937,28 +937,19 @@
       sForm.addEventListener("submit", handleSupportSubmit);
     }
 
-    // Hover confetti event listener for red buttons (Phase 2 & 4)
+    // Hover confetti event listener for red buttons (Optimized - no forced layout thrashing)
     document.addEventListener('mouseover', (e) => {
       const btn = e.target.closest('button, .btn, .keypad-btn, .sound-btn, .admin-btn, .tab-btn, .arrow-btn, .page-btn, .btn-back-home, .notification-btn, .modal-close-btn, .btn-primary, .btn-secondary');
       if (!btn) return;
       if (btn.dataset.hovered === 'true') return;
       btn.dataset.hovered = 'true';
 
-      const style = window.getComputedStyle(btn);
-      const color = style.color;
-      const border = style.borderColor;
-      const bg = style.backgroundColor;
-      
-      const isRed = color.includes('255, 77, 94') || 
-                    border.includes('255, 77, 94') || 
-                    bg.includes('255, 77, 94') ||
-                    btn.classList.contains('red') ||
+      const isRed = btn.classList.contains('red') ||
+                    btn.classList.contains('btn-red') ||
+                    btn.classList.contains('badge-status-red') ||
                     btn.classList.contains('has-confetti') ||
-                    btn.id.toLowerCase().includes('delete') ||
-                    btn.id.toLowerCase().includes('clear') ||
-                    btn.id.toLowerCase().includes('clean') ||
-                    btn.textContent.toLowerCase().includes('borrar') ||
-                    btn.textContent.toLowerCase().includes('eliminar');
+                    (btn.id && (btn.id.toLowerCase().includes('delete') || btn.id.toLowerCase().includes('clear') || btn.id.toLowerCase().includes('clean'))) ||
+                    (btn.textContent && (btn.textContent.toLowerCase().includes('borrar') || btn.textContent.toLowerCase().includes('eliminar')));
 
       if (isRed) {
         const rect = btn.getBoundingClientRect();
@@ -1910,26 +1901,31 @@
 
     const conf = configs[activeRaffleId];
     const totalTickets = Math.max(1, Number(conf.total) || 10000);
-    const ticketsObj = allTickets[activeRaffleId];
+    const ticketsObj = allTickets[activeRaffleId] || {};
 
     const searchVal = $("explorerSearch").value.trim();
     const filterEnd = $("explorerFilterEnd").value;
     const filterType = $("explorerFilterType").value;
 
-    let pageStartIndex = explorerPage * explorerLimit;
+    const maxNeededMatches = Math.min(totalTickets, (explorerPage + 3) * explorerLimit);
     let matchedTickets = [];
 
     for (let i = 0; i < totalTickets; i++) {
+      if (filterType === 'even' && i % 2 !== 0) continue;
+      if (filterType === 'odd' && i % 2 === 0) continue;
+
       const formatted = pad5(i);
       const isSold = !!ticketsObj[formatted];
 
       if (searchVal && !formatted.includes(searchVal)) continue;
       if (filterEnd && !formatted.endsWith(filterEnd)) continue;
-      if (filterType === 'even' && i % 2 !== 0) continue;
-      if (filterType === 'odd' && i % 2 === 0) continue;
       if (filterType === 'available' && isSold) continue;
 
       matchedTickets.push({num: formatted, sold: isSold});
+
+      if (!searchVal && matchedTickets.length >= maxNeededMatches) {
+        break;
+      }
     }
 
     const totalFiltered = matchedTickets.length;
@@ -1937,9 +1933,10 @@
     
     if (explorerPage >= totalPages) {
       explorerPage = totalPages - 1;
-      pageStartIndex = explorerPage * explorerLimit;
     }
     if (explorerPage < 0) explorerPage = 0;
+
+    const pageStartIndex = explorerPage * explorerLimit;
 
     $("explorerPageNum").textContent = `Pág. ${explorerPage + 1} de ${totalPages}`;
     $("explorerPrevPage").disabled = explorerPage === 0;
@@ -1952,12 +1949,12 @@
       return;
     }
 
+    const fragment = document.createDocumentFragment();
     pageSlice.forEach(t => {
       const card = document.createElement("div");
       const isSelectedInCart = cart.includes(t.num);
       card.className = `grid-ticket ${t.sold ? 'sold' : ''} ${t.num === currentNumber ? 'selected' : ''} ${isSelectedInCart ? 'selected' : ''}`;
       
-      const ticketsObj = allTickets[activeRaffleId];
       if (t.sold && ticketsObj[t.num] && ticketsObj[t.num].estado === "pagado") {
         card.classList.add("paid");
         card.style.borderColor = "var(--border-cyan)";
@@ -1980,8 +1977,9 @@
           playSound("click");
         });
       }
-      grid.appendChild(card);
+      fragment.appendChild(card);
     });
+    grid.appendChild(fragment);
   }
 
   $("explorerPrevPage").addEventListener("click", () => {
