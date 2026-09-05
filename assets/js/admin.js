@@ -834,7 +834,7 @@
 
       body.appendChild(tr);
       renderedCount++;
-      if (renderedCount >= 100) break; // Limit render size for speed
+      if (!query && renderedCount >= 500) break;
     }
 
     if (renderedCount === 0) {
