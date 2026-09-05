@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { kv } = require('@vercel/kv');
+const { put, list } = require('@vercel/blob');
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -11,6 +12,10 @@ app.use(express.static(path.join(__dirname, '..')));
 
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+
+let cachedDb = null;
+let lastDbFetchTime = 0;
+const CACHE_TTL_MS = 2000;
 
 const DEFAULT_CONFIGS = {
   florida5: {
@@ -39,19 +44,42 @@ const DEFAULT_CONFIGS = {
 
 // Helper to read database
 async function readDb() {
+  const now = Date.now();
+  if (cachedDb && (now - lastDbFetchTime) < CACHE_TTL_MS) {
+    return cachedDb;
+  }
+
   let db = null;
-  if (useKV) {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+
+  if (token) {
+    try {
+      const { blobs } = await list({ prefix: 'suerterd_db.json', token });
+      if (blobs && blobs.length > 0) {
+        const res = await fetch(blobs[0].url, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const text = await res.text();
+          db = JSON.parse(text);
+        }
+      }
+    } catch (e) {
+      console.error("Error reading from Vercel Blob:", e);
+    }
+  }
+
+  if (!db && useKV) {
     try {
       const data = await kv.get('suerterd_db');
       db = data || {};
     } catch (e) {
-      console.error("Error reading from Vercel KV, falling back to local file if available", e);
+      console.error("Error reading from Vercel KV:", e);
     }
   }
+
   if (!db) {
-    if (!fs.existsSync(DATA_FILE)) {
-      db = {};
-    } else {
+    if (fs.existsSync(DATA_FILE)) {
       try {
         const raw = fs.readFileSync(DATA_FILE, 'utf8');
         db = JSON.parse(raw) || {};
@@ -59,28 +87,12 @@ async function readDb() {
         console.error("Error reading data.json, returning empty object", e);
         db = {};
       }
+    } else {
+      db = {};
     }
   }
 
   let changed = false;
-
-  // Force migration sync to overwrite stale KV snapshots with fresh data.json
-  const CURRENT_DB_VERSION = 5;
-  if (!db._db_version || db._db_version < CURRENT_DB_VERSION) {
-    if (fs.existsSync(DATA_FILE)) {
-      try {
-        const raw = fs.readFileSync(DATA_FILE, 'utf8');
-        const localDb = JSON.parse(raw);
-        if (localDb) {
-          db = localDb;
-          db._db_version = CURRENT_DB_VERSION;
-          changed = true;
-        }
-      } catch (e) {
-        console.error("Error reading DATA_FILE for migration sync", e);
-      }
-    }
-  }
 
   // Auto-initialize raffle IDs list
   if (!db['suerterd:raffle:ids'] || db['suerterd:raffle:ids'] !== JSON.stringify(["florida5"])) {
@@ -117,23 +129,41 @@ async function readDb() {
     await writeDb(db);
   }
 
+  cachedDb = db;
+  lastDbFetchTime = Date.now();
   return db;
 }
 
 // Helper to write database
 async function writeDb(db) {
+  cachedDb = db;
+  lastDbFetchTime = Date.now();
+
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (token) {
+    try {
+      await put('suerterd_db.json', JSON.stringify(db), {
+        access: 'private',
+        addRandomSuffix: false,
+        token
+      });
+    } catch (e) {
+      console.error("Error writing to Vercel Blob:", e);
+    }
+  }
+
   if (useKV) {
     try {
       await kv.set('suerterd_db', db);
-      return;
     } catch (e) {
-      console.error("Error writing to Vercel KV", e);
+      console.error("Error writing to Vercel KV:", e);
     }
   }
+
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
   } catch (e) {
-    console.error("Error writing data.json", e);
+    // Ignore read-only filesystem errors on Vercel
   }
 }
 

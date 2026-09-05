@@ -36,7 +36,7 @@
   };
 
   let activeRaffleId = "florida5";
-  let adminPin = sessionStorage.getItem('admin_pin') || '';
+  let adminPin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '';
   let configs = {};
   let allTickets = {};
   let winners = [];
@@ -93,10 +93,20 @@
         body: JSON.stringify({ key, value: val })
       });
       if (!res.ok) {
-        console.error(`Error setStorageItem for ${key}: Unauthorized or failed`);
+        const errData = await res.json().catch(() => ({}));
+        console.error(`Error setStorageItem for ${key}:`, errData);
+        if (typeof showNotification === 'function') {
+          showNotification("Error al guardar cambios: " + (errData.error || "Sin autorización / Error de servidor"), "error");
+        }
+        return false;
       }
+      return true;
     } catch (e) {
       console.error(`Error setStorageItem for ${key}`, e);
+      if (typeof showNotification === 'function') {
+        showNotification("Error de conexión al guardar cambios.", "error");
+      }
+      return false;
     }
   }
 
