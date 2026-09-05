@@ -12,6 +12,7 @@ app.use(express.static(path.join(__dirname, '..')));
 
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || "vercel_blob_rw_bLTLF5Id60MLnm2K_dDzlanQNawLODP4lD8C6Kk4piwXqV8";
 
 let cachedDb = null;
 let lastDbFetchTime = 0;
@@ -50,14 +51,14 @@ async function readDb() {
   }
 
   let db = null;
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
 
-  if (token) {
+  if (BLOB_TOKEN) {
     try {
-      const { blobs } = await list({ prefix: 'suerterd_db.json', token });
+      const { blobs } = await list({ prefix: 'suerterd_db.json', token: BLOB_TOKEN });
       if (blobs && blobs.length > 0) {
-        const res = await fetch(blobs[0].url, {
-          headers: { 'Authorization': `Bearer ${token}` }
+        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+        const res = await fetch(sorted[0].url, {
+          headers: { 'Authorization': `Bearer ${BLOB_TOKEN}` }
         });
         if (res.ok) {
           const text = await res.text();
@@ -139,14 +140,13 @@ async function writeDb(db) {
   cachedDb = db;
   lastDbFetchTime = Date.now();
 
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (token) {
+  if (BLOB_TOKEN) {
     try {
       await put('suerterd_db.json', JSON.stringify(db), {
         access: 'private',
         addRandomSuffix: false,
         allowOverwrite: true,
-        token
+        token: BLOB_TOKEN
       });
     } catch (e) {
       console.error("Error writing to Vercel Blob:", e);
