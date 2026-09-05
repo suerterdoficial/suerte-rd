@@ -1953,8 +1953,20 @@ ${formattedNumsText}
     const noImgMsg = $("viewReceiptNoImgMsg");
 
     if (modal && img) {
-      if (base64) {
-        img.src = base64;
+      let finalImg = (typeof base64 === 'string' && base64.startsWith('data:')) ? base64 : null;
+      if (!finalImg) {
+        const nums = String(tNum).split(",");
+        for (const n of nums) {
+          const numTrim = n.trim();
+          if (allTickets[rId] && allTickets[rId][numTrim] && typeof allTickets[rId][numTrim].comprobante === 'string' && allTickets[rId][numTrim].comprobante.startsWith('data:')) {
+            finalImg = allTickets[rId][numTrim].comprobante;
+            break;
+          }
+        }
+      }
+
+      if (finalImg) {
+        img.src = finalImg;
         img.style.display = "block";
         if (noImgMsg) noImgMsg.style.display = "none";
       } else {

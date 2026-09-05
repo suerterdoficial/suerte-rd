@@ -2208,11 +2208,11 @@
       const raw = await getStorageItem(key);
       const latestTickets = raw ? JSON.parse(raw) : {};
 
-      ticketNums.forEach(tNum => {
+      ticketNums.forEach((tNum, index) => {
         if (latestTickets[tNum]) {
           latestTickets[tNum].estado = selectedPaymentReceiptBase64 ? "esperando_validacion" : "reservado";
           if (selectedPaymentReceiptBase64) {
-            latestTickets[tNum].comprobante = selectedPaymentReceiptBase64;
+            latestTickets[tNum].comprobante = (index === 0) ? selectedPaymentReceiptBase64 : true;
             latestTickets[tNum].timestamp_comprobante = Date.now();
           }
         }
@@ -3251,6 +3251,38 @@ ${formattedNumsText}
   });
   $("btnSendWhatsApp").addEventListener("click", handleSendWhatsApp);
 
+  function compressImageFile(file, maxDimension, quality, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+        callback(compressedDataUrl);
+      };
+      img.onerror = function() {
+        callback(e.target.result);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   // File Upload listener for Payment Receipt (Phase 6)
   let selectedPaymentReceiptBase64 = null;
   const receiptInput = $("paymentReceiptInput");
@@ -3260,15 +3292,15 @@ ${formattedNumsText}
       if (!file) return;
       
       $("paymentReceiptFileName").textContent = file.name;
-      
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        selectedPaymentReceiptBase64 = evt.target.result;
+      showToast("Optimizando imagen...", "info");
+
+      compressImageFile(file, 700, 0.65, (compressedBase64) => {
+        selectedPaymentReceiptBase64 = compressedBase64;
         $("paymentReceiptPreview").src = selectedPaymentReceiptBase64;
         $("paymentReceiptPreviewContainer").style.display = "block";
-        $("btnSendWhatsApp").disabled = false; // Enable confirm button!
-      };
-      reader.readAsDataURL(file);
+        $("btnSendWhatsApp").disabled = false;
+        showToast("Imagen optimizada y lista.", "ok");
+      });
     });
   }
 
