@@ -10,6 +10,16 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, '..')));
 
+app.get('/assets/js/app.js', (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, '..', 'assets', 'js', 'app.js'));
+});
+
+app.get('/assets/js/admin.js', (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, '..', 'assets', 'js', 'admin.js'));
+});
+
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || "vercel_blob_rw_bLTLF5Id60MLnm2K_dDzlanQNawLODP4lD8C6Kk4piwXqV8";
