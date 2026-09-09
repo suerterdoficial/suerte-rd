@@ -1739,6 +1739,7 @@ ESTADO: ${estadoBadge}
               raffleId: rId,
               name: t.name || t.nombre || "Cliente",
               whatsapp: t.whatsapp,
+              loteria: t.loteria || "Pick 5 Florida",
               comprobante: t.comprobante || null,
               estado: t.estado,
               timestamp: t.timestamp_comprobante || t.timestamp,
@@ -1747,6 +1748,9 @@ ESTADO: ${estadoBadge}
           }
           if (t.comprobante && !groups[groupKey].comprobante) {
             groups[groupKey].comprobante = t.comprobante;
+          }
+          if (t.loteria && (groups[groupKey].loteria === "Pick 5 Florida" || !groups[groupKey].loteria)) {
+            groups[groupKey].loteria = t.loteria;
           }
           groups[groupKey].numbers.push(tNum);
           if (t.estado === 'esperando_validacion') {
@@ -1776,6 +1780,9 @@ ESTADO: ${estadoBadge}
           statusBadge = `<span class="badge" style="background:rgba(255, 215, 0, 0.1); color:var(--gold); border:1px solid var(--gold);">Reservado (S.C.)</span>`;
         }
 
+        const totalAmount = calculateTotalAmount(g.numbers.length, conf);
+        const amountDisplay = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
+
         rowsHtml += `
           <tr data-raffle="${rId}" data-tickets="${allNumsStr}">
             <td><strong>${escapeHtml(conf.title)}</strong></td>
@@ -1785,12 +1792,14 @@ ESTADO: ${estadoBadge}
               </span>
               <div style="font-size:0.75rem; color:var(--text-grey); margin-top:4px; font-family:var(--font-mono);">${numbersDisplay}</div>
             </td>
+            <td><strong style="color:var(--green); font-family:var(--font-mono); font-size:0.95rem;">${amountDisplay}</strong></td>
             <td>${escapeHtml(g.name)}</td>
             <td>
               <a href="https://wa.me/${formatWhatsAppPhone(g.whatsapp)}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; border-color:#00E676; color:#00E676; display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
                 <i data-lucide="message-circle" style="width:12px;"></i> WhatsApp
               </a>
             </td>
+            <td><span class="badge" style="background:rgba(0,229,255,0.05); color:var(--cyan); border:1px solid var(--border-cyan);">${escapeHtml(g.loteria)}</span></td>
             <td>
               ${g.comprobante ? `
                 <button class="btn btn-secondary btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
@@ -1852,7 +1861,7 @@ ESTADO: ${estadoBadge}
     } else {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
+          <td colspan="10" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
             No hay comprobantes pendientes de validación.
           </td>
         </tr>
@@ -1891,6 +1900,8 @@ ESTADO: ${estadoBadge}
       if (tInfo && tInfo.whatsapp && conf) {
         const clientName = tInfo.name || tInfo.nombre || "Cliente";
         const raffleTitle = conf.title;
+        const totalAmount = calculateTotalAmount(nums.length, conf);
+        const amountDisplay = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
         const formattedLines = [];
         for (let i = 0; i < nums.length; i += 4) {
           const chunk = nums.slice(i, i + 4).map(n => `#${n}`).join(", ");
@@ -1905,7 +1916,9 @@ ESTADO: ${estadoBadge}
 
 👤 *CLIENTE:* ${clientName}
 🏆 *SORTEO:* ${raffleTitle}
+🎯 *LOTERÍA OFICIAL:* ${tInfo.loteria || 'Pick 5 Florida'}
 📊 *CANTIDAD DE BOLETOS:* ${nums.length} boletos
+💵 *MONTO TOTAL VALIDADO:* ${amountDisplay}
 
 🎟️ *BOLETOS ACTIVOS:*
 ${formattedNumsText}
@@ -1988,14 +2001,20 @@ ${formattedNumsText}
       const nums = String(tNum).split(",");
       const firstNum = nums[0].trim();
       const tInfo = (allTickets[rId] && allTickets[rId][firstNum]) || {};
+      const conf = configs[rId];
+      const totalAmount = calculateTotalAmount(nums.length, conf);
       
       const metaName = $("viewReceiptMetaName");
       const metaPhone = $("viewReceiptMetaPhone");
+      const metaLottery = $("viewReceiptMetaLottery");
       const metaTickets = $("viewReceiptMetaTickets");
+      const metaAmount = $("viewReceiptMetaAmount");
 
       if (metaName) metaName.textContent = tInfo.name || tInfo.nombre || "Cliente";
       if (metaPhone) metaPhone.textContent = tInfo.whatsapp || "Sin número";
-      if (metaTickets) metaTickets.textContent = nums.map(n => `#${n.trim()}`).join(", ");
+      if (metaLottery) metaLottery.textContent = tInfo.loteria || "Pick 5 Florida";
+      if (metaTickets) metaTickets.textContent = `${nums.length} boletos (${nums.map(n => `#${n.trim()}`).join(", ")})`;
+      if (metaAmount) metaAmount.textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
 
       modal.classList.add("active");
     }

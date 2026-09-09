@@ -556,7 +556,7 @@ app.post('/api/tickets/reserve', async (req, res) => {
         name: name,
         nombre: name,
         whatsapp: whatsapp,
-        loteria: loteria || "Pick 5 Florida",
+        loteria: loteria || existing.loteria || "Pick 5 Florida",
         estado: targetState,
         timestamp: existing.timestamp || now
       };
@@ -572,8 +572,8 @@ app.post('/api/tickets/reserve', async (req, res) => {
     // Create notification
     if (!db.notifications) db.notifications = [];
     const notifMsg = comprobante 
-      ? `¡Paquete de ${ticketList.length} boletos enviado con comprobante por ${name}! Pendiente de validación.`
-      : `¡Paquete de ${ticketList.length} boletos reservado por ${name}! En espera de comprobante.`;
+      ? `¡Comprobante de pago recibido para el paquete de ${ticketList.length} boletos de ${name}! Pendiente de validación en Admin.`
+      : `¡Paquete de ${ticketList.length} boletos apartado por ${name} (${loteria || 'Pick 5 Florida'})! En espera de comprobante.`;
     
     db.notifications.unshift({
       text: notifMsg,

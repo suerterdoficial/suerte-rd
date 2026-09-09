@@ -4,6 +4,18 @@
   "suerterd:tickets:v2:florida5": "{}",
   "notifications": [
     {
+      "text": "Boleto #00002 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Test)",
+      "timestamp": 1788993890889
+    },
+    {
+      "text": "Boleto #00001 liberado automáticamente tras 24 horas sin pago (Cliente: Juan Perez)",
+      "timestamp": 1788993890889
+    },
+    {
+      "text": "¡Paquete de 2 boletos reservado por Prueba Test! En espera de comprobante.",
+      "timestamp": 1788651364242
+    },
+    {
       "text": "Base de datos limpia y sincronizada correctamente en Vercel KV.",
       "timestamp": 1788649720475
     }

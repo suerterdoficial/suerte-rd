@@ -980,8 +980,10 @@
                 <tr>
                   <th>Sorteo</th>
                   <th>Boleto(s)</th>
+                  <th>Monto Total</th>
                   <th>Comprador</th>
                   <th>WhatsApp</th>
+                  <th>Lotería</th>
                   <th>Comprobante</th>
                   <th>Estado</th>
                   <th>Fecha</th>
@@ -990,7 +992,7 @@
               </thead>
               <tbody id="paymentsTableBody">
                 <tr>
-                  <td colspan="8" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
+                  <td colspan="10" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
                     No hay comprobantes pendientes de validación.
                   </td>
                 </tr>
@@ -1048,12 +1050,12 @@
             <span style="color: var(--cyan); font-weight:700; font-size:0.9rem; display:block; margin-bottom:15px;"><i data-lucide="plus-circle" style="width:16px; vertical-align:middle; margin-right:4px;"></i> Agregar Nueva Cuenta Bancaria:</span>
             <div class="form-grid">
               <div class="field">
-                <label for="bankNameInput">Nombre del Banco</label>
-                <input type="text" id="bankNameInput" placeholder="Ej: Banreservas, Banco Popular">
+                <label for="bankNameInput">Banco</label>
+                <input type="text" id="bankNameInput" placeholder="Ej: Banreservas, Banco Popular...">
               </div>
               <div class="field">
                 <label for="bankTypeInput">Tipo de Cuenta</label>
-                <input type="text" id="bankTypeInput" placeholder="Ej: Cuenta de Ahorro, Cuenta Corriente">
+                <input type="text" id="bankTypeInput" placeholder="Ej: Cuenta de Ahorro / Corriente">
               </div>
               <div class="field">
                 <label for="bankNumInput">Número de Cuenta</label>
@@ -1061,11 +1063,11 @@
               </div>
               <div class="field">
                 <label for="bankOwnerInput">Titular de la Cuenta</label>
-                <input type="text" id="bankOwnerInput" placeholder="Ej: Cristhofer Sosa">
+                <input type="text" id="bankOwnerInput" placeholder="Ej: Juan Pérez">
               </div>
-              <div class="field full-width" style="margin-bottom:0;">
-                <button class="btn btn-primary" id="btnAddBankAccount" style="width:100%;">Registrar Cuenta Bancaria</button>
-              </div>
+            </div>
+            <div style="margin-top:15px; text-align:right;">
+              <button class="btn btn-primary" id="btnAddBankAccount" style="padding: 10px 20px;">Registrar Cuenta Bancaria</button>
             </div>
           </div>
 
@@ -1076,9 +1078,9 @@
                 <tr>
                   <th>Banco</th>
                   <th>Tipo</th>
-                  <th>Número de Cuenta</th>
+                  <th>Número</th>
                   <th>Titular</th>
-                  <th>Acciones</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
               <tbody id="bankAccountsTableBody">
