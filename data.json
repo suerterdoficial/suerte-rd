@@ -1,15 +1,15 @@
 {
   "suerterd:raffle:ids": "[\"florida5\"]",
-  "suerterd:config:v2:florida5": "{\"id\":\"florida5\",\"title\":\"Sorteo Especial iPhone 17 Pro Max 1TB\",\"prize\":\"iPhone 17 Pro Max 1TB\",\"price\":\"RD$3\",\"total\":100000,\"ticketDigits\":5,\"image\":\"./assets/suerte_rd_iphone17_banner.png\",\"active\":true,\"brand\":\"Apple\",\"model\":\"iPhone 17 Pro Max 1TB\",\"year\":\"2026\",\"details\":\"¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.\",\"blessedPct\":0.1,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedDrawInterval\":5,\"countdownTriggerPct\":80,\"countdownDurationDays\":7,\"blessedNumbers\":[],\"whatsapp\":\"18099838626\"}",
+  "suerterd:config:v2:florida5": "{\"id\":\"florida5\",\"title\":\"Sorteo Especial iPhone 17 Pro Max 1TB\",\"prize\":\"iPhone 17 Pro Max 1TB\",\"price\":\"RD$3\",\"total\":100000,\"ticketDigits\":5,\"image\":\"./assets/suerte_rd_iphone17_banner.png\",\"active\":true,\"brand\":\"Apple\",\"model\":\"iPhone 17 Pro Max 1TB\",\"year\":\"2026\",\"details\":\"¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.\",\"blessedPct\":0.1,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedDrawInterval\":5,\"countdownTriggerPct\":80,\"countdownDurationDays\":7,\"blessedNumbers\":[],\"whatsapp\":\"8099838626\"}",
   "suerterd:tickets:v2:florida5": "{}",
   "notifications": [
     {
       "text": "Boleto #00002 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Test)",
-      "timestamp": 1788995685654
+      "timestamp": 1788996768906
     },
     {
       "text": "Boleto #00001 liberado automáticamente tras 24 horas sin pago (Cliente: Juan Perez)",
-      "timestamp": 1788995685654
+      "timestamp": 1788996768906
     },
     {
       "text": "¡Paquete de 2 boletos reservado por Prueba Test! En espera de comprobante.",

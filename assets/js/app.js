@@ -2288,11 +2288,7 @@ ${formattedNumsText}
       return (clean && !clean.includes("280")) ? clean : "18099838626";
     }
 
-    let targetWhatsapp = (conf && conf.whatsapp) ? String(conf.whatsapp) : "8099838626";
-    if (targetWhatsapp.includes("280") || targetWhatsapp.includes("555")) {
-      targetWhatsapp = "8099838626";
-    }
-    const whatsappNum = formatWhatsAppPhone(targetWhatsapp);
+    const whatsappNum = "18099838626";
     window.open(`https://wa.me/${whatsappNum}?text=${encoded}`, "_blank");
 
     // Reset selected file fields

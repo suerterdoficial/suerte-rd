@@ -4849,7 +4849,7 @@
     const textMsg = `Hola Suerte RD, he reservado el boleto digital #${num} en combinación con ${lottery} para el sorteo del "${conf.prize}" a nombre de ${name}. Solicito los datos para completar mi pago.`;
     const encoded = encodeURIComponent(textMsg);
 
-    const targetPhone = conf.whatsapp || "18099838626";
+    const targetPhone = "18099838626";
     window.open(`https://wa.me/${targetPhone}?text=${encoded}`, "_blank");
 
     clearTicketSelection();
