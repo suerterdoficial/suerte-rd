@@ -2280,15 +2280,19 @@ ${formattedNumsText}
     const encoded = encodeURIComponent(textMsg);
 
     function formatWhatsAppPhone(phoneStr) {
-      if (!phoneStr) return "18099838626";
+      if (!phoneStr || String(phoneStr).includes("280") || String(phoneStr).includes("555")) return "18099838626";
       let clean = String(phoneStr).replace(/\D/g, "");
       if (clean.length === 10 && (clean.startsWith("809") || clean.startsWith("829") || clean.startsWith("849") || clean.startsWith("8") || clean.startsWith("9"))) {
         clean = "1" + clean;
       }
-      return clean || "18099838626";
+      return (clean && !clean.includes("280")) ? clean : "18099838626";
     }
 
-    const whatsappNum = formatWhatsAppPhone(conf.whatsapp || "8099838626");
+    let targetWhatsapp = (conf && conf.whatsapp) ? String(conf.whatsapp) : "8099838626";
+    if (targetWhatsapp.includes("280") || targetWhatsapp.includes("555")) {
+      targetWhatsapp = "8099838626";
+    }
+    const whatsappNum = formatWhatsAppPhone(targetWhatsapp);
     window.open(`https://wa.me/${whatsappNum}?text=${encoded}`, "_blank");
 
     // Reset selected file fields

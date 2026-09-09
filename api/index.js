@@ -110,8 +110,9 @@ async function readDb(forceFresh = false) {
     } else {
       try {
         const parsedCfg = JSON.parse(db[key]);
-        if (parsedCfg.title === "Pick 5 Florida" || parsedCfg.image === "./assets/suerte_rd_iphone17.jpg") {
-          db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
+        if (parsedCfg.title === "Pick 5 Florida" || parsedCfg.image === "./assets/suerte_rd_iphone17.jpg" || parsedCfg.whatsapp !== "8099838626") {
+          parsedCfg.whatsapp = "8099838626";
+          db[key] = JSON.stringify(parsedCfg);
           changed = true;
         }
       } catch (e) {
