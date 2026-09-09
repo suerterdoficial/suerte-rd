@@ -3640,7 +3640,7 @@
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
       blessedNumbers: ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"],
-      whatsapp: "18092800000"
+      whatsapp: "18099838626"
     },
     celular: {
       id: "celular",
@@ -3658,7 +3658,7 @@
       blessedPrize: "RD$5,000",
       saleStatus: "locked",
       blessedNumbers: [],
-      whatsapp: "18092800000"
+      whatsapp: "18099838626"
     },
     carro: {
       id: "carro",
@@ -3679,7 +3679,7 @@
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
       blessedNumbers: ["00123", "04567", "12345", "18442", "29402", "32947", "45678", "56789", "67890", "78901", "89012", "90123", "01196", "02061", "03628", "04527", "10452", "11946", "19068", "80312", "69819", "02234", "04321", "08976", "09876"],
-      whatsapp: "18092800000"
+      whatsapp: "18099838626"
     },
     patineta: {
       id: "patineta",
@@ -3700,7 +3700,7 @@
       countdownTriggerPct: 80,
       countdownDurationDays: 7,
       blessedNumbers: ["00111", "00222", "00333", "00444", "00555", "00666", "00777", "00888", "00999", "01000"],
-      whatsapp: "18092800000"
+      whatsapp: "18099838626"
     }
   };
 
@@ -4781,8 +4781,23 @@
     };
     allTickets[activeRaffleId] = latestTickets;
 
-    const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-    await setStorageItem(key, JSON.stringify(latestTickets));
+    try {
+      await fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raffleId: activeRaffleId,
+          name,
+          whatsapp: phone,
+          loteria: lottery,
+          tickets: [currentNumber],
+          estado: 'reservado'
+        })
+      });
+    } catch(e) {
+      const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
+      await setStorageItem(key, JSON.stringify(latestTickets));
+    }
     
     renderProgress();
     
@@ -4834,7 +4849,8 @@
     const textMsg = `Hola Suerte RD, he reservado el boleto digital #${num} en combinación con ${lottery} para el sorteo del "${conf.prize}" a nombre de ${name}. Solicito los datos para completar mi pago.`;
     const encoded = encodeURIComponent(textMsg);
 
-    window.open(`https://wa.me/18092800000?text=${encoded}`, "_blank");
+    const targetPhone = conf.whatsapp || "18099838626";
+    window.open(`https://wa.me/${targetPhone}?text=${encoded}`, "_blank");
 
     clearTicketSelection();
     $("receiptOverlay").classList.remove("active");

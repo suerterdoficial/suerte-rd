@@ -143,7 +143,7 @@ async function writeDb(db) {
   if (BLOB_TOKEN) {
     try {
       await put('suerterd_db.json', JSON.stringify(db), {
-        access: 'private',
+        access: 'public',
         addRandomSuffix: false,
         allowOverwrite: true,
         token: BLOB_TOKEN
@@ -530,8 +530,13 @@ app.post('/api/admin/clean-expired', async (req, res) => {
 app.post('/api/tickets/reserve', async (req, res) => {
   try {
     const { raffleId, name, whatsapp, loteria, tickets, comprobante, estado } = req.body;
-    if (!raffleId || !name || !whatsapp || !tickets || !Array.isArray(tickets) || tickets.length === 0) {
+    if (!name || !whatsapp || !tickets) {
       return res.status(400).json({ error: "Campos incompletos para reservar boletos." });
+    }
+
+    const ticketList = Array.isArray(tickets) ? tickets : [tickets];
+    if (ticketList.length === 0) {
+      return res.status(400).json({ error: "No se especificaron boletos." });
     }
 
     const rId = raffleId || "florida5";
@@ -542,7 +547,7 @@ app.post('/api/tickets/reserve', async (req, res) => {
     const now = Date.now();
     const targetState = estado || (comprobante ? "esperando_validacion" : "reservado");
 
-    tickets.forEach((tNum, index) => {
+    ticketList.forEach((tNum, index) => {
       const existing = ticketsObj[tNum] || {};
       if (existing.estado === 'pagado') return;
 
@@ -567,8 +572,8 @@ app.post('/api/tickets/reserve', async (req, res) => {
     // Create notification
     if (!db.notifications) db.notifications = [];
     const notifMsg = comprobante 
-      ? `¡Paquete de ${tickets.length} boletos enviado con comprobante por ${name}! Pendiente de validación.`
-      : `¡Paquete de ${tickets.length} boletos reservado por ${name}! En espera de comprobante.`;
+      ? `¡Paquete de ${ticketList.length} boletos enviado con comprobante por ${name}! Pendiente de validación.`
+      : `¡Paquete de ${ticketList.length} boletos reservado por ${name}! En espera de comprobante.`;
     
     db.notifications.unshift({
       text: notifMsg,
@@ -577,7 +582,7 @@ app.post('/api/tickets/reserve', async (req, res) => {
     if (db.notifications.length > 50) db.notifications = db.notifications.slice(0, 50);
 
     await writeDb(db);
-    res.json({ success: true, count: tickets.length });
+    res.json({ success: true, count: ticketList.length });
   } catch (e) {
     console.error("Error in /api/tickets/reserve:", e);
     res.status(500).json({ error: e.message });
