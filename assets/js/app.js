@@ -171,8 +171,19 @@
       requestAnimationFrame(animate);
     }
 
-    animate();
-  }
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.includes("suerterd:config")) {
+          const val = localStorage.getItem(k);
+          if (val && (val.includes("280") || val.includes("555"))) {
+            const parsed = JSON.parse(val);
+            parsed.whatsapp = "18099838626";
+            localStorage.setItem(k, JSON.stringify(parsed));
+          }
+        }
+      }
+    } catch(e) {}
 
   const DEFAULT_CONFIGS = {
     florida5: {
@@ -832,6 +843,7 @@
       if (configs[rId].blessedNumbers === undefined || !Array.isArray(configs[rId].blessedNumbers)) {
         configs[rId].blessedNumbers = DEFAULT_CONFIGS[rId]?.blessedNumbers ?? [];
       }
+      configs[rId].whatsapp = "18099838626";
     }
 
     // 2. Cargar Ventas de Boletos de las Rifas
@@ -2280,12 +2292,12 @@ ${formattedNumsText}
     const encoded = encodeURIComponent(textMsg);
 
     function formatWhatsAppPhone(phoneStr) {
-      if (!phoneStr || String(phoneStr).includes("280") || String(phoneStr).includes("555")) return "18099838626";
+      if (!phoneStr) return "18099838626";
       let clean = String(phoneStr).replace(/\D/g, "");
       if (clean.length === 10 && (clean.startsWith("809") || clean.startsWith("829") || clean.startsWith("849") || clean.startsWith("8") || clean.startsWith("9"))) {
         clean = "1" + clean;
       }
-      return (clean && !clean.includes("280")) ? clean : "18099838626";
+      return clean || "18099838626";
     }
 
     const targetWhatsapp = (conf && conf.whatsapp) ? conf.whatsapp : "8099838626";
@@ -2520,7 +2532,7 @@ ${formattedNumsText}
       $("buyerNameInput").value = "Usuario Buscador";
     }
     if (!$("buyerWhatsappInput").value.trim()) {
-      $("buyerWhatsappInput").value = "18095550000";
+      $("buyerWhatsappInput").value = "18099838626";
     }
     checkStep2Validation();
 

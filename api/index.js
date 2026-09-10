@@ -22,7 +22,7 @@ app.get('/assets/js/admin.js', (req, res) => {
 
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || "vercel_blob_rw_bLTLF5Id60MLnm2K_dDzlanQNawLODP4lD8C6Kk4piwXqV8";
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || null;
 
 let cachedDb = null;
 let lastDbFetchTime = 0;
@@ -120,8 +120,8 @@ async function readDb(forceFresh = false) {
     } else {
       try {
         const parsedCfg = JSON.parse(db[key]);
-        if (parsedCfg.title === "Pick 5 Florida" || parsedCfg.image === "./assets/suerte_rd_iphone17.jpg" || parsedCfg.whatsapp !== "8099838626") {
-          parsedCfg.whatsapp = "8099838626";
+        if (parsedCfg.whatsapp !== "18099838626" && parsedCfg.whatsapp !== "8099838626") {
+          parsedCfg.whatsapp = "18099838626";
           db[key] = JSON.stringify(parsedCfg);
           changed = true;
         }

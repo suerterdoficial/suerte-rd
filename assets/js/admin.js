@@ -188,6 +188,7 @@
       if (configs[rId].blessedNumbers === undefined) {
         configs[rId].blessedNumbers = DEFAULT_CONFIGS[rId]?.blessedNumbers ?? ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"];
       }
+      configs[rId].whatsapp = "18099838626";
     }
 
     if (RAFFLE_IDS.length > 0) {
