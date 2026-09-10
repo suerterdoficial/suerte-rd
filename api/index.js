@@ -49,7 +49,7 @@ const DEFAULT_CONFIGS = {
     countdownTriggerPct: 80,
     countdownDurationDays: 7,
     blessedNumbers: [],
-    whatsapp: "18099838626"
+    whatsapp: "8099838626"
   }
 };
 

@@ -5,11 +5,11 @@
   "notifications": [
     {
       "text": "Boleto #00002 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Test)",
-      "timestamp": 1788997368863
+      "timestamp": 1789002469307
     },
     {
       "text": "Boleto #00001 liberado automáticamente tras 24 horas sin pago (Cliente: Juan Perez)",
-      "timestamp": 1788997368863
+      "timestamp": 1789002469307
     },
     {
       "text": "¡Paquete de 2 boletos reservado por Prueba Test! En espera de comprobante.",
