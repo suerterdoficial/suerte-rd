@@ -3893,7 +3893,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: 10000;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   opacity: 0;
@@ -3904,9 +3904,10 @@ button:active:not(:disabled), .btn:active:not(:disabled), .keypad-btn:active, .s
 }
 
 .overlay.active {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 .modal {
