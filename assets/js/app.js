@@ -171,19 +171,22 @@
       requestAnimationFrame(animate);
     }
 
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.includes("suerterd:config")) {
-          const val = localStorage.getItem(k);
-          if (val && (val.includes("280") || val.includes("555"))) {
-            const parsed = JSON.parse(val);
-            parsed.whatsapp = "18099838626";
-            localStorage.setItem(k, JSON.stringify(parsed));
-          }
+    animate();
+  }
+
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.includes("suerterd:config")) {
+        const val = localStorage.getItem(k);
+        if (val && (val.includes("280") || val.includes("555"))) {
+          const parsed = JSON.parse(val);
+          parsed.whatsapp = "18099838626";
+          localStorage.setItem(k, JSON.stringify(parsed));
         }
       }
-    } catch(e) {}
+    }
+  } catch(e) {}
 
   const DEFAULT_CONFIGS = {
     florida5: {
@@ -1038,15 +1041,24 @@
     activeRaffleId = rId;
 
     const conf = configs[rId];
-    $("heroTitle").innerHTML = `${conf.title.split(" ").slice(0, -1).join(" ") || "Sorteo"} <span>${conf.title.split(" ").slice(-1)[0] || "RD"}</span>`;
-    $("heroSubtitle").textContent = `Participa por nuestro gran premio: ${conf.prize}.`;
+    const heroTitle = $("heroTitle");
+    if (heroTitle) {
+      heroTitle.innerHTML = `${conf.title.split(" ").slice(0, -1).join(" ") || "Sorteo"} <span>${conf.title.split(" ").slice(-1)[0] || "RD"}</span>`;
+    }
+    const heroSubtitle = $("heroSubtitle");
+    if (heroSubtitle) {
+      heroSubtitle.textContent = `Participa por nuestro gran premio: ${conf.prize}.`;
+    }
     
     const bannerImg = $("heroBannerImg");
     if (bannerImg) {
       bannerImg.src = conf.image;
     }
 
-    $("jackpotDisplay").textContent = conf.prize;
+    const jackpotDisplay = $("jackpotDisplay");
+    if (jackpotDisplay) {
+      jackpotDisplay.textContent = conf.prize;
+    }
 
     const digitCount = conf.ticketDigits || 5;
     const digitsRow = $("digitsRow");
@@ -2251,7 +2263,6 @@
       return;
     }
 
-    const phone = $("receiptPhone").textContent;
     const priceText = $("receiptPrice").textContent;
     const dateText = $("receiptDate").textContent;
     const barcodeText = $("receiptBarcodeText").textContent;

@@ -10,6 +10,7 @@
   "dependencies": {
     "@vercel/blob": "^2.8.0",
     "@vercel/kv": "^1.0.1",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "puppeteer": "^25.10.0"
   }
 }
