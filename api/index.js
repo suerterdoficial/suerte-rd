@@ -8,6 +8,13 @@ const PORT = process.env.PORT || 8000;
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use((req, res, next) => {
+  if (!req.url.startsWith('/api') && !req.url.startsWith('/assets') && req.url !== '/' && req.url !== '/admin') {
+    req.url = '/api' + req.url;
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, '..')));
 
 app.get('/assets/js/app.js', (req, res) => {

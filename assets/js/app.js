@@ -2543,7 +2543,7 @@ ${formattedNumsText}
   }
 
   function addPackageToCart(count) {
-    const conf = configs[activeRaffleId];
+    const conf = configs[activeRaffleId] || (DEFAULT_CONFIGS[activeRaffleId] ? {...DEFAULT_CONFIGS[activeRaffleId]} : null);
     if (!conf) return;
     const tickets = allTickets[activeRaffleId] || {};
     const totalCount = Math.max(1, Number(conf.total) || 10000);
@@ -2551,7 +2551,7 @@ ${formattedNumsText}
     const available = [];
     for (let i = 0; i < totalCount; i++) {
       const num = pad5(i);
-      if (!tickets[num] && !cart.includes(num)) {
+      if (!tickets[num]) {
         available.push(num);
       }
     }
@@ -2569,10 +2569,10 @@ ${formattedNumsText}
       tempAvailable.splice(randIdx, 1);
     }
 
-    cart.push(...selected);
+    cart = [...selected];
     renderCart();
     playSound("success");
-    showToast(`¡Se agregaron ${count} boletos al carrito con tarifa de paquete!`, "ok");
+    showToast(`¡Se seleccionaron ${count} boletos con tarifa de paquete!`, "ok");
     
     showScreen('purchase');
     openReserveForm();
