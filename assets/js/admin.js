@@ -476,21 +476,27 @@
     activeRaffleId = rId;
     
     // Header Sync
-    const conf = configs[rId];
-    $("headerTitle").textContent = conf.title;
-    $("headerSubtitle").textContent = `Premio: ${conf.prize} • Precio: ${conf.price} • Total Boletos: ${conf.total.toLocaleString("es-DO")}`;
+    const conf = configs[rId] || DEFAULT_CONFIGS[rId] || { 
+      title: "Sorteo Especial iPhone 17 Pro Max 1TB", 
+      prize: "iPhone 17 Pro Max 1TB", 
+      price: "RD$3", 
+      total: 100000 
+    };
+    
+    if ($("headerTitle")) $("headerTitle").textContent = conf.title || "Sorteo Especial iPhone 17 Pro Max 1TB";
+    if ($("headerSubtitle")) $("headerSubtitle").textContent = `Premio: ${conf.prize || 'iPhone 17 Pro Max 1TB'} • Precio: ${conf.price || 'RD$3'} • Total Boletos: ${(conf.total || 100000).toLocaleString("es-DO")}`;
 
     // Rebuild draw reels UI
-    updateDrawReelsDOM();
+    try { updateDrawReelsDOM(); } catch(e) {}
 
     // Dropdowns Sync
-    if ($("globalRaffleSelect").value !== rId) $("globalRaffleSelect").value = rId;
+    if ($("globalRaffleSelect") && $("globalRaffleSelect").value !== rId) $("globalRaffleSelect").value = rId;
     if ($("cfgRaffleSelect") && $("cfgRaffleSelect").value !== rId) $("cfgRaffleSelect").value = rId;
 
-    loadConfigForm(rId);
-    updateDashboardStats();
-    renderTicketsTable();
-    updatePaymentsNotificationBadge();
+    try { loadConfigForm(rId); } catch(e) {}
+    try { updateDashboardStats(); } catch(e) {}
+    try { renderTicketsTable(); } catch(e) {}
+    try { updatePaymentsNotificationBadge(); } catch(e) {}
   }
 
   function updateDrawReelsDOM() {
@@ -578,57 +584,65 @@
 
   // --- DASHBOARD AND STATS ---
   function updateDashboardStats() {
-    const conf = configs[activeRaffleId];
-    const tickets = allTickets[activeRaffleId] || {};
-    
-    const totalCount = conf.total;
-    const soldList = Object.values(tickets);
-    
-    const soldCount = soldList.length;
-    const reservedCount = soldList.filter(t => t.estado === "reservado" || t.estado === "esperando_validacion").length;
-    const paidCount = soldList.filter(t => t.estado === "pagado").length;
-    
-    // Group paid tickets by buyer/timestamp to calculate package pricing accurately
-    const paidGroups = {};
-    Object.keys(tickets).forEach(tNum => {
-      const t = tickets[tNum];
-      if (t.estado === "pagado") {
-        const key = `${t.timestamp || 0}_${t.whatsapp || 'unknown'}`;
-        if (!paidGroups[key]) paidGroups[key] = 0;
-        paidGroups[key]++;
+    try {
+      const conf = configs[activeRaffleId] || DEFAULT_CONFIGS[activeRaffleId] || { total: 100000, price: "RD$3" };
+      const tickets = allTickets[activeRaffleId] || {};
+      
+      const totalCount = conf.total || 100000;
+      const soldList = Object.values(tickets);
+      
+      const soldCount = soldList.length;
+      const reservedCount = soldList.filter(t => t && (t.estado === "reservado" || t.estado === "esperando_validacion")).length;
+      const paidCount = soldList.filter(t => t && t.estado === "pagado").length;
+      
+      // Group paid tickets by buyer/timestamp to calculate package pricing accurately
+      const paidGroups = {};
+      Object.keys(tickets).forEach(tNum => {
+        const t = tickets[tNum];
+        if (t && t.estado === "pagado") {
+          const key = `${t.timestamp || 0}_${t.whatsapp || 'unknown'}`;
+          if (!paidGroups[key]) paidGroups[key] = 0;
+          paidGroups[key]++;
+        }
+      });
+
+      let totalPaidIncome = 0;
+      Object.values(paidGroups).forEach(count => {
+        totalPaidIncome += calculateTotalAmount(count, conf);
+      });
+
+      if (Object.keys(paidGroups).length === 0 && paidCount > 0) {
+        totalPaidIncome = calculateTotalAmount(paidCount, conf);
       }
-    });
 
-    let totalPaidIncome = 0;
-    Object.values(paidGroups).forEach(count => {
-      totalPaidIncome += calculateTotalAmount(count, conf);
-    });
+      if ($("statIncome")) $("statIncome").textContent = `RD$ ${totalPaidIncome.toLocaleString("es-DO")}`;
+      if ($("statSold")) $("statSold").textContent = `${soldCount.toLocaleString("es-DO")} / ${totalCount.toLocaleString("es-DO")}`;
+      if ($("statRatio")) $("statRatio").textContent = `${reservedCount.toLocaleString("es-DO")} Res. / ${paidCount.toLocaleString("es-DO")} Pag.`;
 
-    if (Object.keys(paidGroups).length === 0 && paidCount > 0) {
-      totalPaidIncome = calculateTotalAmount(paidCount, conf);
+      try {
+        renderChart();
+      } catch (e) {
+        console.warn("Chart rendering skipped:", e);
+      }
+    } catch (e) {
+      console.error("updateDashboardStats error:", e);
     }
-
-    $("statIncome").textContent = `RD$ ${totalPaidIncome.toLocaleString("es-DO")}`;
-    $("statSold").textContent = `${soldCount.toLocaleString("es-DO")} / ${totalCount.toLocaleString("es-DO")}`;
-    $("statRatio").textContent = `${reservedCount.toLocaleString("es-DO")} Res. / ${paidCount.toLocaleString("es-DO")} Pag.`;
-
-    renderChart();
   }
 
   function renderChart() {
     const ctx = $("statsChart");
-    if (!ctx) return;
+    if (!ctx || typeof Chart === 'undefined') return;
 
-    const conf = configs[activeRaffleId];
+    const conf = configs[activeRaffleId] || DEFAULT_CONFIGS[activeRaffleId] || { total: 100000 };
     const tickets = allTickets[activeRaffleId] || {};
-    const totalCount = conf.total;
+    const totalCount = conf.total || 100000;
     const soldList = Object.values(tickets);
-    const reservedCount = soldList.filter(t => t.estado === "reservado" || t.estado === "esperando_validacion").length;
-    const paidCount = soldList.filter(t => t.estado === "pagado").length;
+    const reservedCount = soldList.filter(t => t && (t.estado === "reservado" || t.estado === "esperando_validacion")).length;
+    const paidCount = soldList.filter(t => t && t.estado === "pagado").length;
     const availableCount = Math.max(0, totalCount - soldList.length);
 
     if (statsChart) {
-      statsChart.destroy();
+      try { statsChart.destroy(); } catch (e) {}
     }
 
     statsChart = new Chart(ctx, {
