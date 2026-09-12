@@ -146,8 +146,8 @@ async function readDb(forceFresh = false) {
 
   let changed = false;
 
-  // Auto-initialize raffle IDs list
-  if (!db['suerterd:raffle:ids'] || db['suerterd:raffle:ids'] !== JSON.stringify(["florida5"])) {
+  // Auto-initialize raffle IDs list if missing
+  if (!db['suerterd:raffle:ids']) {
     db['suerterd:raffle:ids'] = JSON.stringify(["florida5"]);
     changed = true;
   }
@@ -158,17 +158,6 @@ async function readDb(forceFresh = false) {
     if (!db[key]) {
       db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
       changed = true;
-    } else {
-      try {
-        const parsedCfg = JSON.parse(db[key]);
-        if (parsedCfg.whatsapp !== "18099838626" && parsedCfg.whatsapp !== "8099838626") {
-          parsedCfg.whatsapp = "18099838626";
-          db[key] = JSON.stringify(parsedCfg);
-          changed = true;
-        }
-      } catch (e) {
-        console.error("Error parsing config during migration check", e);
-      }
     }
     // Also ensure tickets databases are initialized empty if not present
     const tKey = `suerterd:tickets:v2:${id}`;
