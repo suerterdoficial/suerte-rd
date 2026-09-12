@@ -896,6 +896,49 @@
         <span id="storyVideoText" style="text-align:center; padding:20px;">[Reproduciendo Video Ganador...]</span>
       </div>
     </div>
+</div>
+</div>
+
+<!-- Modal: Subir Comprobante de Pago (Para Boletos Reservados) -->
+<div class="overlay" id="uploadReceiptModal" style="pointer-events: none;">
+  <div class="modal" style="max-width: 480px;">
+    <button class="modal-close-btn" id="closeUploadReceiptModalBtn"><i data-lucide="x"></i></button>
+    <h3 style="text-align: center; margin-bottom: 5px; color: var(--cyan);">Envío de Comprobante de Depósito</h3>
+    <p style="text-align: center; color: var(--text-grey); font-size: 0.85rem; margin-bottom: 20px;">Adjunta la foto de tu comprobante de pago para validar tu compra.</p>
+
+    <div class="field">
+      <label>Cliente / Comprador</label>
+      <input type="text" id="uploadReceiptClientName" readonly style="background: rgba(0,0,0,0.3); color: #FFF;">
+    </div>
+
+    <div class="field">
+      <label>WhatsApp / Teléfono</label>
+      <input type="text" id="uploadReceiptClientPhone" readonly style="background: rgba(0,0,0,0.3); color: var(--cyan);">
+    </div>
+
+    <div class="field">
+      <label>Boleto(s) a Validar</label>
+      <input type="text" id="uploadReceiptTicketNums" readonly style="background: rgba(0,0,0,0.3); color: var(--gold); font-family: var(--font-mono); font-weight: 800;">
+    </div>
+
+    <div class="luckium-upload-card" style="border: 2px dashed var(--border-cyan); background: rgba(0, 229, 255, 0.04); border-radius: 16px; padding: 20px; text-align: center;">
+      <i data-lucide="upload-cloud" style="width: 36px; height: 36px; color: var(--cyan); margin-bottom: 8px;"></i>
+      <div style="font-weight: 800; color: #FFF; font-size: 0.95rem;">Seleccionar Captura o Foto del Depósito</div>
+      <div style="font-size: 0.75rem; color: var(--text-grey); margin-bottom: 12px;">Formatos permitidos: JPG, PNG, WEBP</div>
+      
+      <label for="directReceiptInput" class="btn btn-secondary" style="border-color: var(--cyan); color: var(--cyan); display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+        <i data-lucide="image" style="width: 16px; height: 16px;"></i> Elegir Imagen
+      </label>
+      <input type="file" id="directReceiptInput" accept="image/*" style="display:none;">
+    </div>
+
+    <div id="directReceiptPreviewContainer" style="display:none; margin-top: 15px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border-cyan); max-height: 180px; background: rgba(0,0,0,0.4); text-align: center;">
+      <img id="directReceiptPreview" style="max-width: 100%; max-height: 180px; object-fit: contain; padding: 8px;">
+    </div>
+
+    <button class="btn btn-primary" id="btnSubmitDirectReceipt" disabled style="width: 100%; margin-top: 20px; font-weight: 800; gap: 8px;">
+      <i data-lucide="send" style="width: 18px;"></i> Enviar Comprobante al Administrador
+    </button>
   </div>
 </div>
 
