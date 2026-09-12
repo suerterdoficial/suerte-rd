@@ -338,6 +338,10 @@
           renderWinnersTable();
         } else if (target === "panePaymentsConfig") {
           renderBankAccountsTable();
+        } else if (target === "paneWhatsappTemplates") {
+          loadWhatsappTemplates();
+        } else if (target === "paneFinancialReports") {
+          renderFinancialReportsTable();
         }
       });
     });
@@ -438,6 +442,10 @@
     // Receipt image viewer tools
     safeAddListener("btnRotateReceiptImg", "click", rotateReceiptImage);
     safeAddListener("btnOpenReceiptNewTab", "click", openReceiptNewTab);
+
+    // WhatsApp Templates & Financial Reports
+    safeAddListener("btnSaveWaTemplates", "click", saveWhatsappTemplates);
+    safeAddListener("btnExportFinancialCSV", "click", exportFinancialCSV);
 
     // Change PIN
     safeAddListener("btnUpdatePin", "click", updateAdminPinCode);
@@ -2436,11 +2444,161 @@ Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo 
           renderWinnersTable();
         } else if (paneId === "panePaymentsConfig") {
           renderBankAccountsTable();
+        } else if (paneId === "paneWhatsappTemplates") {
+          loadWhatsappTemplates();
+        } else if (paneId === "paneFinancialReports") {
+          renderFinancialReportsTable();
         }
       }
     } catch(e) {
       console.error("Polling error", e);
     }
+  }
+
+  // --- WHATSAPP TEMPLATES MANAGEMENT ---
+  const DEFAULT_WA_APPROVED = `✅ *SUERTE RD* | *CONFIRMACIÓN DE PAGO OFICIAL* ✅
+═════════════════════════════
+🎉 *¡TU COMPRA DE PAQUETE HA SIDO VALIDADA Y ACTIVADA CON ÉXITO!* 🎉
+
+👤 *CLIENTE:* {CLIENTE}
+🏆 *SORTEO:* {SORTEO}
+🎯 *LOTERÍA OFICIAL:* {LOTERIA}
+📊 *DETALLE DEL PAQUETE:* {PAQUETE}
+💵 *MONTO TOTAL VALIDADO:* {MONTO}
+
+🎟️ *BOLETOS ACTIVOS EN LA WEB:*
+{BOLETOS}
+
+🟢 *ESTADO:* *PAGADOS Y PARTICIPANDO OFICIALMENTE EN LA RIFA* 🟢
+═════════════════════════════
+✨ ¡Tus boletos ya están oficialmente registrados y participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
+
+  const DEFAULT_WA_REJECTED = `⚠️ *SUERTE RD* | *NOTIFICACIÓN DE COMPROBANTE* ⚠️
+═════════════════════════════
+Hola *{CLIENTE}*, necesitamos revisar tu comprobante para el sorteo *{SORTEO}*.
+
+📌 *MOTIVO:* {MOTIVO}
+
+Por favor reenvíanos tu foto de transferencia actualizada para validar y activar tu participación oficial. ¡Muchas gracias! 🙏✨`;
+
+  async function loadWhatsappTemplates() {
+    try {
+      const appRaw = await getStorageItem("suerterd:wa:template_approved");
+      const rejRaw = await getStorageItem("suerterd:wa:template_rejected");
+      if ($("waTemplateApproved")) $("waTemplateApproved").value = appRaw || DEFAULT_WA_APPROVED;
+      if ($("waTemplateRejected")) $("waTemplateRejected").value = rejRaw || DEFAULT_WA_REJECTED;
+    } catch (e) {
+      if ($("waTemplateApproved")) $("waTemplateApproved").value = DEFAULT_WA_APPROVED;
+      if ($("waTemplateRejected")) $("waTemplateRejected").value = DEFAULT_WA_REJECTED;
+    }
+  }
+
+  async function saveWhatsappTemplates() {
+    showNotification("Guardando plantillas de WhatsApp...", "info");
+    const appVal = $("waTemplateApproved") ? $("waTemplateApproved").value.trim() : DEFAULT_WA_APPROVED;
+    const rejVal = $("waTemplateRejected") ? $("waTemplateRejected").value.trim() : DEFAULT_WA_REJECTED;
+
+    await setStorageItem("suerterd:wa:template_approved", appVal);
+    await setStorageItem("suerterd:wa:template_rejected", rejVal);
+
+    showNotification("¡Plantillas de WhatsApp guardadas exitosamente!", "success");
+  }
+
+  // --- FINANCIAL REPORTS & METRICS ---
+  function renderFinancialReportsTable() {
+    const tbody = $("financialBreakdownTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const conf = configs[activeRaffleId] || DEFAULT_CONFIGS[activeRaffleId] || { total: 100000 };
+    const tickets = allTickets[activeRaffleId] || {};
+    const ticketList = Object.values(tickets);
+
+    const paidTickets = ticketList.filter(t => t && t.estado === "pagado");
+    const pendingTickets = ticketList.filter(t => t && (t.estado === "esperando_validacion" || t.estado === "reservado"));
+
+    // Tiers Breakdown
+    const tiers = [
+      { name: "Paquete Diamante (500 Boletos)", price: "RD$ 1,500", count: 500 },
+      { name: "Paquete Oro (250 Boletos)", price: "RD$ 750", count: 250 },
+      { name: "Paquete Plata (150 Boletos)", price: "RD$ 450", count: 150 },
+      { name: "Paquete Bronce (50 Boletos)", price: "RD$ 150", count: 50 },
+      { name: "Boletos Individuales (< 50)", price: "RD$ 3 / c/u", count: 1 }
+    ];
+
+    let totalRevenue = 0;
+    let totalPendingRevenue = 0;
+    let rowsHtml = "";
+
+    tiers.forEach(tier => {
+      let tierPaidSales = 0;
+      let tierPaidTicketsCount = 0;
+      let tierRevenue = 0;
+
+      paidTickets.forEach(t => {
+        const pName = t.paquete || "";
+        if (pName.includes(tier.name.split(" ")[1]) || (tier.count === 1 && (!pName || pName.includes("Boleto")))) {
+          tierPaidSales++;
+          tierPaidTicketsCount++;
+        }
+      });
+
+      if (tier.count === 500) tierRevenue = tierPaidSales * 1500;
+      else if (tier.count === 250) tierRevenue = tierPaidSales * 750;
+      else if (tier.count === 150) tierRevenue = tierPaidSales * 450;
+      else if (tier.count === 50) tierRevenue = tierPaidSales * 150;
+      else tierRevenue = tierPaidTicketsCount * 3;
+
+      totalRevenue += tierRevenue;
+
+      rowsHtml += `
+        <tr>
+          <td><strong style="color:var(--cyan);">${tier.name}</strong></td>
+          <td style="font-family:var(--font-mono);">${tier.price}</td>
+          <td><strong style="color:#FFF;">${tierPaidSales.toLocaleString("es-DO")} ventas</strong></td>
+          <td style="font-family:var(--font-mono);">${tierPaidTicketsCount.toLocaleString("es-DO")} boletos</td>
+          <td><strong style="color:var(--green); font-family:var(--font-mono);">RD$ ${tierRevenue.toLocaleString("es-DO")}</strong></td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = rowsHtml;
+
+    if ($("finTotalRevenue")) $("finTotalRevenue").textContent = `RD$ ${totalRevenue.toLocaleString("es-DO")}`;
+    if ($("finPendingRevenue")) $("finPendingRevenue").textContent = `RD$ ${(pendingTickets.length * 3).toLocaleString("es-DO")}`;
+    if ($("finAvgTicket")) $("finAvgTicket").textContent = paidTickets.length > 0 ? `RD$ ${Math.round(totalRevenue / Math.max(1, paidTickets.length)).toLocaleString("es-DO")}` : "RD$ 0";
+  }
+
+  function exportFinancialCSV() {
+    const conf = configs[activeRaffleId] || { title: "Sorteo" };
+    let csv = `Sorteo,Nivel Paquete,Precio,Ventas Validadas,Boletos Incluidos,Total Recaudado\n`;
+    const tbody = $("financialBreakdownTableBody");
+    if (!tbody) return;
+
+    tbody.querySelectorAll("tr").forEach(tr => {
+      const cols = tr.querySelectorAll("td");
+      if (cols.length >= 5) {
+        const rowData = [
+          `"${conf.title}"`,
+          `"${cols[0].innerText.trim()}"`,
+          `"${cols[1].innerText.trim()}"`,
+          `"${cols[2].innerText.trim()}"`,
+          `"${cols[3].innerText.trim()}"`,
+          `"${cols[4].innerText.trim()}"`
+        ];
+        csv += rowData.join(",") + "\n";
+      }
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Reporte_Financiero_SuerteRD_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showNotification("Reporte financiero exportado en CSV.", "success");
   }
 
   // Run navigation setup immediately so sidebar buttons are always active & clickable
