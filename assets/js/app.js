@@ -687,8 +687,9 @@
   }
 
   function calculateTotalAmount(count, conf) {
-    if (!conf) return 0;
-    const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 100;
+    if (!conf) conf = {};
+    const priceStr = conf.price ? String(conf.price) : "3";
+    const ticketPrice = parseInt(priceStr.replace(/\D/g, "")) || 3;
     let remaining = count;
     let totalAmount = 0;
     
@@ -2129,136 +2130,141 @@
       return;
     }
 
-    let latestTickets = {};
-    try {
-      const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-      const raw = await getStorageItem(key);
-      latestTickets = raw ? JSON.parse(raw) : {};
-    } catch(e) { latestTickets = allTickets[activeRaffleId]; }
-
-    // Check if ANY ticket is already taken
-    const takenTickets = [];
-    cart.forEach(num => {
-      if (latestTickets[num]) {
-        takenTickets.push(num);
-      }
-    });
-
-    if (takenTickets.length > 0) {
-      allTickets[activeRaffleId] = latestTickets;
-      err.textContent = `Los siguientes boletos ya fueron ocupados: ${takenTickets.join(", ")}. Remuévelos de tu carrito para continuar.`;
-      showToast("Boletos ocupados por otro usuario.", "bad");
-      playSound("error");
-      if (mode === 'explore') {
-        renderExplorerGrid();
-      }
-      return;
+    const btnSubmit = $("btnConfirmReserveFinal");
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Generando Recibo...";
     }
 
-    // Book all tickets in cart
+    // 1. Prepare ticket state in memory immediately
+    let latestTickets = allTickets[activeRaffleId] || {};
     const timestamp = Date.now();
-    cart.forEach(num => {
+    
+    // Copy cart before resetting
+    const checkedOutCart = [...cart];
+    cart = [];
+    renderCart();
+
+    checkedOutCart.forEach(num => {
       latestTickets[num] = {
         name,
-        nombre: name, // support backend/admin compatibility
+        nombre: name,
         whatsapp: phone,
         loteria: lottery,
+        paquete: lastSelectedPackageLabel || "",
         estado: "reservado",
         timestamp: timestamp
       };
     });
 
     allTickets[activeRaffleId] = latestTickets;
-
     try {
-      await fetch('/api/tickets/reserve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          raffleId: activeRaffleId,
-          name,
-          whatsapp: phone,
-          loteria: lottery,
-          tickets: cart,
-          estado: 'reservado',
-          packageLabel: lastSelectedPackageLabel
-        })
-      });
-    } catch(e) {
       const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-      await setStorageItem(key, JSON.stringify(latestTickets));
+      localStorage.setItem(key, JSON.stringify(latestTickets));
+    } catch(e) {}
+
+    // 2. Hide reservation modal and reset button state
+    $("reserveConfirmOverlay").classList.remove("active");
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = `<i data-lucide="check" style="width:18px;"></i> Confirmar y Generar Recibo`;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
-    
+
     renderProgress();
     
-    confetti({
-      particleCount: 150,
-      spread: 80,
-      origin: { y: 0.6 }
-    });
+    try {
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+    } catch(e) {}
 
     playSound("success");
-    showToast("¡Boletos comprados! Completa tu pago por WhatsApp.", "ok");
+    showToast("¡Boletos reservados! Completa tu pago por WhatsApp.", "ok");
 
-    $("reserveConfirmOverlay").classList.remove("active");
-    
-    const checkedOutCart = [...cart];
-    cart = [];
-    renderCart();
-
+    // Open receipt modal INSTANTLY (Zero delay)
     showReceipt(checkedOutCart.join(", "), name, phone, lottery, checkedOutCart.length);
+
+    // 3. Send network sync to server asynchronously in background
+    fetch('/api/tickets/reserve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        raffleId: activeRaffleId,
+        name,
+        whatsapp: phone,
+        loteria: lottery,
+        tickets: checkedOutCart,
+        estado: 'reservado',
+        packageLabel: lastSelectedPackageLabel
+      })
+    }).catch(e => {
+      console.warn("Background ticket sync error:", e);
+    });
   }
 
   function showReceipt(num, name, phone, lottery, count = 1) {
-    const conf = configs[activeRaffleId];
-    $("receiptRaffleTitle").textContent = conf.title.toUpperCase();
-    $("receiptDate").textContent = new Date().toLocaleDateString("es-DO", {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    });
-    $("receiptName").textContent = name;
-    $("receiptPhone").textContent = phone;
-    
-    const totalAmount = calculateTotalAmount(count, conf);
-    $("receiptPrice").textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
-    
-    $("receiptLottery").textContent = lottery;
-    
-    const receiptNumEl = $("receiptTicketNum");
-    const rawTicketsStr = (typeof num === "string") ? num : (Array.isArray(num) ? num.join(", ") : String(num));
-    receiptNumEl.setAttribute("data-tickets", rawTicketsStr);
-    receiptNumEl.innerHTML = formatTicketChips(num, true);
-
-    const firstNum = rawTicketsStr.split(", ")[0].replace(/#/g, "");
-    $("receiptBarcodeText").textContent = `SRD-${firstNum}-${count}tix`;
-
-    // Render structured bank details
-    const bankGrid = $("receiptBankAccounts");
-    if (bankGrid) {
-      bankGrid.innerHTML = bankAccounts.map((acc, idx) => `
-        <div class="bank-card-item">
-          <div class="bank-card-info">
-            <span class="bank-card-name" style="color: #1A202C;">${acc.bank}</span>
-            <span class="bank-card-type">${acc.type}</span>
-            <span class="bank-card-num" style="font-size: 1rem; font-weight: 700; color: #2D3748; letter-spacing: 0.5px; margin: 2px 0;">${acc.number}</span>
-            <span class="bank-card-owner" style="font-size: 0.7rem; color: #718096;">Titular: ${acc.owner}</span>
-          </div>
-          <button class="bank-card-copy-btn" onclick="window.srd.copyToClipboard('${acc.number}', '${acc.bank}')" type="button" title="Copiar número de cuenta">
-            <i data-lucide="copy" style="width:14px; height:14px;"></i>
-          </button>
-        </div>
-      `).join("");
+    try {
+      const conf = (configs && configs[activeRaffleId]) || (DEFAULT_CONFIGS && DEFAULT_CONFIGS[activeRaffleId]) || { title: "Sorteo Especial iPhone 17 Pro Max 1TB", price: "RD$3" };
+      const title = (conf && conf.title) ? conf.title : "Sorteo Especial iPhone 17 Pro Max 1TB";
+      if ($("receiptRaffleTitle")) $("receiptRaffleTitle").textContent = title.toUpperCase();
       
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+      if ($("receiptDate")) {
+        $("receiptDate").textContent = new Date().toLocaleDateString("es-DO", {
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        });
       }
+      if ($("receiptName")) $("receiptName").textContent = name || "Cliente";
+      if ($("receiptPhone")) $("receiptPhone").textContent = phone || "";
+      
+      const totalAmount = calculateTotalAmount(count, conf);
+      if ($("receiptPrice")) $("receiptPrice").textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
+      if ($("receiptLottery")) $("receiptLottery").textContent = lottery || "Pick 5 Florida";
+      
+      const receiptNumEl = $("receiptTicketNum");
+      if (receiptNumEl) {
+        const rawTicketsStr = (typeof num === "string") ? num : (Array.isArray(num) ? num.join(", ") : String(num));
+        receiptNumEl.setAttribute("data-tickets", rawTicketsStr);
+        receiptNumEl.innerHTML = formatTicketChips(num, true);
+        const firstNum = (rawTicketsStr.split(", ")[0] || "00000").replace(/#/g, "");
+        if ($("receiptBarcodeText")) $("receiptBarcodeText").textContent = `SRD-${firstNum}-${count}tix`;
+      }
+
+      // Render structured bank details
+      const bankGrid = $("receiptBankAccounts");
+      if (bankGrid && Array.isArray(bankAccounts)) {
+        bankGrid.innerHTML = bankAccounts.map((acc) => `
+          <div class="bank-card-item">
+            <div class="bank-card-info">
+              <span class="bank-card-name" style="color: #1A202C;">${acc.bank}</span>
+              <span class="bank-card-type">${acc.type}</span>
+              <span class="bank-card-num" style="font-size: 1rem; font-weight: 700; color: #2D3748; letter-spacing: 0.5px; margin: 2px 0;">${acc.number}</span>
+              <span class="bank-card-owner" style="font-size: 0.7rem; color: #718096;">Titular: ${acc.owner}</span>
+            </div>
+            <button class="bank-card-copy-btn" onclick="window.srd.copyToClipboard('${acc.number}', '${acc.bank}')" type="button" title="Copiar número de cuenta">
+              <i data-lucide="copy" style="width:14px; height:14px;"></i>
+            </button>
+          </div>
+        `).join("");
+        
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }
+
+      const btnWa = $("btnSendWhatsApp");
+      if (btnWa) btnWa.disabled = false;
+    } catch(e) {
+      console.error("Error formatting receipt elements:", e);
     }
 
-    const btnWa = $("btnSendWhatsApp");
-    if (btnWa) btnWa.disabled = false;
-
-    $("receiptOverlay").classList.add("active");
+    if ($("receiptOverlay")) {
+      $("receiptOverlay").classList.add("active");
+    }
   }
 
   async function handleSendWhatsApp() {
