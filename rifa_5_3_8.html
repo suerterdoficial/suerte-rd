@@ -4257,6 +4257,11 @@
       const total = Math.max(1, Number(conf.total) || 10000);
       const pct = Math.min(100, (sold / total) * 100);
 
+      let pctDisplay = "0.0%";
+      if (sold > 0) {
+        pctDisplay = pct < 0.1 ? `${pct.toFixed(2)}%` : `${pct.toFixed(1)}%`;
+      }
+
       const card = document.createElement("div");
       card.className = `raffle-card ${rId === activeRaffleId ? 'active' : ''}`;
       card.setAttribute("data-id", rId);
@@ -4268,10 +4273,10 @@
           <div class="raffle-card-title">${escapeHtml(conf.title)}</div>
           <div class="raffle-card-meta">
             <span class="raffle-card-price">${escapeHtml(conf.price)}</span>
-            <span class="raffle-card-percent">${pct.toFixed(1)}% vendido</span>
+            <span class="raffle-card-percent">${pctDisplay} vendido</span>
           </div>
           <div class="progress-track" style="height:8px; border-color: rgba(0, 229, 255, 0.25);">
-            <div class="progress-bar" style="width: ${pct}%"></div>
+            <div class="progress-bar" style="width: ${Math.max(pct, sold > 0 ? 0.8 : 0)}%"></div>
           </div>
         </div>
       `;
@@ -4288,22 +4293,21 @@
   // Actualizar estadísticas de ventas
   function renderProgress() {
     const conf = configs[activeRaffleId];
-    const ticketsObj = allTickets[activeRaffleId];
+    const ticketsObj = allTickets[activeRaffleId] || {};
     const sold = Object.keys(ticketsObj).length;
     const total = Math.max(1, Number(conf.total) || 10000);
     const pct = Math.min(100, (sold / total) * 100);
 
-    $("soldLabel").textContent = `${sold.toLocaleString("es-DO")} vendidos de ${total.toLocaleString("es-DO")}`;
-    $("pctLabel").textContent = `${pct.toFixed(1)}% comprado`;
-    $("progressBar").style.width = `${pct}%`;
-
-    const cardEl = document.querySelector(`.raffle-card[data-id="${activeRaffleId}"]`);
-    if (cardEl) {
-      const pEl = cardEl.querySelector(".raffle-card-percent");
-      const bEl = cardEl.querySelector(".progress-bar");
-      if (pEl) pEl.textContent = `${pct.toFixed(1)}% vendido`;
-      if (bEl) bEl.style.width = `${pct}%`;
+    let pctDisplay = "0.0%";
+    if (sold > 0) {
+      pctDisplay = pct < 0.1 ? `${pct.toFixed(2)}%` : `${pct.toFixed(1)}%`;
     }
+
+    $("soldLabel").textContent = `${sold.toLocaleString("es-DO")} vendidos de ${total.toLocaleString("es-DO")}`;
+    $("pctLabel").textContent = `${pctDisplay} comprado`;
+    $("progressBar").style.width = `${Math.max(pct, sold > 0 ? 0.8 : 0)}%`;
+
+    renderRaffleSelector();
   }
 
   // Renderizar último resultado para el sorteo activo

@@ -455,6 +455,34 @@
     }
   }
 
+  async function pollClientUpdates() {
+    try {
+      let changed = false;
+      for (const rId of RAFFLE_IDS) {
+        const key = `${TICKETS_KEY_PREFIX}:${rId}`;
+        const raw = await getStorageItem(key);
+        if (raw) {
+          const freshTickets = JSON.parse(raw);
+          const oldKeys = Object.keys(allTickets[rId] || {}).length;
+          const newKeys = Object.keys(freshTickets).length;
+          if (oldKeys !== newKeys) {
+            changed = true;
+          }
+          allTickets[rId] = freshTickets;
+        }
+      }
+      if (changed) {
+        renderProgress();
+        renderRaffleSelector();
+        if (mode === 'explore') {
+          renderExplorerGrid();
+        }
+      }
+    } catch(e) {
+      console.warn("Client polling tickets error", e);
+    }
+  }
+
   function renderNotificationsList(notifications) {
     const list = $("notificationsList");
     const badge = $("notificationsBadge");
@@ -945,6 +973,7 @@
     // Notificaciones iniciales y polling (Phase 2)
     fetchNotifications();
     setInterval(fetchNotifications, 20000);
+    setInterval(pollClientUpdates, 5000);
 
     // Formulario de soporte (Phase 2)
     const sForm = $("supportForm");
@@ -1321,11 +1350,16 @@
     RAFFLE_IDS.forEach(rId => {
       const conf = configs[rId];
       if (conf.active === false) return;
-      const sold = Object.keys(allTickets[rId]).length;
+      const sold = Object.keys(allTickets[rId] || {}).length;
       const total = Math.max(1, Number(conf.total) || 10000);
       const pct = Math.min(100, (sold / total) * 100);
 
       const isLocked = conf.saleStatus === "locked";
+
+      let pctDisplay = "0.0%";
+      if (sold > 0) {
+        pctDisplay = pct < 0.1 ? `${pct.toFixed(2)}%` : `${pct.toFixed(1)}%`;
+      }
 
       const card = document.createElement("div");
       card.className = `raffle-card ${rId === activeRaffleId ? 'active' : ''} ${isLocked ? 'raffle-locked' : ''}`;
@@ -1345,7 +1379,7 @@
           <div class="raffle-card-title">${escapeHtml(conf.title)}</div>
           <div class="raffle-card-meta">
             <span class="raffle-card-price">${escapeHtml(conf.price)}</span>
-            <span class="raffle-card-percent">${isLocked ? 'Exhibición' : `${pct.toFixed(1)}% vendido`}</span>
+            <span class="raffle-card-percent">${isLocked ? 'Exhibición' : `${pctDisplay} vendido`}</span>
           </div>
           ${isLocked ? `
           <div style="font-size:0.75rem; color:var(--text-grey); font-weight:600; display:flex; align-items:center; gap:4px; margin-top:8px;">
@@ -1353,7 +1387,7 @@
           </div>
           ` : `
           <div class="progress-track" style="height:8px; border-color: rgba(0, 229, 255, 0.25);">
-            <div class="progress-bar" style="width: ${pct}%"></div>
+            <div class="progress-bar" style="width: ${Math.max(pct, sold > 0 ? 0.8 : 0)}%"></div>
           </div>
           `}
         </div>
@@ -1504,22 +1538,21 @@
 
   function renderProgress() {
     const conf = configs[activeRaffleId];
-    const ticketsObj = allTickets[activeRaffleId];
+    const ticketsObj = allTickets[activeRaffleId] || {};
     const sold = Object.keys(ticketsObj).length;
     const total = Math.max(1, Number(conf.total) || 10000);
     const pct = Math.min(100, (sold / total) * 100);
 
-    $("soldLabel").textContent = `${sold.toLocaleString("es-DO")} vendidos de ${total.toLocaleString("es-DO")}`;
-    $("pctLabel").textContent = `${pct.toFixed(1)}% comprado`;
-    $("progressBar").style.width = `${pct}%`;
-
-    const cardEl = document.querySelector(`.raffle-card[data-id="${activeRaffleId}"]`);
-    if (cardEl) {
-      const pEl = cardEl.querySelector(".raffle-card-percent");
-      const bEl = cardEl.querySelector(".progress-bar");
-      if (pEl) pEl.textContent = `${pct.toFixed(1)}% vendido`;
-      if (bEl) bEl.style.width = `${pct}%`;
+    let pctDisplay = "0.0%";
+    if (sold > 0) {
+      pctDisplay = pct < 0.1 ? `${pct.toFixed(2)}%` : `${pct.toFixed(1)}%`;
     }
+
+    $("soldLabel").textContent = `${sold.toLocaleString("es-DO")} vendidos de ${total.toLocaleString("es-DO")}`;
+    $("pctLabel").textContent = `${pctDisplay} comprado`;
+    $("progressBar").style.width = `${Math.max(pct, sold > 0 ? 0.8 : 0)}%`;
+
+    renderRaffleSelector();
 
     // Calculate accumulated revenue: price * sold tickets
     const priceNum = parseFloat(conf.price.replace(/[^\d.]/g, "")) || 0;
@@ -1754,9 +1787,9 @@
   }
 
   function generate25RandomNumbers() {
-    const conf = configs[activeRaffleId];
+    const conf = configs[activeRaffleId] || (DEFAULT_CONFIGS && DEFAULT_CONFIGS[activeRaffleId]) || { total: 100000 };
     const maxVal = Math.max(1, Number(conf.total) || 10000);
-    const ticketsObj = allTickets[activeRaffleId];
+    const ticketsObj = (allTickets && allTickets[activeRaffleId]) || {};
     const soldList = Object.keys(ticketsObj);
     
     const countNeeded = 25;
@@ -2242,6 +2275,16 @@
     const ticketNums = num.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
     const phone = $("receiptPhone").textContent;
 
+    let currentPkgTag = lastSelectedPackageLabel || "";
+    if (!currentPkgTag) {
+      if (ticketNums.length === 50) currentPkgTag = "Paquete Bronce (50 Boletos)";
+      else if (ticketNums.length === 150) currentPkgTag = "Paquete Plata (150 Boletos)";
+      else if (ticketNums.length === 250) currentPkgTag = "Paquete Oro (250 Boletos)";
+      else if (ticketNums.length === 500) currentPkgTag = "Paquete Diamante (500 Boletos)";
+      else if (ticketNums.length > 1) currentPkgTag = `Grupo (${ticketNums.length} Boletos)`;
+      else currentPkgTag = "Boleto Individual";
+    }
+
     try {
       await fetch('/api/tickets/reserve', {
         method: 'POST',
@@ -2252,6 +2295,7 @@
           whatsapp: phone,
           loteria: lottery,
           tickets: ticketNums,
+          packageLabel: currentPkgTag,
           comprobante: selectedPaymentReceiptBase64,
           estado: selectedPaymentReceiptBase64 ? "esperando_validacion" : "reservado"
         })
@@ -2553,8 +2597,16 @@ ${formattedNumsText}
     showScreen('purchase');
   }
 
+  let lastSelectedPackageLabel = "";
+
   function addPackageToCart(count) {
-    const conf = configs[activeRaffleId] || (DEFAULT_CONFIGS[activeRaffleId] ? {...DEFAULT_CONFIGS[activeRaffleId]} : null);
+    if (count === 50) lastSelectedPackageLabel = "Paquete Bronce (50 Boletos)";
+    else if (count === 150) lastSelectedPackageLabel = "Paquete Plata (150 Boletos)";
+    else if (count === 250) lastSelectedPackageLabel = "Paquete Oro (250 Boletos)";
+    else if (count === 500) lastSelectedPackageLabel = "Paquete Diamante (500 Boletos)";
+    else lastSelectedPackageLabel = `Paquete de ${count} Boletos`;
+
+    const conf = configs[activeRaffleId] || (DEFAULT_CONFIGS && DEFAULT_CONFIGS[activeRaffleId]) || null;
     if (!conf) return;
     const tickets = allTickets[activeRaffleId] || {};
     const totalCount = Math.max(1, Number(conf.total) || 10000);
