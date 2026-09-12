@@ -926,16 +926,22 @@
 
 
 
-    // Secret trigger: click the logo 5 times to go to /admin
+    // Secret trigger: click the logo 3 times to go to /admin
     let logoClickCount = 0;
+    let logoTimer = null;
     const logoBrand = $("navBrandLogo");
     if (logoBrand) {
       logoBrand.addEventListener("click", () => {
         logoClickCount++;
-        if (logoClickCount >= 5) {
+        if (logoTimer) clearTimeout(logoTimer);
+        
+        if (logoClickCount >= 3) {
+          logoClickCount = 0;
           window.location.href = "/admin";
+          return;
         }
-        setTimeout(() => {
+
+        logoTimer = setTimeout(() => {
           logoClickCount = 0;
         }, 3000);
       });
