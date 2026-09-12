@@ -279,10 +279,10 @@
     if (mainSel) {
       mainSel.innerHTML = "";
       RAFFLE_IDS.forEach(rId => {
-        const conf = configs[rId];
+        const conf = configs[rId] || DEFAULT_CONFIGS[rId] || { title: "Sorteo Especial iPhone 17 Pro Max 1TB" };
         const opt = document.createElement("option");
         opt.value = rId;
-        opt.textContent = `${conf.title} (${rId})`;
+        opt.textContent = `${conf.title || 'Sorteo'} (${rId})`;
         mainSel.appendChild(opt);
       });
       mainSel.value = activeRaffleId;
@@ -291,10 +291,10 @@
     if (formSel) {
       formSel.innerHTML = "";
       RAFFLE_IDS.forEach(rId => {
-        const conf = configs[rId];
+        const conf = configs[rId] || DEFAULT_CONFIGS[rId] || { title: "Sorteo Especial iPhone 17 Pro Max 1TB" };
         const opt = document.createElement("option");
         opt.value = rId;
-        opt.textContent = `${conf.title} (${rId})`;
+        opt.textContent = `${conf.title || 'Sorteo'} (${rId})`;
         formSel.appendChild(opt);
       });
       formSel.value = activeRaffleId;
@@ -305,6 +305,9 @@
   function setupNavigation() {
     const navButtons = document.querySelectorAll(".nav-btn");
     navButtons.forEach(btn => {
+      if (btn.hasAttribute("data-nav-bound")) return;
+      btn.setAttribute("data-nav-bound", "true");
+
       btn.addEventListener("click", () => {
         navButtons.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
@@ -2376,6 +2379,9 @@ Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo 
       console.error("Polling error", e);
     }
   }
+
+  // Run navigation setup immediately so sidebar buttons are always active & clickable
+  setupNavigation();
 
   // Run on startup
   await checkAuthentication();
