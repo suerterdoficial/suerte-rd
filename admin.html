@@ -527,12 +527,14 @@
       justify-content: center;
       opacity: 0;
       visibility: hidden;
+      pointer-events: none;
       transition: all 0.3s ease;
     }
 
     .overlay.active {
       opacity: 1;
       visibility: visible;
+      pointer-events: auto;
     }
 
     .modal {
@@ -572,7 +574,7 @@
 <body>
 
   <!-- Login Overlay -->
-  <div class="overlay active" id="adminLoginOverlay">
+  <div class="overlay" id="adminLoginOverlay">
     <div class="modal" style="max-width: 400px; text-align: center; border-color: var(--cyan); box-shadow: 0 0 30px var(--cyan-glow);">
       <div style="margin-bottom: 20px;">
         <i data-lucide="shield-alert" style="width: 60px; height: 60px; color: var(--cyan); filter: drop-shadow(0 0 10px var(--cyan-glow));"></i>
