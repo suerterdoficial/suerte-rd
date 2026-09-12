@@ -128,17 +128,29 @@
     return clean;
   }
 
+  function safeParse(val, fallback = null) {
+    if (val === null || val === undefined) return fallback;
+    if (typeof val === 'object') return val;
+    if (typeof val === 'string') {
+      try {
+        return JSON.parse(val);
+      } catch (e) {
+        console.warn("safeParse JSON parse failed:", e);
+        return fallback;
+      }
+    }
+    return fallback;
+  }
+
   // --- INITIALIZATION ---
   async function init() {
     // Load IDs
     try {
       const idsRaw = await getStorageItem("suerterd:raffle:ids");
-      if (idsRaw) {
-        const parsed = JSON.parse(idsRaw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          RAFFLE_IDS.length = 0;
-          RAFFLE_IDS.push(...parsed);
-        }
+      const parsed = safeParse(idsRaw, null);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        RAFFLE_IDS.length = 0;
+        RAFFLE_IDS.push(...parsed);
       } else {
         await setStorageItem("suerterd:raffle:ids", JSON.stringify(RAFFLE_IDS));
       }
@@ -151,7 +163,8 @@
       try {
         const key = `${CFG_KEY_PREFIX}:${rId}`;
         const raw = await getStorageItem(key);
-        configs[rId] = raw ? JSON.parse(raw) : (DEFAULT_CONFIGS[rId] ? {...DEFAULT_CONFIGS[rId]} : {
+        const parsed = safeParse(raw, null);
+        configs[rId] = parsed ? parsed : (DEFAULT_CONFIGS[rId] ? {...DEFAULT_CONFIGS[rId]} : {
           id: rId,
           title: "Nuevo Sorteo",
           prize: "Premio Principal",
@@ -203,7 +216,7 @@
       try {
         const key = `${TICKETS_KEY_PREFIX}:${rId}`;
         const raw = await getStorageItem(key);
-        allTickets[rId] = raw ? JSON.parse(raw) : {};
+        allTickets[rId] = safeParse(raw, {});
       } catch (e) {
         allTickets[rId] = {};
       }
@@ -212,7 +225,7 @@
     // Load Winners
     try {
       const winnersRaw = await getStorageItem(WINNERS_KEY);
-      winners = winnersRaw ? JSON.parse(winnersRaw) : [];
+      winners = safeParse(winnersRaw, []);
     } catch (e) {
       winners = [];
     }
@@ -220,8 +233,9 @@
     // Load Bank Accounts / Payment Methods
     try {
       const bankAccountsRaw = await getStorageItem("suerterd:payment:methods");
-      if (bankAccountsRaw) {
-        bankAccounts = JSON.parse(bankAccountsRaw);
+      const parsedBank = safeParse(bankAccountsRaw, null);
+      if (parsedBank) {
+        bankAccounts = parsedBank;
       } else {
         bankAccounts = [...DEFAULT_BANK_ACCOUNTS];
         await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
@@ -2284,7 +2298,7 @@ Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo 
           const tKey = `${TICKETS_KEY_PREFIX}:${rId}`;
           const raw = await getStorageItem(tKey);
           if (raw) {
-            allTickets[rId] = JSON.parse(raw);
+            allTickets[rId] = safeParse(raw, allTickets[rId] || {});
           }
         } catch (e) {}
       }
@@ -2293,7 +2307,7 @@ Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo 
       try {
         const raw = await getStorageItem("supportMessages");
         if (raw) {
-          supportMessages = JSON.parse(raw);
+          supportMessages = safeParse(raw, supportMessages || []);
         }
       } catch (e) {}
 
@@ -2301,7 +2315,7 @@ Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo 
       try {
         const rawWinners = await getStorageItem(WINNERS_KEY);
         if (rawWinners) {
-          winners = JSON.parse(rawWinners);
+          winners = safeParse(rawWinners, winners || []);
         }
       } catch (e) {}
 
@@ -2309,7 +2323,7 @@ Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo 
       try {
         const rawBankAccounts = await getStorageItem("suerterd:payment:methods");
         if (rawBankAccounts) {
-          bankAccounts = JSON.parse(rawBankAccounts);
+          bankAccounts = safeParse(rawBankAccounts, bankAccounts || []);
         }
       } catch (e) {}
 
