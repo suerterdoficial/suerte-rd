@@ -2193,6 +2193,16 @@
     // Open receipt modal INSTANTLY (Zero delay)
     showReceipt(checkedOutCart.join(", "), name, phone, lottery, checkedOutCart.length);
 
+    let detectedPkgLabel = lastSelectedPackageLabel || "";
+    if (!detectedPkgLabel) {
+      if (checkedOutCart.length === 50) detectedPkgLabel = "Paquete Bronce (50 Boletos)";
+      else if (checkedOutCart.length === 150) detectedPkgLabel = "Paquete Plata (150 Boletos)";
+      else if (checkedOutCart.length === 250) detectedPkgLabel = "Paquete Oro (250 Boletos)";
+      else if (checkedOutCart.length === 500) detectedPkgLabel = "Paquete Diamante (500 Boletos)";
+      else if (checkedOutCart.length > 1) detectedPkgLabel = `Grupo (${checkedOutCart.length} Boletos)`;
+      else detectedPkgLabel = "Boleto Individual";
+    }
+
     // 3. Send network sync to server asynchronously in background
     fetch('/api/tickets/reserve', {
       method: 'POST',
@@ -2204,7 +2214,7 @@
         loteria: lottery,
         tickets: checkedOutCart,
         estado: 'reservado',
-        packageLabel: lastSelectedPackageLabel
+        packageLabel: detectedPkgLabel
       })
     }).catch(e => {
       console.warn("Background ticket sync error:", e);

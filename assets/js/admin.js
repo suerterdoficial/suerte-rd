@@ -44,6 +44,7 @@
   let bankAccounts = [];
   let statsChart = null;
   let lastNotificationTime = Date.now();
+  let lastPendingPaymentsCount = 0;
   let editingBankAccountIndex = null;
   let selectedWinnerPhotoBase64 = null;
 
@@ -392,6 +393,40 @@
       $("ticketStatusFilter").addEventListener("change", renderTicketsTable);
     }
 
+    // Payment Validation search & status filters
+    if ($("paymentSearchInput")) {
+      $("paymentSearchInput").addEventListener("input", renderPaymentsTable);
+    }
+    if ($("paymentStatusFilter")) {
+      $("paymentStatusFilter").addEventListener("change", renderPaymentsTable);
+    }
+
+    // Bulk selection checkbox
+    if ($("paymentsHeaderCheckbox")) {
+      $("paymentsHeaderCheckbox").addEventListener("change", (e) => {
+        const isChecked = e.target.checked;
+        document.querySelectorAll(".payment-row-checkbox").forEach(chk => {
+          chk.checked = isChecked;
+        });
+      });
+    }
+
+    // Bulk Actions
+    if ($("btnBulkApprove")) {
+      $("btnBulkApprove").addEventListener("click", bulkApprovePayments);
+    }
+    if ($("btnBulkReject")) {
+      $("btnBulkReject").addEventListener("click", bulkRejectPayments);
+    }
+
+    // Receipt image viewer tools
+    if ($("btnRotateReceiptImg")) {
+      $("btnRotateReceiptImg").addEventListener("click", rotateReceiptImage);
+    }
+    if ($("btnOpenReceiptNewTab")) {
+      $("btnOpenReceiptNewTab").addEventListener("click", openReceiptNewTab);
+    }
+
     // Change PIN
     $("btnUpdatePin").addEventListener("click", updateAdminPinCode);
 
@@ -405,13 +440,13 @@
       });
     }
 
-    // Receipt Modal Close (Phase 6)
+    // Receipt Modal Close
     const closeBtn = $("closeViewReceiptBtn");
     if (closeBtn) {
       closeBtn.addEventListener("click", closeReceiptViewer);
     }
     
-    // Receipt Modal Approve (Phase 6)
+    // Receipt Modal Approve
     const approveBtn = $("btnApproveReceiptModal");
     if (approveBtn) {
       approveBtn.addEventListener("click", () => {
@@ -422,12 +457,14 @@
       });
     }
     
-    // Receipt Modal Reject (Phase 6)
+    // Receipt Modal Reject
     const rejectBtnModal = $("btnRejectReceiptModal");
     if (rejectBtnModal) {
       rejectBtnModal.addEventListener("click", () => {
         if (activeReceiptRaffleId && activeReceiptTicketNum) {
-          rejectPaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum);
+          const reasonSelect = $("rejectReasonSelect");
+          const reason = reasonSelect ? reasonSelect.value : "Comprobante no recibido o inválido";
+          rejectPaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum, reason);
           closeReceiptViewer();
         }
       });
@@ -1710,6 +1747,10 @@ ESTADO: ${estadoBadge}
     return pendingGroups;
   }
 
+  let currentReceiptRotation = 0;
+  let approvedTodayCount = 0;
+  let rejectedTodayCount = 0;
+
   function updatePaymentsNotificationBadge() {
     const count = getPendingPaymentsCount();
     const badge = $("paymentNotificationBadge");
@@ -1721,6 +1762,51 @@ ESTADO: ${estadoBadge}
         badge.style.display = "none";
       }
     }
+    if (count > lastPendingPaymentsCount && lastPendingPaymentsCount >= 0) {
+      playSound("chime");
+      showToast("¡Nuevo paquete de boletos recibido para validación en Admin!", "info");
+    }
+    lastPendingPaymentsCount = count;
+  }
+
+  function updateValidationSummaryStats() {
+    let pendingCount = 0;
+    let pendingAmount = 0;
+
+    RAFFLE_IDS.forEach(rId => {
+      const conf = configs[rId];
+      const tickets = allTickets[rId] || {};
+      const groups = {};
+
+      Object.keys(tickets).forEach(tNum => {
+        const t = tickets[tNum];
+        if (t.estado === 'esperando_validacion' || t.estado === 'reservado') {
+          const groupKey = `${t.timestamp_comprobante || t.timestamp}_${t.whatsapp}`;
+          if (!groups[groupKey]) {
+            groups[groupKey] = { count: 0 };
+          }
+          groups[groupKey].count++;
+        }
+      });
+
+      Object.keys(groups).forEach(gKey => {
+        const g = groups[gKey];
+        pendingCount++;
+        if (conf) {
+          pendingAmount += calculateTotalAmount(g.count, conf);
+        }
+      });
+    });
+
+    const elCount = $("valStatPendingCount");
+    const elAmount = $("valStatPendingAmount");
+    const elApproved = $("valStatApprovedCount");
+    const elRejected = $("valStatRejectedCount");
+
+    if (elCount) elCount.textContent = pendingCount;
+    if (elAmount) elAmount.textContent = `RD$ ${pendingAmount.toLocaleString("es-DO")}`;
+    if (elApproved) elApproved.textContent = approvedTodayCount;
+    if (elRejected) elRejected.textContent = rejectedTodayCount;
   }
 
   function renderPaymentsTable() {
@@ -1728,13 +1814,15 @@ ESTADO: ${estadoBadge}
     if (!tbody) return;
     tbody.innerHTML = "";
 
+    const searchVal = ($("paymentSearchInput") ? $("paymentSearchInput").value.trim().toLowerCase() : "");
+    const statusFilterVal = ($("paymentStatusFilter") ? $("paymentStatusFilter").value : "");
+
     let rowsHtml = "";
     let hasPending = false;
 
     RAFFLE_IDS.forEach(rId => {
       const conf = configs[rId];
       const tickets = allTickets[rId] || {};
-      
       const groups = {};
       
       Object.keys(tickets).forEach(tNum => {
@@ -1768,17 +1856,28 @@ ESTADO: ${estadoBadge}
       
       Object.keys(groups).forEach(gKey => {
         const g = groups[gKey];
-        hasPending = true;
         g.numbers.sort();
-        
+        const allNumsStr = g.numbers.join(",");
+
+        // Filter status check
+        if (statusFilterVal === "con_comprobante" && g.estado !== "esperando_validacion") return;
+        if (statusFilterVal === "sin_comprobante" && g.estado === "esperando_validacion") return;
+
+        // Search text check
+        if (searchVal) {
+          const matchTicket = g.numbers.some(n => n.includes(searchVal));
+          const matchName = g.name.toLowerCase().includes(searchVal);
+          const matchWa = g.whatsapp.toLowerCase().includes(searchVal);
+          if (!matchTicket && !matchName && !matchWa) return;
+        }
+
+        hasPending = true;
         const dateStr = g.timestamp ? new Date(g.timestamp).toLocaleDateString("es-DO") + " " + new Date(g.timestamp).toLocaleTimeString("es-DO", {hour: '2-digit', minute:'2-digit'}) : "N/A";
         
         let numbersDisplay = g.numbers.map(n => `#${n}`).join(", ");
         if (g.numbers.length > 5) {
           numbersDisplay = g.numbers.slice(0, 5).map(n => `#${n}`).join(", ") + `... y ${g.numbers.length - 5} más`;
         }
-        
-        const allNumsStr = g.numbers.join(",");
 
         let packageBadge = "";
         const firstNum = g.numbers[0];
@@ -1801,9 +1900,9 @@ ESTADO: ${estadoBadge}
 
         let statusBadge = "";
         if (g.estado === 'esperando_validacion') {
-          statusBadge = `<span class="badge" style="background:rgba(0, 229, 255, 0.1); color:var(--cyan); border:1px solid var(--cyan);">Recibo Subido</span>`;
+          statusBadge = `<span class="badge" style="background:rgba(0, 229, 255, 0.15); color:var(--cyan); border:1px solid var(--cyan);">🟡 RECIBO SUBIDO</span>`;
         } else {
-          statusBadge = `<span class="badge" style="background:rgba(255, 215, 0, 0.1); color:var(--gold); border:1px solid var(--gold);">Reservado (S.C.)</span>`;
+          statusBadge = `<span class="badge" style="background:rgba(255, 215, 0, 0.15); color:var(--gold); border:1px solid var(--gold);">🔵 RESERVADO</span>`;
         }
 
         const totalAmount = calculateTotalAmount(g.numbers.length, conf);
@@ -1811,6 +1910,9 @@ ESTADO: ${estadoBadge}
 
         rowsHtml += `
           <tr data-raffle="${rId}" data-tickets="${allNumsStr}">
+            <td style="text-align:center;">
+              <input type="checkbox" class="payment-row-checkbox" data-raffle="${rId}" data-tickets="${allNumsStr}" style="width:18px; height:18px; cursor:pointer;">
+            </td>
             <td><strong>${escapeHtml(conf.title)}</strong></td>
             <td>
               ${packageBadge}
@@ -1826,7 +1928,7 @@ ESTADO: ${estadoBadge}
             <td><span class="badge" style="background:rgba(0,229,255,0.05); color:var(--cyan); border:1px solid var(--border-cyan);">${escapeHtml(g.loteria)}</span></td>
             <td>
               ${g.comprobante ? `
-                <button class="btn btn-secondary btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
+                <button class="btn btn-secondary btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; border-color:var(--cyan); color:var(--cyan); display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
                   <i data-lucide="image" style="width:12px;"></i> Ver Recibo
                 </button>
               ` : `<span style="color:var(--text-muted); font-size:0.8rem;">Sin recibo</span>`}
@@ -1879,27 +1981,88 @@ ESTADO: ${estadoBadge}
         btn.addEventListener("click", () => {
           const rId = btn.getAttribute("data-raffle");
           const numsStr = btn.getAttribute("data-tickets");
-          rejectPaymentGroup(rId, numsStr);
+          const reasonSelect = $("rejectReasonSelect");
+          const reason = reasonSelect ? reasonSelect.value : "Comprobante no recibido o inválido";
+          rejectPaymentGroup(rId, numsStr, reason);
         });
       });
     } else {
       tbody.innerHTML = `
         <tr>
-          <td colspan="10" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
-            No hay comprobantes pendientes de validación.
+          <td colspan="11" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
+            No se encontraron compras o comprobantes pendientes.
           </td>
         </tr>
       `;
     }
     
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     updatePaymentsNotificationBadge();
+    updateValidationSummaryStats();
   }
 
-  async function approvePaymentGroup(rId, numsStr) {
+  async function bulkApprovePayments() {
+    const checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
+    if (checkedBoxes.length === 0) {
+      alert("Por favor selecciona al menos una compra de la lista para aprobar.");
+      return;
+    }
+
+    if (!confirm(`¿Estás seguro de que deseas APROBAR y ACTIVAR las ${checkedBoxes.length} compras seleccionadas?`)) return;
+
+    showNotification("Aprobando selección masiva...", "info");
+    let totalApproved = 0;
+
+    for (const chk of checkedBoxes) {
+      const rId = chk.getAttribute("data-raffle");
+      const numsStr = chk.getAttribute("data-tickets");
+      const approvedCount = await approvePaymentGroup(rId, numsStr, true);
+      totalApproved += approvedCount;
+    }
+
+    showNotification(`¡Se activaron ${totalApproved} boletos exitosamente en lote!`, "success");
+    const headerChk = $("paymentsHeaderCheckbox");
+    if (headerChk) headerChk.checked = false;
+    renderPaymentsTable();
+    if (activeRaffleId) {
+      renderTicketsTable();
+      updateDashboardStats();
+    }
+  }
+
+  async function bulkRejectPayments() {
+    const checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
+    if (checkedBoxes.length === 0) {
+      alert("Por favor selecciona al menos una compra de la lista para rechazar.");
+      return;
+    }
+
+    if (!confirm(`¿Estás seguro de que deseas RECHAZAR y LIBERAR las ${checkedBoxes.length} compras seleccionadas?`)) return;
+
+    showNotification("Rechazando selección masiva...", "info");
+    let totalRejected = 0;
+
+    for (const chk of checkedBoxes) {
+      const rId = chk.getAttribute("data-raffle");
+      const numsStr = chk.getAttribute("data-tickets");
+      const rejectedCount = await rejectPaymentGroup(rId, numsStr, "Rechazo en lote por administración", true);
+      totalRejected += rejectedCount;
+    }
+
+    showNotification(`¡Se liberaron ${totalRejected} boletos en lote!`, "success");
+    const headerChk = $("paymentsHeaderCheckbox");
+    if (headerChk) headerChk.checked = false;
+    renderPaymentsTable();
+    if (activeRaffleId) {
+      renderTicketsTable();
+      updateDashboardStats();
+    }
+  }
+
+  async function approvePaymentGroup(rId, numsStr, isBatch = false) {
     const nums = numsStr.split(",");
-    if (!confirm(`¿Estás seguro de que deseas APROBAR el pago de los ${nums.length} boletos?`)) return;
-    showNotification("Aprobando pagos...", "info");
+    if (!isBatch && !confirm(`¿Estás seguro de que deseas APROBAR y ACTIVAR la compra de ${nums.length} boletos?`)) return 0;
+    if (!isBatch) showNotification("Aprobando y activando paquete en la web...", "info");
     
     const tickets = allTickets[rId] || {};
     let countApprove = 0;
@@ -1913,9 +2076,10 @@ ESTADO: ${estadoBadge}
     });
     
     if (countApprove > 0) {
+      approvedTodayCount += countApprove;
       const key = `${TICKETS_KEY_PREFIX}:${rId}`;
       await setStorageItem(key, JSON.stringify(tickets));
-      showNotification(`¡Se aprobaron ${countApprove} boletos con éxito!`, "success");
+      if (!isBatch) showNotification(`¡Se activaron ${countApprove} boletos exitosamente en la web!`, "success");
       
       // Send WhatsApp message to user confirming activation
       const firstNum = nums[0];
@@ -1926,6 +2090,8 @@ ESTADO: ${estadoBadge}
         const raffleTitle = conf.title;
         const totalAmount = calculateTotalAmount(nums.length, conf);
         const amountDisplay = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
+        const pName = tInfo.paquete || (nums.length >= 25 ? `Paquete (${nums.length} Boletos)` : "Boletos Individuales");
+        
         const formattedLines = [];
         for (let i = 0; i < nums.length; i += 4) {
           const chunk = nums.slice(i, i + 4).map(n => `#${n}`).join(", ");
@@ -1936,41 +2102,47 @@ ESTADO: ${estadoBadge}
         const textMsg = 
 `✅ *SUERTE RD* | *CONFIRMACIÓN DE PAGO OFICIAL* ✅
 ═════════════════════════════
-🎉 *¡TU PAGO HA SIDO VALIDADO CON ÉXITO!* 🎉
+🎉 *¡TU COMPRA DE PAQUETE HA SIDO VALIDADA Y ACTIVADA CON ÉXITO!* 🎉
 
 👤 *CLIENTE:* ${clientName}
 🏆 *SORTEO:* ${raffleTitle}
 🎯 *LOTERÍA OFICIAL:* ${tInfo.loteria || 'Pick 5 Florida'}
-📊 *CANTIDAD DE BOLETOS:* ${nums.length} boletos
+📊 *DETALLE DEL PAQUETE:* ${pName}
 💵 *MONTO TOTAL VALIDADO:* ${amountDisplay}
 
-🎟️ *BOLETOS ACTIVOS:*
+🎟️ *BOLETOS ACTIVOS EN LA WEB:*
 ${formattedNumsText}
 
-🟢 *ESTADO:* *PAGADOS Y ACTIVOS* 🟢
+🟢 *ESTADO:* *PAGADOS Y PARTICIPANDO OFICIALMENTE EN LA RIFA* 🟢
 ═════════════════════════════
-✨ ¡Tus boletos ya están oficialmente registrados participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
+✨ ¡Tus boletos ya están oficialmente registrados y participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
         const encoded = encodeURIComponent(textMsg);
         const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
         window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
       }
 
-      renderPaymentsTable();
-      if (activeRaffleId === rId) {
-        renderTicketsTable();
-        updateDashboardStats();
+      if (!isBatch) {
+        renderPaymentsTable();
+        if (activeRaffleId === rId) {
+          renderTicketsTable();
+          updateDashboardStats();
+        }
       }
     }
+    return countApprove;
   }
 
-  async function rejectPaymentGroup(rId, numsStr) {
+  async function rejectPaymentGroup(rId, numsStr, reasonInput, isBatch = false) {
     const nums = numsStr.split(",");
-    if (!confirm(`¿Estás seguro de que deseas RECHAZAR el pago de los ${nums.length} boletos? Los boletos serán liberados.`)) return;
-    showNotification("Rechazando y liberando boletos...", "info");
+    const reasonText = reasonInput || "Comprobante no visible o inválido";
+    if (!isBatch && !confirm(`¿Estás seguro de que deseas RECHAZAR el pago de los ${nums.length} boletos? Los boletos serán liberados.`)) return 0;
+    if (!isBatch) showNotification("Rechazando y liberando boletos...", "info");
     
     const tickets = allTickets[rId] || {};
     let countReject = 0;
-    
+    const firstNum = nums[0];
+    const tInfo = tickets[firstNum] ? { ...tickets[firstNum] } : null;
+
     nums.forEach(tNum => {
       if (tickets[tNum]) {
         delete tickets[tNum];
@@ -1979,25 +2151,54 @@ ${formattedNumsText}
     });
     
     if (countReject > 0) {
+      rejectedTodayCount += countReject;
       const key = `${TICKETS_KEY_PREFIX}:${rId}`;
       await setStorageItem(key, JSON.stringify(tickets));
-      showNotification(`¡Se liberaron ${countReject} boletos!`, "success");
+      if (!isBatch) showNotification(`¡Se liberaron ${countReject} boletos!`, "success");
       
-      renderPaymentsTable();
-      if (activeRaffleId === rId) {
-        renderTicketsTable();
-        updateDashboardStats();
+      // Notify customer via WhatsApp about rejection reason so they can fix
+      if (tInfo && tInfo.whatsapp) {
+        const conf = configs[rId];
+        const raffleTitle = conf ? conf.title : "Sorteo Suerte RD";
+        const clientName = tInfo.name || tInfo.nombre || "Cliente";
+
+        const textMsg = 
+`⚠️ *SUERTE RD* | *NOTIFICACIÓN DE COMPROBANTE* ⚠️
+═════════════════════════════
+Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo *${raffleTitle}*:
+
+❌ *ESTADO:* *PAGO NO VALIDADO*
+📝 *MOTIVO:* ${reasonText}
+
+ℹ️ Tus boletos han sido liberados provisionalmente. Por favor ponte en contacto con nosotros o realiza nuevamente tu apartado enviando un comprobante válido. ¡Gracias por tu preferencia! 🍀`;
+        const encoded = encodeURIComponent(textMsg);
+        const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
+        window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
+      }
+
+      if (!isBatch) {
+        renderPaymentsTable();
+        if (activeRaffleId === rId) {
+          renderTicketsTable();
+          updateDashboardStats();
+        }
       }
     }
+    return countReject;
   }
 
   function openReceiptViewer(rId, tNum, base64) {
     activeReceiptRaffleId = rId;
     activeReceiptTicketNum = tNum;
+    currentReceiptRotation = 0;
     
     const modal = $("viewReceiptOverlay");
     const img = $("viewReceiptImg");
     const noImgMsg = $("viewReceiptNoImgMsg");
+
+    if (img) {
+      img.style.transform = "rotate(0deg)";
+    }
 
     if (modal && img) {
       let finalImg = (typeof base64 === 'string' && base64.startsWith('data:')) ? base64 : null;
@@ -2044,9 +2245,30 @@ ${formattedNumsText}
     }
   }
 
+  function rotateReceiptImage() {
+    const img = $("viewReceiptImg");
+    if (!img) return;
+    currentReceiptRotation = (currentReceiptRotation + 90) % 360;
+    img.style.transform = `rotate(${currentReceiptRotation}deg)`;
+    playSound("click");
+  }
+
+  function openReceiptNewTab() {
+    const img = $("viewReceiptImg");
+    if (img && img.src && img.src.startsWith("data:")) {
+      const win = window.open();
+      if (win) {
+        win.document.write(`<body style="margin:0; background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh;"><img src="${img.src}" style="max-width:100%; max-height:100vh;"></body>`);
+      }
+    } else {
+      alert("No hay imagen de comprobante para visualizar.");
+    }
+  }
+
   function closeReceiptViewer() {
     activeReceiptRaffleId = null;
     activeReceiptTicketNum = null;
+    currentReceiptRotation = 0;
     
     const modal = $("viewReceiptOverlay");
     if (modal) {
