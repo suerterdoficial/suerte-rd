@@ -2021,11 +2021,16 @@ ESTADO: ${estadoBadge}
     } else {
       tbody.innerHTML = `
         <tr>
-          <td colspan="11" style="text-align:center; padding:30px; color:var(--text-grey); font-family:var(--font-mono);">
-            No se encontraron compras o comprobantes pendientes.
+          <td colspan="11" style="text-align:center; padding:35px 20px; color:var(--text-grey); font-family:var(--font-mono);">
+            <div style="font-size:1rem; color:#FFF; font-weight:700; margin-bottom:6px;">No hay compras o comprobantes pendientes en este momento.</div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">Cuando los usuarios compren boletos en la web, aparecerán aquí para su validación.</div>
+            <button class="btn btn-secondary" id="btnCreateTestPayment" style="border-color:var(--cyan); color:var(--cyan); font-weight:800; font-size:0.8rem; padding:8px 16px; display:inline-flex; align-items:center; gap:6px;">
+              <i data-lucide="plus-circle" style="width:14px;"></i> Crear Orden de Prueba para Validar
+            </button>
           </td>
         </tr>
       `;
+      safeAddListener("btnCreateTestPayment", "click", createTestReservation);
     }
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -2033,10 +2038,44 @@ ESTADO: ${estadoBadge}
     updateValidationSummaryStats();
   }
 
+  async function createTestReservation() {
+    showNotification("Generando orden de prueba en el servidor...", "info");
+    try {
+      const testTickets = ["00001", "00002", "00003", "00004", "00005", "00006", "00007", "00008", "00009", "00010", "00011", "00012", "00013", "00014", "00015", "00016", "00017", "00018", "00019", "00020", "00021", "00022", "00023", "00024", "00025"];
+      const res = await fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raffleId: activeRaffleId || "florida5",
+          name: "Carlos Mendoza (Cliente de Prueba)",
+          whatsapp: "18099838626",
+          loteria: "Pick 5 Florida",
+          tickets: testTickets,
+          packageLabel: "Paquete de Prueba (25 Boletos)",
+          comprobante: "./assets/suerte_rd_iphone17_banner.png",
+          estado: "esperando_validacion"
+        })
+      });
+      if (res.ok) {
+        showNotification("¡Orden de prueba creada exitosamente! Cargando datos...", "success");
+        // Reload all tickets for active raffle
+        const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
+        const raw = await getStorageItem(key);
+        allTickets[activeRaffleId] = safeParse(raw, {});
+        renderPaymentsTable();
+      } else {
+        showNotification("Error al crear la orden de prueba.", "error");
+      }
+    } catch(e) {
+      console.error("Error createTestReservation:", e);
+      showNotification("Error de conexión al crear orden de prueba.", "error");
+    }
+  }
+
   async function bulkApprovePayments() {
     const checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
     if (checkedBoxes.length === 0) {
-      alert("Por favor selecciona al menos una compra de la lista para aprobar.");
+      showNotification("Por favor marca la casilla de al menos una compra en la lista para aprobar.", "info");
       return;
     }
 
@@ -2065,7 +2104,7 @@ ESTADO: ${estadoBadge}
   async function bulkRejectPayments() {
     const checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
     if (checkedBoxes.length === 0) {
-      alert("Por favor selecciona al menos una compra de la lista para rechazar.");
+      showNotification("Por favor marca la casilla de al menos una compra en la lista para rechazar.", "info");
       return;
     }
 
