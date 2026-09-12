@@ -59,6 +59,13 @@
   // --- API HELPERS ---
   const $ = (id) => document.getElementById(id);
 
+  function safeAddListener(id, event, handler) {
+    const el = $(id);
+    if (el) {
+      el.addEventListener(event, handler);
+    }
+  }
+
   function escapeHtml(s) {
     if (!s) return "";
     return String(s)
@@ -338,49 +345,53 @@
 
   // --- EVENT LISTENERS BINDING ---
   function setupEventListeners() {
-    $("globalRaffleSelect").addEventListener("change", (e) => {
+    safeAddListener("globalRaffleSelect", "change", (e) => {
       loadRaffleState(e.target.value);
     });
 
-    if ($("cfgRaffleSelect")) {
-      $("cfgRaffleSelect").addEventListener("change", (e) => {
-        loadConfigForm(e.target.value);
-      });
-    }
+    safeAddListener("cfgRaffleSelect", "change", (e) => {
+      loadConfigForm(e.target.value);
+    });
 
     // Image Upload Preview
-    $("cfgImageUpload").addEventListener("change", (e) => {
+    safeAddListener("cfgImageUpload", "change", (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          $("cfgImgPreview").src = evt.target.result;
-          $("cfgImgPreview").style.display = "block";
-          $("cfgImgPlaceholder").style.display = "none";
+          if ($("cfgImgPreview")) {
+            $("cfgImgPreview").src = evt.target.result;
+            $("cfgImgPreview").style.display = "block";
+          }
+          if ($("cfgImgPlaceholder")) $("cfgImgPlaceholder").style.display = "none";
         };
         reader.readAsDataURL(file);
       }
     });
 
     // CRUD
-    $("btnSaveConfig").addEventListener("click", saveConfigChanges);
-    $("btnCreateNewRaffle").addEventListener("click", () => $("createRaffleOverlay").classList.add("active"));
-    $("closeCreateModal").addEventListener("click", () => $("createRaffleOverlay").classList.remove("active"));
-    $("btnCreateSubmit").addEventListener("click", createRaffle);
-    $("btnDeleteCurrentRaffle").addEventListener("click", deleteRaffle);
+    safeAddListener("btnSaveConfig", "click", saveConfigChanges);
+    safeAddListener("btnCreateNewRaffle", "click", () => {
+      const overlay = $("createRaffleOverlay");
+      if (overlay) overlay.classList.add("active");
+    });
+    safeAddListener("closeCreateModal", "click", () => {
+      const overlay = $("createRaffleOverlay");
+      if (overlay) overlay.classList.remove("active");
+    });
+    safeAddListener("btnCreateSubmit", "click", createRaffle);
+    safeAddListener("btnDeleteCurrentRaffle", "click", deleteRaffle);
 
     // Sales Actions
-    $("btnReleaseExpired").addEventListener("click", cleanExpiredTickets);
-    $("btnBlockSubmit").addEventListener("click", blockTicketManual);
-    $("btnExportCSV").addEventListener("click", exportSalesCSV);
-    $("btnResetSales").addEventListener("click", resetRaffleSales);
+    safeAddListener("btnReleaseExpired", "click", cleanExpiredTickets);
+    safeAddListener("btnBlockSubmit", "click", blockTicketManual);
+    safeAddListener("btnExportCSV", "click", exportSalesCSV);
+    safeAddListener("btnResetSales", "click", resetRaffleSales);
 
     // Draw
-    $("btnStartDraw").addEventListener("click", startOfficialDraw);
-    $("btnAddWinner").addEventListener("click", addWinnerManual);
-    if ($("btnAddBankAccount")) {
-      $("btnAddBankAccount").addEventListener("click", addBankAccount);
-    }
+    safeAddListener("btnStartDraw", "click", startOfficialDraw);
+    safeAddListener("btnAddWinner", "click", addWinnerManual);
+    safeAddListener("btnAddBankAccount", "click", addBankAccount);
 
     // Winner photo upload listener
     const winImageInput = $("winImageUpload");
@@ -405,87 +416,59 @@
     }
 
     // Ticket search filter
-    $("ticketSearchInput").addEventListener("input", renderTicketsTable);
-    if ($("ticketStatusFilter")) {
-      $("ticketStatusFilter").addEventListener("change", renderTicketsTable);
-    }
+    safeAddListener("ticketSearchInput", "input", renderTicketsTable);
+    safeAddListener("ticketStatusFilter", "change", renderTicketsTable);
 
     // Payment Validation search & status filters
-    if ($("paymentSearchInput")) {
-      $("paymentSearchInput").addEventListener("input", renderPaymentsTable);
-    }
-    if ($("paymentStatusFilter")) {
-      $("paymentStatusFilter").addEventListener("change", renderPaymentsTable);
-    }
+    safeAddListener("paymentSearchInput", "input", renderPaymentsTable);
+    safeAddListener("paymentStatusFilter", "change", renderPaymentsTable);
 
     // Bulk selection checkbox
-    if ($("paymentsHeaderCheckbox")) {
-      $("paymentsHeaderCheckbox").addEventListener("change", (e) => {
-        const isChecked = e.target.checked;
-        document.querySelectorAll(".payment-row-checkbox").forEach(chk => {
-          chk.checked = isChecked;
-        });
+    safeAddListener("paymentsHeaderCheckbox", "change", (e) => {
+      const isChecked = e.target.checked;
+      document.querySelectorAll(".payment-row-checkbox").forEach(chk => {
+        chk.checked = isChecked;
       });
-    }
+    });
 
     // Bulk Actions
-    if ($("btnBulkApprove")) {
-      $("btnBulkApprove").addEventListener("click", bulkApprovePayments);
-    }
-    if ($("btnBulkReject")) {
-      $("btnBulkReject").addEventListener("click", bulkRejectPayments);
-    }
+    safeAddListener("btnBulkApprove", "click", bulkApprovePayments);
+    safeAddListener("btnBulkReject", "click", bulkRejectPayments);
 
     // Receipt image viewer tools
-    if ($("btnRotateReceiptImg")) {
-      $("btnRotateReceiptImg").addEventListener("click", rotateReceiptImage);
-    }
-    if ($("btnOpenReceiptNewTab")) {
-      $("btnOpenReceiptNewTab").addEventListener("click", openReceiptNewTab);
-    }
+    safeAddListener("btnRotateReceiptImg", "click", rotateReceiptImage);
+    safeAddListener("btnOpenReceiptNewTab", "click", openReceiptNewTab);
 
     // Change PIN
-    $("btnUpdatePin").addEventListener("click", updateAdminPinCode);
+    safeAddListener("btnUpdatePin", "click", updateAdminPinCode);
 
     // Logout
-    const btnLogout = $("btnAdminLogout");
-    if (btnLogout) {
-      btnLogout.addEventListener("click", () => {
-        sessionStorage.removeItem('admin_pin');
-        localStorage.removeItem('suerterd_admin_logged');
-        window.location.href = '/';
-      });
-    }
+    safeAddListener("btnAdminLogout", "click", () => {
+      sessionStorage.removeItem('admin_pin');
+      localStorage.removeItem('suerterd_admin_logged');
+      window.location.href = '/';
+    });
 
     // Receipt Modal Close
-    const closeBtn = $("closeViewReceiptBtn");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", closeReceiptViewer);
-    }
+    safeAddListener("closeViewReceiptBtn", "click", closeReceiptViewer);
     
     // Receipt Modal Approve
-    const approveBtn = $("btnApproveReceiptModal");
-    if (approveBtn) {
-      approveBtn.addEventListener("click", () => {
-        if (activeReceiptRaffleId && activeReceiptTicketNum) {
-          approvePaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum);
-          closeReceiptViewer();
-        }
-      });
-    }
+    safeAddListener("btnApproveReceiptModal", "click", () => {
+      if (activeReceiptRaffleId && activeReceiptTicketNum) {
+        approvePaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum);
+        closeReceiptViewer();
+      }
+    });
     
     // Receipt Modal Reject
-    const rejectBtnModal = $("btnRejectReceiptModal");
-    if (rejectBtnModal) {
-      rejectBtnModal.addEventListener("click", () => {
-        if (activeReceiptRaffleId && activeReceiptTicketNum) {
-          const reasonSelect = $("rejectReasonSelect");
-          const reason = reasonSelect ? reasonSelect.value : "Comprobante no recibido o inválido";
-          rejectPaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum, reason);
-          closeReceiptViewer();
-        }
-      });
-    }
+    safeAddListener("btnRejectReceiptModal", "click", () => {
+      if (activeReceiptRaffleId && activeReceiptTicketNum) {
+        const reasonSelect = $("rejectReasonSelect");
+        const reason = reasonSelect ? reasonSelect.value : "Comprobante no recibido o inválido";
+        rejectPaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum, reason);
+        closeReceiptViewer();
+      }
+    });
   }
 
   // --- STATE LOADER ---
@@ -1672,6 +1655,7 @@ ESTADO: ${estadoBadge}
   }
 
   async function checkAuthentication() {
+    const loginOverlay = $("adminLoginOverlay");
     const pin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '123456';
     if (pin) {
       const isValid = await verifyPin(pin);
@@ -1680,19 +1664,25 @@ ESTADO: ${estadoBadge}
         sessionStorage.setItem('admin_pin', pin);
         localStorage.setItem('admin_pin', pin);
         localStorage.setItem('suerterd_admin_logged', 'true');
-        $("adminLoginOverlay").classList.remove("active");
+        if (loginOverlay) loginOverlay.classList.remove("active");
         await init();
         return;
       }
     }
-    // If not authenticated or verification fails, show the login screen and listen to submit
-    $("adminLoginOverlay").classList.add("active");
-    
-    // Bind login submit buttons
-    $("btnAdminLoginSubmit").onclick = handleLoginSubmit;
-    $("adminLoginPinInput").onkeydown = (e) => {
-      if (e.key === "Enter") handleLoginSubmit();
-    };
+    if (loginOverlay) {
+      loginOverlay.classList.add("active");
+      const btnSubmit = $("btnAdminLoginSubmit");
+      if (btnSubmit) btnSubmit.onclick = handleLoginSubmit;
+      const pinInput = $("adminLoginPinInput");
+      if (pinInput) {
+        pinInput.onkeydown = (e) => {
+          if (e.key === "Enter") handleLoginSubmit();
+        };
+      }
+    } else {
+      adminPin = '123456';
+      await init();
+    }
   }
 
   async function verifyPin(pin) {
@@ -1713,6 +1703,7 @@ ESTADO: ${estadoBadge}
 
   async function handleLoginSubmit() {
     const input = $("adminLoginPinInput");
+    if (!input) return;
     const pin = input.value.trim();
     if (!pin) {
       showLoginError("Ingresa un PIN.");
@@ -1725,7 +1716,8 @@ ESTADO: ${estadoBadge}
       sessionStorage.setItem('admin_pin', pin);
       localStorage.setItem('admin_pin', pin);
       localStorage.setItem('suerterd_admin_logged', 'true');
-      $("adminLoginOverlay").classList.remove("active");
+      const loginOverlay = $("adminLoginOverlay");
+      if (loginOverlay) loginOverlay.classList.remove("active");
       await init();
     } else {
       showLoginError("PIN de seguridad incorrecto.");
