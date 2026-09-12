@@ -1936,11 +1936,20 @@ ESTADO: ${estadoBadge}
               <div style="font-size:0.75rem; color:var(--text-grey); margin-top:2px; font-family:var(--font-mono);">${numbersDisplay}</div>
             </td>
             <td><strong style="color:var(--green); font-family:var(--font-mono); font-size:0.95rem;">${amountDisplay}</strong></td>
-            <td>${escapeHtml(g.name)}</td>
             <td>
-              <a href="https://wa.me/${formatWhatsAppPhone(g.whatsapp)}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; border-color:#00E676; color:#00E676; display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
-                <i data-lucide="message-circle" style="width:12px;"></i> WhatsApp
-              </a>
+              <div style="font-weight:800; color:#FFF; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="user" style="width:14px; color:var(--cyan);"></i> ${escapeHtml(g.name)}
+              </div>
+            </td>
+            <td>
+              <div style="display:flex; flex-direction:column; gap:3px;">
+                <span style="color:var(--cyan); font-family:var(--font-mono); font-weight:700; font-size:0.85rem; display:flex; align-items:center; gap:4px;">
+                  <i data-lucide="phone" style="width:12px;"></i> ${escapeHtml(g.whatsapp)}
+                </span>
+                <a href="https://wa.me/${formatWhatsAppPhone(g.whatsapp)}" target="_blank" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.7rem; border-color:#00E676; color:#00E676; display:inline-flex; align-items:center; gap:4px; margin-bottom:0; width:fit-content;">
+                  <i data-lucide="message-circle" style="width:12px;"></i> Abrir Chat
+                </a>
+              </div>
             </td>
             <td><span class="badge" style="background:rgba(0,229,255,0.05); color:var(--cyan); border:1px solid var(--border-cyan);">${escapeHtml(g.loteria)}</span></td>
             <td>
@@ -2252,12 +2261,13 @@ Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo 
       const metaTickets = $("viewReceiptMetaTickets");
       const metaAmount = $("viewReceiptMetaAmount");
 
-      if (metaName) metaName.textContent = tInfo.name || tInfo.nombre || "Cliente";
-      if (metaPhone) metaPhone.textContent = tInfo.whatsapp || "Sin número";
+      if (metaName) metaName.innerHTML = `<span style="color:#FFF; font-weight:800; font-size:1rem; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="user" style="width:16px; color:var(--cyan);"></i> ${escapeHtml(tInfo.name || tInfo.nombre || "Cliente")}</span>`;
+      if (metaPhone) metaPhone.innerHTML = `<a href="https://wa.me/${formatWhatsAppPhone(tInfo.whatsapp)}" target="_blank" style="color:var(--cyan); font-weight:800; font-family:var(--font-mono); font-size:0.95rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="phone" style="width:14px;"></i> ${escapeHtml(tInfo.whatsapp || "Sin número")}</a>`;
       if (metaLottery) metaLottery.textContent = tInfo.loteria || "Pick 5 Florida";
       if (metaTickets) metaTickets.textContent = `${nums.length} boletos (${nums.map(n => `#${n.trim()}`).join(", ")})`;
       if (metaAmount) metaAmount.textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
 
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       modal.classList.add("active");
     }
   }
