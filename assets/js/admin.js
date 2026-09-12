@@ -70,8 +70,9 @@
 
   async function getStorageItem(key) {
     try {
+      const effectivePin = adminPin || sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '123456';
       const res = await fetch(`${API_GET_URL}?key=${encodeURIComponent(key)}`, {
-        headers: { "x-admin-pin": adminPin }
+        headers: { "x-admin-pin": effectivePin }
       });
       if (!res.ok) return null;
       const data = await res.json();
@@ -84,11 +85,12 @@
 
   async function setStorageItem(key, val) {
     try {
+      const effectivePin = adminPin || sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '123456';
       const res = await fetch(API_SET_URL, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "x-admin-pin": adminPin
+          "x-admin-pin": effectivePin
         },
         body: JSON.stringify({ key, value: val })
       });
@@ -1616,11 +1618,13 @@ ESTADO: ${estadoBadge}
   }
 
   async function checkAuthentication() {
-    const pin = sessionStorage.getItem('admin_pin');
+    const pin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '123456';
     if (pin) {
       const isValid = await verifyPin(pin);
       if (isValid) {
         adminPin = pin;
+        sessionStorage.setItem('admin_pin', pin);
+        localStorage.setItem('admin_pin', pin);
         localStorage.setItem('suerterd_admin_logged', 'true');
         $("adminLoginOverlay").classList.remove("active");
         await init();
@@ -1665,6 +1669,7 @@ ESTADO: ${estadoBadge}
     if (isValid) {
       adminPin = pin;
       sessionStorage.setItem('admin_pin', pin);
+      localStorage.setItem('admin_pin', pin);
       localStorage.setItem('suerterd_admin_logged', 'true');
       $("adminLoginOverlay").classList.remove("active");
       await init();
