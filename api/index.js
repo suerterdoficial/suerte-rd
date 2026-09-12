@@ -9,8 +9,9 @@ const PORT = process.env.PORT || 8000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use((req, res, next) => {
-  if (!req.url.startsWith('/api') && !req.url.startsWith('/assets') && req.url !== '/' && req.url !== '/admin') {
-    req.url = '/api' + req.url;
+  const matchedPath = req.headers['x-matched-path'] || req.originalUrl || req.url;
+  if (matchedPath && matchedPath.startsWith('/api/')) {
+    req.url = matchedPath;
   }
   next();
 });
@@ -572,7 +573,7 @@ app.get('/api/debug-db', async (req, res) => {
 });
 
 // API Endpoints
-app.post('/api/admin/verify', async (req, res) => {
+app.post(['/api/admin/verify', '/admin/verify'], async (req, res) => {
   const { pin } = req.body;
   const adminPin = await getAdminPin();
   if (pin === adminPin || pin === '123456' || pin === 'SuerteRD2026') {
@@ -594,7 +595,7 @@ app.post('/api/admin/clean-expired', async (req, res) => {
 });
 
 // Public Ticket Reservation Endpoint for Customers
-app.post('/api/tickets/reserve', async (req, res) => {
+app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
   try {
     const { raffleId, name, whatsapp, loteria, tickets, comprobante, estado, packageLabel } = req.body;
     if (!name || !whatsapp || !tickets) {
@@ -677,7 +678,7 @@ app.get('/api/cron/release-tickets', async (req, res) => {
   }
 });
 
-app.get('/api/get', async (req, res) => {
+app.get(['/api/get', '/get'], async (req, res) => {
   const { key } = req.query;
   if (!key) {
     return res.status(400).json({ error: "Missing key parameter" });
@@ -691,7 +692,7 @@ app.get('/api/get', async (req, res) => {
   res.json({ value: db[key] || null });
 });
 
-app.post('/api/set', async (req, res) => {
+app.post(['/api/set', '/set'], async (req, res) => {
   const { key, value } = req.body;
   if (!key) {
     return res.status(400).json({ error: "Missing key in request body" });
@@ -799,7 +800,7 @@ app.post('/api/set', async (req, res) => {
 });
 
 // Notifications API
-app.get('/api/notifications', async (req, res) => {
+app.get(['/api/notifications', '/notifications'], async (req, res) => {
   // Let this be public so client can show live activity logs feed
   const db = await readDb();
   res.json({ value: db.notifications || [] });
