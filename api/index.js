@@ -27,13 +27,16 @@ app.get('/assets/js/admin.js', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'assets', 'js', 'admin.js'));
 });
 
-const DATA_FILE = path.join(__dirname, '..', 'data.json');
+const ORIGINAL_DATA_FILE = path.join(__dirname, '..', 'data.json');
+const DATA_FILE = process.env.VERCEL ? path.join('/tmp', 'suerterd_data.json') : ORIGINAL_DATA_FILE;
+const UPSTASH_URL = process.env.KV_REST_API_URL || 'https://brief-buffalo-176284.upstash.io';
+const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || 'gQAAAAAAArCcAQIgcDJiZDkxOTY3MDQ2OWU0YzkwYmM1OTYyMGZmYzA4OTE2ZA';
 const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || null;
 
 let cachedDb = null;
 let lastDbFetchTime = 0;
-const CACHE_TTL_MS = 2000;
+const CACHE_TTL_MS = 1000;
 
 const DEFAULT_CONFIGS = {
   florida5: {
@@ -96,13 +99,43 @@ async function readDb(forceFresh = false) {
     }
   }
 
+  if (!db && UPSTASH_URL && UPSTASH_TOKEN) {
+    try {
+      const res = await fetch(`${UPSTASH_URL}/get/suerterd_db`, {
+        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.result) {
+          db = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+        }
+      }
+    } catch (e) {
+      console.error("Error reading from Upstash Redis:", e);
+    }
+  }
+
   if (!db) {
+    if (process.env.VERCEL && !fs.existsSync(DATA_FILE) && fs.existsSync(ORIGINAL_DATA_FILE)) {
+      try {
+        fs.copyFileSync(ORIGINAL_DATA_FILE, DATA_FILE);
+      } catch (e) {
+        console.error("Error copying original data.json to /tmp:", e);
+      }
+    }
     if (fs.existsSync(DATA_FILE)) {
       try {
         const raw = fs.readFileSync(DATA_FILE, 'utf8');
         db = JSON.parse(raw) || {};
       } catch (e) {
-        console.error("Error reading data.json, returning empty object", e);
+        console.error("Error reading DATA_FILE, returning empty object", e);
+        db = {};
+      }
+    } else if (fs.existsSync(ORIGINAL_DATA_FILE)) {
+      try {
+        const raw = fs.readFileSync(ORIGINAL_DATA_FILE, 'utf8');
+        db = JSON.parse(raw) || {};
+      } catch (e) {
         db = {};
       }
     } else {
@@ -176,6 +209,22 @@ async function writeDb(db) {
       await kv.set('suerterd_db', db);
     } catch (e) {
       console.error("Error writing to Vercel KV:", e);
+    }
+  }
+
+  if (UPSTASH_URL && UPSTASH_TOKEN) {
+    try {
+      const valStr = JSON.stringify(db);
+      await fetch(`${UPSTASH_URL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${UPSTASH_TOKEN}`
+        },
+        body: JSON.stringify(['SET', 'suerterd_db', valStr])
+      });
+    } catch (e) {
+      console.error("Error writing to Upstash Redis:", e);
     }
   }
 

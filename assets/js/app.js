@@ -2180,7 +2180,8 @@
           whatsapp: phone,
           loteria: lottery,
           tickets: cart,
-          estado: 'reservado'
+          estado: 'reservado',
+          packageLabel: lastSelectedPackageLabel
         })
       });
     } catch(e) {
