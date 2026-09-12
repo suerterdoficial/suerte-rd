@@ -1050,7 +1050,7 @@
       select.innerHTML = "";
       RAFFLE_IDS.forEach(rId => {
         const conf = configs[rId];
-        if (conf.active === false) return;
+        if (conf && conf.active === false) return;
         const isLocked = conf.saleStatus === "locked";
         const opt = document.createElement("option");
         opt.value = rId;
@@ -1350,7 +1350,7 @@
 
     RAFFLE_IDS.forEach(rId => {
       const conf = configs[rId];
-      if (conf.active === false) return;
+      if (conf && conf.active === false) return;
       const sold = Object.keys(allTickets[rId] || {}).length;
       const total = Math.max(1, Number(conf.total) || 10000);
       const pct = Math.min(100, (sold / total) * 100);
@@ -1538,10 +1538,10 @@
   }
 
   function renderProgress() {
-    const conf = configs[activeRaffleId];
-    const ticketsObj = allTickets[activeRaffleId] || {};
+    const conf = (configs && configs[activeRaffleId]) || (DEFAULT_CONFIGS && DEFAULT_CONFIGS[activeRaffleId]) || (DEFAULT_CONFIGS && DEFAULT_CONFIGS['florida5']) || { total: 100000, price: "RD$3" };
+    const ticketsObj = (allTickets && allTickets[activeRaffleId]) || {};
     const sold = Object.keys(ticketsObj).length;
-    const total = Math.max(1, Number(conf.total) || 10000);
+    const total = Math.max(1, Number(conf.total) || 100000);
     const pct = Math.min(100, (sold / total) * 100);
 
     let pctDisplay = "0.0%";
@@ -1549,21 +1549,21 @@
       pctDisplay = pct < 0.1 ? `${pct.toFixed(2)}%` : `${pct.toFixed(1)}%`;
     }
 
-    $("soldLabel").textContent = `${sold.toLocaleString("es-DO")} vendidos de ${total.toLocaleString("es-DO")}`;
-    $("pctLabel").textContent = `${pctDisplay} comprado`;
-    $("progressBar").style.width = `${Math.max(pct, sold > 0 ? 0.8 : 0)}%`;
+    if ($("soldLabel")) $("soldLabel").textContent = `${sold.toLocaleString("es-DO")} vendidos de ${total.toLocaleString("es-DO")}`;
+    if ($("pctLabel")) $("pctLabel").textContent = `${pctDisplay} comprado`;
+    if ($("progressBar")) $("progressBar").style.width = `${Math.max(pct, sold > 0 ? 0.8 : 0)}%`;
 
     renderRaffleSelector();
 
-    // Calculate accumulated revenue: price * sold tickets
-    const priceNum = parseFloat(conf.price.replace(/[^\d.]/g, "")) || 0;
+    const priceStr = conf.price ? String(conf.price) : "3";
+    const priceNum = parseFloat(priceStr.replace(/[^\d.]/g, "")) || 3;
     const accumulated = priceNum * sold;
     const accDisplay = $("accumulatedDisplay");
     if (accDisplay) {
       accDisplay.textContent = `RD$ ${accumulated.toLocaleString("es-DO")}`;
     }
-    renderBlessedNumbers();
-    updateCountdown();
+    try { renderBlessedNumbers(); } catch(e) {}
+    try { updateCountdown(); } catch(e) {}
   }
 
   function renderDrawResults() {
@@ -2171,7 +2171,7 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
-    renderProgress();
+    try { renderProgress(); } catch(e) { console.warn("renderProgress error:", e); }
     
     try {
       confetti({
@@ -2268,19 +2268,24 @@
   }
 
   async function handleSendWhatsApp() {
-    const conf = configs[activeRaffleId];
-    const num = $("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent;
-    const name = $("receiptName").textContent;
-    const lottery = $("receiptLottery").textContent;
+    const conf = (configs && configs[activeRaffleId]) || (DEFAULT_CONFIGS && DEFAULT_CONFIGS[activeRaffleId]) || {};
+    const num = $("receiptTicketNum") ? ($("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent) : "";
+    const name = $("receiptName") ? $("receiptName").textContent : "Cliente";
+    const lottery = $("receiptLottery") ? $("receiptLottery").textContent : "Pick 5 Florida";
+    const phone = $("receiptPhone") ? $("receiptPhone").textContent : "";
+    const priceText = $("receiptPrice") ? $("receiptPrice").textContent : "RD$0";
+    const dateText = $("receiptDate") ? $("receiptDate").textContent : new Date().toLocaleDateString("es-DO");
+    const barcodeText = $("receiptBarcodeText") ? $("receiptBarcodeText").textContent : "SRD-00000";
 
-    if (selectedPaymentReceiptBase64) {
-      showToast("Registrando comprobante...", "info");
-    } else {
-      showToast("Registrando apartado para validación...", "info");
+    const btnWa = $("btnSendWhatsApp");
+    if (btnWa) {
+      btnWa.disabled = true;
+      btnWa.textContent = "Procesando...";
     }
 
+    showToast(selectedPaymentReceiptBase64 ? "¡Procesando comprobante!" : "¡Procesando apartado!", "info");
+
     const ticketNums = num.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
-    const phone = $("receiptPhone").textContent;
 
     let currentPkgTag = lastSelectedPackageLabel || "";
     if (!currentPkgTag) {
@@ -2292,39 +2297,31 @@
       else currentPkgTag = "Boleto Individual";
     }
 
-    try {
-      await fetch('/api/tickets/reserve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          raffleId: activeRaffleId,
-          name,
-          whatsapp: phone,
-          loteria: lottery,
-          tickets: ticketNums,
-          packageLabel: currentPkgTag,
-          comprobante: selectedPaymentReceiptBase64,
-          estado: selectedPaymentReceiptBase64 ? "esperando_validacion" : "reservado"
-        })
-      });
-      showToast(selectedPaymentReceiptBase64 ? "¡Comprobante registrado!" : "¡Apartado registrado!", "ok");
-    } catch(e) {
-      console.error("Failed to upload receipt via reserve API", e);
-      showToast("Error al registrar apartado. Reintenta.", "bad");
-      return;
-    }
+    // 1. Send reserve & receipt API call in background (non-blocking)
+    fetch('/api/tickets/reserve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        raffleId: activeRaffleId,
+        name,
+        whatsapp: phone,
+        loteria: lottery,
+        tickets: ticketNums,
+        packageLabel: currentPkgTag,
+        comprobante: selectedPaymentReceiptBase64 || true,
+        estado: selectedPaymentReceiptBase64 ? "esperando_validacion" : "reservado"
+      })
+    }).catch(e => {
+      console.warn("Background receipt upload notice:", e);
+    });
 
-    const priceText = $("receiptPrice").textContent;
-    const dateText = $("receiptDate").textContent;
-    const barcodeText = $("receiptBarcodeText").textContent;
-    const prizeTitle = conf.prize || conf.title || "Gran Sorteo Suerte RD";
-
-    const ticketListRaw = num.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
-    const ticketCount = ticketListRaw.length;
+    // 2. Format WhatsApp text
+    const prizeTitle = (conf && (conf.prize || conf.title)) ? (conf.prize || conf.title) : "Sorteo Especial iPhone 17 Pro Max 1TB";
+    const ticketCount = ticketNums.length;
 
     const formattedLines = [];
-    for (let i = 0; i < ticketListRaw.length; i += 4) {
-      const chunk = ticketListRaw.slice(i, i + 4).map(n => `#${n}`).join(", ");
+    for (let i = 0; i < ticketNums.length; i += 4) {
+      const chunk = ticketNums.slice(i, i + 4).map(n => `#${n}`).join(", ");
       formattedLines.push(chunk);
     }
     const formattedNumsText = formattedLines.join("\n");
@@ -2364,9 +2361,10 @@ ${formattedNumsText}
 
     const targetWhatsapp = (conf && conf.whatsapp) ? conf.whatsapp : "8099838626";
     const whatsappNum = formatWhatsAppPhone(targetWhatsapp);
+    
+    // 3. Open WhatsApp link & reset modal
     window.open(`https://wa.me/${whatsappNum}?text=${encoded}`, "_blank");
 
-    // Reset selected file fields
     selectedPaymentReceiptBase64 = null;
     const receiptInput = $("paymentReceiptInput");
     if (receiptInput) receiptInput.value = "";
@@ -2375,8 +2373,14 @@ ${formattedNumsText}
     const previewCont = $("paymentReceiptPreviewContainer");
     if (previewCont) previewCont.style.display = "none";
 
-    clearTicketSelection();
-    $("receiptOverlay").classList.remove("active");
+    try { clearTicketSelection(); } catch(e) {}
+    if ($("receiptOverlay")) $("receiptOverlay").classList.remove("active");
+
+    if (btnWa) {
+      btnWa.disabled = false;
+      btnWa.innerHTML = `Confirmar <i data-lucide="arrow-right" style="width:16px; margin-left:4px;"></i>`;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
   }
 
   function clearTicketSelection() {
