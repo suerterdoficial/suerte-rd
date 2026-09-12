@@ -1959,21 +1959,23 @@ ESTADO: ${estadoBadge}
             </td>
             <td><span class="badge" style="background:rgba(0,229,255,0.05); color:var(--cyan); border:1px solid var(--border-cyan);">${escapeHtml(g.loteria)}</span></td>
             <td>
+            <td>
               ${g.comprobante ? `
-                <button class="btn btn-secondary btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; border-color:var(--cyan); color:var(--cyan); display:inline-flex; align-items:center; gap:4px; margin-bottom:0;">
-                  <i data-lucide="image" style="width:12px;"></i> Ver Recibo
-                </button>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:4px 0;">
+                  <img src="${g.comprobante}" class="btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; border:2px solid var(--cyan); cursor:pointer; box-shadow:0 0 12px rgba(0,229,255,0.3);" title="Hacer clic para ver recibo HD">
+                  <span style="font-size:0.65rem; color:var(--cyan); font-weight:800; cursor:pointer;" class="btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}">🔍 Ampliar Foto</span>
+                </div>
               ` : `<span style="color:var(--text-muted); font-size:0.8rem;">Sin recibo</span>`}
             </td>
             <td style="white-space: nowrap;">${statusBadge}</td>
             <td style="font-size:0.8rem; color:var(--text-grey);">${dateStr}</td>
             <td>
               <div style="display:flex; gap:6px;">
-                <button class="btn btn-green btn-approve-group" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; font-weight:800; margin-bottom:0;">
-                  <i data-lucide="check" style="width:12px; vertical-align:middle;"></i> Aprobar
+                <button class="btn btn-green btn-approve-group" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 6px 12px; font-size: 0.78rem; font-weight:800; margin-bottom:0; cursor:pointer;">
+                  <i data-lucide="check" style="width:14px; vertical-align:middle;"></i> Aprobar
                 </button>
-                <button class="btn btn-red btn-reject-group" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 4px 8px; font-size: 0.75rem; font-weight:800; margin-bottom:0;">
-                  <i data-lucide="x" style="width:12px; vertical-align:middle;"></i> Rechazar
+                <button class="btn btn-red btn-reject-group" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 6px 12px; font-size: 0.78rem; font-weight:800; margin-bottom:0; cursor:pointer;">
+                  <i data-lucide="x" style="width:14px; vertical-align:middle;"></i> Rechazar
                 </button>
               </div>
             </td>
@@ -2073,10 +2075,16 @@ ESTADO: ${estadoBadge}
   }
 
   async function bulkApprovePayments() {
-    const checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
+    let checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
     if (checkedBoxes.length === 0) {
-      showNotification("Por favor marca la casilla de al menos una compra en la lista para aprobar.", "info");
-      return;
+      const allBoxes = document.querySelectorAll(".payment-row-checkbox");
+      if (allBoxes.length > 0) {
+        allBoxes.forEach(chk => chk.checked = true);
+        checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
+      } else {
+        showNotification("No hay compras pendientes en la lista para aprobar.", "info");
+        return;
+      }
     }
 
     if (!confirm(`¿Estás seguro de que deseas APROBAR y ACTIVAR las ${checkedBoxes.length} compras seleccionadas?`)) return;
