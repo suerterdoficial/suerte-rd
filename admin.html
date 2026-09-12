@@ -648,31 +648,39 @@
 
     <!-- Content Area -->
     <div class="content-area">
-      <header>
+      <header style="background: rgba(5, 24, 32, 0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-cyan); padding: 18px 24px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
         <div class="header-info">
-          <h1 id="headerTitle">Cargando Sorteo...</h1>
-          <p id="headerSubtitle">Cargando estadísticas y estado de ventas.</p>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+            <h1 id="headerTitle" style="font-family:var(--font-title); font-size:1.4rem; font-weight:800; color:#FFF;">Sorteo Especial iPhone 17 Pro Max 1TB</h1>
+            <span class="badge" style="background:rgba(0,230,118,0.15); color:var(--green); border:1px solid var(--green); font-size:0.7rem; font-weight:800; padding:3px 8px;">🛡️ Centro de Control Admin</span>
+          </div>
+          <p id="headerSubtitle" style="color:var(--text-grey); font-size:0.85rem;">Premio: iPhone 17 Pro Max 1TB • Precio: RD$3 • Total Boletos: 100,000</p>
         </div>
-        <div>
-          <select id="globalRaffleSelect" style="width: 250px; background:#05141b; font-weight:700;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <select id="globalRaffleSelect" style="width: 250px; background:#05141b; font-weight:700; height:42px; border:1px solid var(--border-cyan); border-radius:10px; color:#FFF; padding:0 10px;">
             <!-- Loaded dynamically -->
           </select>
         </div>
       </header>
 
-      <!-- Stats Grid -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Total Recaudado (Est.)</div>
-          <div class="stat-value" id="statIncome" style="color: var(--green);">RD$0</div>
+      <!-- Metrics Grid (Estilo Listo Patrón) -->
+      <div class="stats-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom:25px;">
+        <div class="stat-card" style="background:var(--card-bg); border:1px solid var(--border-cyan); border-left:4px solid var(--green); border-radius:16px; padding:18px;">
+          <div class="stat-label" style="font-size:0.75rem; color:var(--text-grey); text-transform:uppercase; font-weight:800; letter-spacing:0.5px;">Ingresos Totales (Validados)</div>
+          <div class="stat-value" id="statIncome" style="color: var(--green); font-family:var(--font-mono); font-size:1.8rem; font-weight:800; margin-top:6px;">RD$ 750</div>
+          <small style="color:var(--text-muted); font-size:0.75rem;">Sincronizado en tiempo real</small>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Boletos Vendidos</div>
-          <div class="stat-value" id="statSold">0 / 0</div>
+
+        <div class="stat-card" style="background:var(--card-bg); border:1px solid var(--border-cyan); border-left:4px solid var(--cyan); border-radius:16px; padding:18px;">
+          <div class="stat-label" style="font-size:0.75rem; color:var(--text-grey); text-transform:uppercase; font-weight:800; letter-spacing:0.5px;">Boletos Vendidos</div>
+          <div class="stat-value" id="statSold" style="color: #FFF; font-family:var(--font-mono); font-size:1.8rem; font-weight:800; margin-top:6px;">225 / 100,000</div>
+          <small style="color:var(--cyan); font-size:0.75rem; font-weight:700;">0.2% del total de rifa</small>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Reservados vs Pagados</div>
-          <div class="stat-value" id="statRatio" style="font-size: 1.4rem;">0 Res. / 0 Pag.</div>
+
+        <div class="stat-card" style="background:var(--card-bg); border:1px solid var(--border-cyan); border-left:4px solid var(--gold); border-radius:16px; padding:18px;">
+          <div class="stat-label" style="font-size:0.75rem; color:var(--text-grey); text-transform:uppercase; font-weight:800; letter-spacing:0.5px;">Reservados vs Pagados</div>
+          <div class="stat-value" id="statRatio" style="font-size: 1.4rem; color:var(--gold); font-family:var(--font-mono); font-weight:800; margin-top:6px;">0 Res. / 225 Pag.</div>
+          <small style="color:var(--text-muted); font-size:0.75rem;">Auditoría permanente</small>
         </div>
       </div>
 
