@@ -1,6 +1,11 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/**/*.js": {
+      "includeFiles": "data.json"
+    }
+  },
   "rewrites": [
     { "source": "/admin.", "destination": "/admin.html" },
     { "source": "/admin", "destination": "/admin.html" },

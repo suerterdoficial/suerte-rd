@@ -72,6 +72,24 @@ async function isAdmin(req) {
   return validPins.includes(pinFromHeader) || validPins.includes(pinFromBody) || !process.env.VERCEL;
 }
 
+let BUNDLED_DATA = {};
+try {
+  BUNDLED_DATA = require('../data.json');
+} catch(e) {}
+
+function getDiskDb() {
+  if (BUNDLED_DATA && Object.keys(BUNDLED_DATA).length > 0) {
+    return BUNDLED_DATA;
+  }
+  if (fs.existsSync(ORIGINAL_DATA_FILE)) {
+    try {
+      const raw = fs.readFileSync(ORIGINAL_DATA_FILE, 'utf8');
+      return JSON.parse(raw) || {};
+    } catch (e) {}
+  }
+  return {};
+}
+
 // Helper to read database
 async function readDb(forceFresh = false) {
   const now = Date.now();
@@ -111,15 +129,7 @@ async function readDb(forceFresh = false) {
     db = {};
   }
 
-  let diskDb = {};
-  if (fs.existsSync(ORIGINAL_DATA_FILE)) {
-    try {
-      const raw = fs.readFileSync(ORIGINAL_DATA_FILE, 'utf8');
-      diskDb = JSON.parse(raw) || {};
-    } catch (e) {
-      console.error("Error reading ORIGINAL_DATA_FILE:", e);
-    }
-  }
+  const diskDb = getDiskDb();
 
   for (const k in diskDb) {
     if (!db[k]) {
