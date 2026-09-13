@@ -3569,7 +3569,7 @@ ${formattedNumsText}
     if (!tNums || tNums.length === 0) {
       const rawNum = $("receiptTicketNum") ? ($("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent) : "";
       if (rawNum) {
-        tNums = rawNum.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
+        tNums = rawNum.split(", ").map(s => s.trim().replace(/^#/, "")).filter(s => /^\d+$/.test(s));
       }
     }
     if (!tNums || tNums.length === 0) return;

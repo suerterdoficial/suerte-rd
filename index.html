@@ -753,6 +753,19 @@
       </select>
     </div>
 
+    <div class="field" style="margin-top: 12px;">
+      <label for="checkoutReceiptInput" style="color:var(--gold); font-weight:700; display:flex; align-items:center; gap:6px;">
+        <i data-lucide="upload" style="width:14px; vertical-align:middle; margin-right:4px;"></i> Adjuntar Comprobante de Pago (Opcional)
+      </label>
+      <label for="checkoutReceiptInput" class="btn btn-secondary" style="width:100%; border-color:var(--gold); color:var(--gold); cursor:pointer; margin-top:4px; display:flex; justify-content:center; align-items:center; gap:8px;">
+        <i data-lucide="image" style="width:16px;"></i> Elegir Foto de Transferencia
+      </label>
+      <input type="file" id="checkoutReceiptInput" accept="image/*" style="display:none;">
+      <div id="checkoutReceiptPreviewContainer" style="display:none; margin-top:8px; border-radius:10px; overflow:hidden; border:1px solid var(--border-cyan); max-height:140px; background:rgba(0,0,0,0.3); text-align:center;">
+        <img id="checkoutReceiptPreview" style="max-width:100%; max-height:140px; object-fit:contain; padding:4px;">
+      </div>
+    </div>
+
     <button class="btn btn-primary" style="width:100%; margin-top: 10px;" id="btnConfirmReserveFinal"><i data-lucide="check"></i> Confirmar y Generar Recibo</button>
     <div class="status-lbl bad" style="margin-top: 15px;" id="reserveConfirmErrorMsg"></div>
   </div>

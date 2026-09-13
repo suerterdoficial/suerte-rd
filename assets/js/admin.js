@@ -940,6 +940,74 @@ function resetReceiptImage() {
   applyReceiptTransform();
 }
 
+function compressImageFile(file, maxWidth = 800, quality = 0.75, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      callback(dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleAdminReceiptUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const groupData = window.activeAdminReceiptGroupData;
+  if (!groupData || !groupData.tickets || !groupData.tickets.length) {
+    alert("No hay tickets en la orden seleccionada para asociar la foto.");
+    return;
+  }
+
+  compressImageFile(file, 800, 0.75, async (base64) => {
+    try {
+      const res = await fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raffleId: currentRaffleId,
+          name: groupData.name || 'Cliente',
+          whatsapp: groupData.whatsapp || '',
+          tickets: groupData.tickets,
+          packageLabel: groupData.paquete || 'Paquete',
+          comprobante: base64,
+          estado: groupData.estado || 'esperando_validacion',
+          groupKey: groupData.groupKey
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        groupData.comprobante = base64;
+        const img = document.getElementById('modalImg');
+        const noImgPlaceholder = document.getElementById('modalNoImgPlaceholder');
+        const openExternalBtn = document.getElementById('modalOpenExternalBtn');
+
+        if (img) { img.src = base64; img.style.display = 'block'; }
+        if (noImgPlaceholder) noImgPlaceholder.style.display = 'none';
+        if (openExternalBtn) { openExternalBtn.href = base64; openExternalBtn.style.display = 'inline-flex'; }
+        alert("¡Foto de comprobante guardada y vinculada a la orden exitosamente!");
+        loadTicketsData();
+      }
+    } catch(err) {
+      alert("Error guardando imagen en el servidor: " + err.message);
+    }
+  });
+}
+
 function initModal() {
   const modal = document.getElementById('receiptModal');
   const manualModal = document.getElementById('modalManualOrder');
@@ -953,6 +1021,11 @@ function initModal() {
       if (e.target === manualModal) manualModal.classList.remove('active');
     });
   }
+
+  const input1 = document.getElementById('adminReceiptInput');
+  const input2 = document.getElementById('adminReceiptInputChange');
+  if (input1) input1.addEventListener('change', handleAdminReceiptUpload);
+  if (input2) input2.addEventListener('change', handleAdminReceiptUpload);
 }
 
 function openReceiptFromCache(keyId) {
@@ -962,6 +1035,7 @@ function openReceiptFromCache(keyId) {
 }
 
 function openReceiptModal(groupData) {
+  window.activeAdminReceiptGroupData = groupData;
   const modal = document.getElementById('receiptModal');
   const img = document.getElementById('modalImg');
   const openExternalBtn = document.getElementById('modalOpenExternalBtn');
