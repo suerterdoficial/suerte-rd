@@ -402,14 +402,41 @@
           
           <div style="width:100%; height:100%; max-height:600px; overflow:auto; display:flex; align-items:center; justify-content:center;">
             <img id="modalImg" style="max-width:100%; max-height:580px; object-fit:contain; border-radius:10px; transition:transform 0.25s ease; transform-origin:center center;">
-            <div id="modalNoImgPlaceholder" style="display:none; text-align:center; padding:30px 20px; color:var(--gold);">
-              <i data-lucide="alert-triangle" style="width:56px; height:56px; margin-bottom:12px; color:var(--gold);"></i>
-              <div style="font-size:1.15rem; font-weight:900; color:#FFF;">Sin Foto de Comprobante Adjunta</div>
-              <div style="font-size:0.85rem; color:var(--muted); margin-top:8px; max-width:340px; margin-bottom:16px;">El cliente no adjuntó imagen en la web. Puedes subir la foto que te envió por WhatsApp aquí:</div>
-              <label for="adminReceiptInput" class="btn btn-gold" style="cursor:pointer; display:inline-flex; align-items:center; gap:8px; font-weight:800; padding:10px 18px; border-radius:12px; background:var(--gold); color:#000;">
-                <i data-lucide="upload" style="width:18px; height:18px;"></i> Adjuntar Foto Recibida por WhatsApp
-              </label>
-              <input type="file" id="adminReceiptInput" accept="image/*" style="display:none;">
+            <div id="modalNoImgPlaceholder" style="display:none; width:100%; text-align:center; padding:10px;">
+              <div class="digital-receipt-pass" style="background:#ffffff; color:#1a202c; border-radius:18px; padding:18px; max-width:380px; margin:0 auto; box-shadow:0 10px 30px rgba(0,0,0,0.5); text-align:left; font-family:var(--font-sans); border:2px dashed var(--gold);">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #edf2f7; padding-bottom:8px; margin-bottom:10px;">
+                  <div>
+                    <div style="font-weight:900; font-size:1.1rem; color:#022778; letter-spacing:0.5px; text-transform:uppercase;">🎰 SUERTE RD</div>
+                    <div style="font-size:0.7rem; color:#718096; font-weight:700;">RECIBO DIGITAL DE COMPRA</div>
+                  </div>
+                  <div style="font-size:0.75rem; font-family:var(--font-mono); color:#718096; font-weight:700;" id="digitalReceiptDate">13/09/2026</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem; margin-bottom:10px;">
+                  <div style="display:flex; justify-content:space-between;"><span style="color:#718096;">Comprador:</span><strong id="digitalReceiptName" style="color:#2d3748;">-</strong></div>
+                  <div style="display:flex; justify-content:space-between;"><span style="color:#718096;">WhatsApp:</span><span id="digitalReceiptPhone" style="font-family:var(--font-mono); font-weight:700; color:#054c54;">-</span></div>
+                  <div style="display:flex; justify-content:space-between;"><span style="color:#718096;">Paquete:</span><span id="digitalReceiptPkg" style="font-weight:800; color:#cd7f32;">-</span></div>
+                  <div style="display:flex; justify-content:space-between;"><span style="color:#718096;">Monto Total:</span><span id="digitalReceiptAmount" style="font-weight:900; color:#d69e2e; font-size:1rem;">RD$ 0</span></div>
+                  <div style="display:flex; justify-content:space-between;"><span style="color:#718096;">Lotería:</span><span style="font-weight:700; color:#2b6cb0;">Pick 5 Florida</span></div>
+                </div>
+
+                <div style="background:#f7fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px; margin-bottom:10px;">
+                  <div style="font-size:0.7rem; font-weight:800; color:#4a5568; text-transform:uppercase; margin-bottom:4px;">Boletos Asignados (<span id="digitalReceiptCount">0</span>)</div>
+                  <div id="digitalReceiptTicketsChips" style="font-family:var(--font-mono); font-size:0.75rem; font-weight:800; color:#0d9488; max-height:80px; overflow-y:auto; word-break:break-all;">-</div>
+                </div>
+
+                <div style="border-top:1px dashed #cbd5e0; padding-top:8px; text-align:center;">
+                  <div style="height:22px; background:repeating-linear-gradient(90deg, #1a202c 0, #1a202c 2px, transparent 2px, transparent 4px, #1a202c 4px, #1a202c 7px); margin-bottom:4px; opacity:0.85;"></div>
+                  <div id="digitalReceiptBarcode" style="font-family:var(--font-mono); font-size:0.75rem; font-weight:800; color:#4a5568; letter-spacing:1px;">SRD-00000</div>
+                </div>
+              </div>
+
+              <div style="margin-top:12px;">
+                <label for="adminReceiptInput" class="btn btn-gold" style="cursor:pointer; display:inline-flex; align-items:center; gap:8px; font-weight:800; padding:8px 16px; border-radius:10px; background:var(--gold); color:#000; font-size:0.85rem;">
+                  <i data-lucide="upload" style="width:16px; height:16px;"></i> Adjuntar Foto de Transferencia (WhatsApp)
+                </label>
+                <input type="file" id="adminReceiptInput" accept="image/*" style="display:none;">
+              </div>
             </div>
           </div>
         </div>
