@@ -193,14 +193,14 @@
       id: "florida5",
       title: "Sorteo Gran Especial: 5 iPhone 17 Pro Max 1TB",
       prize: "5 iPhone 17 Pro Max 1TB",
-      price: "5",
+      price: "RD$20",
       total: 100000,
       image: "./assets/suerte_rd_5_iphone17_banner.png",
       active: true,
       brand: "Apple",
       model: "5 iPhone 17 Pro Max 1TB",
       year: "2026",
-      details: "¡Súper Sorteo Especial! Participa por 5 iPhone 17 Pro Max de 1TB. Además: 10 Números Premiados de RD$5,000 pesos cada uno y RD$10,000 pesos extra al que más tickets compre.",
+      details: "¡Súper Sorteo Especial! Participa por 5 iPhone 17 Pro Max de 1TB por solo RD$20 pesos por ticket. Además: 10 Números Premiados de RD$5,000 pesos cada uno y RD$10,000 pesos extra al que más tickets compre.",
       blessedPct: 0.1,
       blessedPrize: "RD$5,000",
       saleStatus: "active",
@@ -1385,8 +1385,7 @@
         badgeHtml = `<span class="raffle-status-badge">PRÓXIMAMENTE</span>`;
       }
 
-      const rawPrice = conf.price || "5";
-      const displayPrice = (rawPrice === "RD$20" || rawPrice === "RD$ 20" || rawPrice === "20") ? "5" : rawPrice;
+      const displayPrice = conf.price || "RD$20";
 
       card.innerHTML = `
         <div class="raffle-img-box">

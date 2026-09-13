@@ -46,7 +46,7 @@ const DEFAULT_CONFIGS = {
     id: "florida5",
     title: "Sorteo Gran Especial: 5 iPhone 17 Pro Max 1TB",
     prize: "5 iPhone 17 Pro Max 1TB",
-    price: "5",
+    price: "RD$20",
     total: 100000,
     ticketDigits: 5,
     image: "./assets/suerte_rd_5_iphone17_banner.png",
@@ -54,7 +54,7 @@ const DEFAULT_CONFIGS = {
     brand: "Apple",
     model: "5 iPhone 17 Pro Max 1TB",
     year: "2026",
-    details: "¡Súper Sorteo Especial! Participa por 5 iPhone 17 Pro Max de 1TB. Además: 10 Números Premiados de RD$5,000 pesos cada uno y RD$10,000 pesos extra al que más tickets compre.",
+    details: "¡Súper Sorteo Especial! Participa por 5 iPhone 17 Pro Max de 1TB por solo RD$20 pesos por ticket. Además: 10 Números Premiados de RD$5,000 pesos cada uno y RD$10,000 pesos extra al que más tickets compre.",
     blessedPct: 0.1,
     blessedPrize: "RD$5,000",
     saleStatus: "active",
@@ -68,11 +68,9 @@ const DEFAULT_CONFIGS = {
 
 // Helper to check admin authorization
 async function isAdmin(req) {
-  const authHeader = req.headers.authorization || req.headers.adminpin || '';
-  const pinFromHeader = authHeader.replace('Bearer ', '').trim();
-  const pinFromBody = req.body && req.body.pin ? String(req.body.pin).trim() : '';
+  const pin = req.headers['x-admin-pin'] || req.query.pin;
   const validPins = ['123456', 'SuerteRD2026', 'SoyArte(20251975)', 'suerte2026'];
-  return validPins.includes(pinFromHeader) || validPins.includes(pinFromBody) || !process.env.VERCEL;
+  return pin && validPins.includes(String(pin).trim());
 }
 
 let BUNDLED_DATA = {};
@@ -101,42 +99,40 @@ function getDiskDb() {
   return {};
 }
 
-// Helper to read database
+// Helper to read database (combining Vercel KV / Upstash / Local File)
 async function readDb(forceFresh = false) {
-  const now = Date.now();
-  if (!forceFresh && cachedDb && (now - lastDbFetchTime) < CACHE_TTL_MS) {
+  if (cachedDb && !forceFresh && (Date.now() - lastDbFetchTime < CACHE_TTL_MS)) {
     return cachedDb;
   }
 
   let db = null;
-
   if (useKV) {
     try {
-      const kvPromise = kv.get('suerterd_db');
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('KV Timeout')), 3500));
-      const data = await Promise.race([kvPromise, timeoutPromise]);
-      db = data || null;
+      db = await kv.get('suerterd_db');
     } catch (e) {
-      console.error("Error reading from Vercel KV:", e.message || e);
+      console.error("Error reading Vercel KV:", e);
     }
   }
 
   if (!db && UPSTASH_URL && UPSTASH_TOKEN) {
     try {
-      const fetchPromise = fetch(`${UPSTASH_URL}/get/suerterd_db`, {
+      const res = await fetch(`${UPSTASH_URL}/get/suerterd_db`, {
         headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
-      }).then(r => r.ok ? r.json() : null);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Upstash Timeout')), 3500));
-      const data = await Promise.race([fetchPromise, timeoutPromise]);
-      if (data && data.result) {
+      });
+      const data = await res.json();
+      if (data.result) {
         db = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
       }
     } catch (e) {
-      console.error("Error reading from Upstash Redis:", e.message || e);
+      console.error("Error reading Upstash Redis:", e);
     }
   }
 
-  if (!db || typeof db !== 'object') {
+  if (!db) {
+    db = getDiskDb();
+  }
+
+  if (!db) {
     db = {};
   }
 
@@ -159,8 +155,8 @@ async function readDb(forceFresh = false) {
     } else {
       try {
         let conf = typeof db[key] === 'string' ? JSON.parse(db[key]) : db[key];
-        if (conf.price === "RD$20" || conf.price === "RD$ 20" || conf.price === "20") {
-          conf.price = "5";
+        if (conf.price === "5" || conf.price === "20" || !conf.price) {
+          conf.price = "RD$20";
           db[key] = JSON.stringify(conf);
         }
       } catch(e) {}
