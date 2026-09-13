@@ -350,7 +350,8 @@ async function approveGroup(encodedTickets, name, whatsapp) {
     if (data.success) {
       updateMetricsAndTables();
       const cleanPhone = whatsapp.replace(/\D/g, '');
-      const msg = `🎉 ¡Felicidades ${name}! Tu pago de ${tickets.length} boleto(s) para el Sorteo del iPhone 17 Pro Max ha sido VALIDADO Y ACTIVADO con éxito en Suerte RD! 🍀 Boletos: ${tickets.join(', ')}`;
+      const formattedList = tickets.map(n => `#${n}`).join(', ');
+      const msg = `🎉 ¡Felicidades ${name}! Tus boletos (${formattedList}) ya están participando para la rifa. Tu compra ha sido VALIDADA Y ACTIVADA con éxito en Suerte RD! 🍀`;
       const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, '_blank');
     } else {

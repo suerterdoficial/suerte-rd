@@ -2213,7 +2213,7 @@
         whatsapp: phone,
         loteria: lottery,
         tickets: checkedOutCart,
-        estado: 'reservado',
+        estado: 'esperando_validacion',
         packageLabel: detectedPkgLabel
       })
     }).catch(e => {
@@ -2325,7 +2325,7 @@
         tickets: ticketNums,
         packageLabel: currentPkgTag,
         comprobante: selectedPaymentReceiptBase64 || true,
-        estado: selectedPaymentReceiptBase64 ? "esperando_validacion" : "reservado"
+        estado: "esperando_validacion"
       })
     }).catch(e => {
       console.warn("Background receipt upload notice:", e);
