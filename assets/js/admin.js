@@ -28,6 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCreateTest.addEventListener('click', handleCreateTestOrder);
   }
 
+  const btnOpenManual = document.getElementById('btnOpenManualModal');
+  if (btnOpenManual) {
+    btnOpenManual.addEventListener('click', () => {
+      const modal = document.getElementById('modalManualOrder');
+      if (modal) modal.classList.add('active');
+    });
+  }
+
   const btnRefresh = document.getElementById('btnRefreshData');
   if (btnRefresh) {
     btnRefresh.addEventListener('click', () => {
@@ -490,7 +498,7 @@ function renderValidarPagosTable() {
   groupList.forEach((g, idx) => {
     const tr = document.createElement('tr');
     const groupKeyId = `receipt_group_${idx}`;
-    window.receiptsCache[groupKeyId] = g.comprobante;
+    window.receiptsCache[groupKeyId] = g;
 
     const totalMonto = g.tickets.length * TICKET_PRICE;
     const cleanPhone = g.whatsapp.replace(/\D/g, '');
@@ -501,7 +509,13 @@ function renderValidarPagosTable() {
       stateBadge = `<span style="background:rgba(0,230,118,0.15); color:var(--green); border:1px solid rgba(0,230,118,0.3); padding:4px 10px; border-radius:8px; font-weight:800; font-size:0.78rem;">✅ Activo & Pagado</span>`;
     }
 
-    let comprobanteBtn = `<span style="color:var(--muted); font-size:0.8rem;">Sin foto</span>`;
+    const pkgBadge = getPackageBadgeHTML(g.paquete, g.tickets.length);
+
+    let comprobanteBtn = `
+      <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;" onclick="openReceiptFromCache('${groupKeyId}')">
+        <i data-lucide="eye" style="width:14px;"></i> Ver Detalle
+      </button>
+    `;
     if (g.comprobante && typeof g.comprobante === 'string' && g.comprobante.startsWith('data:image/')) {
       comprobanteBtn = `
         <button class="btn btn-cyan" style="padding:6px 12px; font-size:0.78rem;" onclick="openReceiptFromCache('${groupKeyId}')">
@@ -509,7 +523,11 @@ function renderValidarPagosTable() {
         </button>
       `;
     } else if (g.comprobante) {
-      comprobanteBtn = `<span style="color:var(--cyan); font-size:0.8rem; font-weight:700;">🖼️ Adjunto (WhatsApp)</span>`;
+      comprobanteBtn = `
+        <button class="btn btn-cyan" style="padding:6px 12px; font-size:0.78rem;" onclick="openReceiptFromCache('${groupKeyId}')">
+          <i data-lucide="image" style="width:14px;"></i> Ver Foto HD
+        </button>
+      `;
     }
 
     const ticketSummary = g.tickets.length > 5 
@@ -534,8 +552,8 @@ function renderValidarPagosTable() {
         </a>
       </td>
       <td>
-        <div style="font-weight:800; color:#FFF;">${escapeHtml(g.paquete)}</div>
-        <div style="font-size:0.75rem; color:var(--cyan); font-family:var(--font-mono); font-weight:700;">${ticketSummary}</div>
+        <div>${pkgBadge}</div>
+        <div style="font-size:0.75rem; color:var(--cyan); font-family:var(--font-mono); font-weight:700; margin-top:4px;">${ticketSummary}</div>
       </td>
       <td style="font-family:var(--font-mono); font-weight:800; color:var(--green); font-size:1rem;">RD$ ${totalMonto.toLocaleString('es-DO')}</td>
       <td>${comprobanteBtn}</td>
@@ -698,33 +716,202 @@ async function handleCreateTestOrder() {
 }
 
 /* ==========================================
-   MODAL COMPROBANTE HD
+   CREAR COMPRA MANUAL ACTIVADA
    ========================================== */
+async function handleCreateManualOrder() {
+  const name = document.getElementById('manualName').value.trim();
+  const whatsapp = document.getElementById('manualWhatsapp').value.trim();
+  const pkgType = document.getElementById('manualPackage').value;
+  const status = document.getElementById('manualStatus').value;
+  const btn = document.getElementById('btnSubmitManual');
+
+  if (!name || !whatsapp) {
+    alert('Por favor ingresa el nombre y WhatsApp del cliente.');
+    return;
+  }
+
+  let count = 250;
+  let pkgLabel = 'Paquete Oro (250 Boletos)';
+  if (pkgType === 'bronce') { count = 50; pkgLabel = 'Paquete Bronce (50 Boletos)'; }
+  else if (pkgType === 'plata') { count = 150; pkgLabel = 'Paquete Plata (150 Boletos)'; }
+  else if (pkgType === 'oro') { count = 250; pkgLabel = 'Paquete Oro (250 Boletos)'; }
+  else if (pkgType === 'diamante') { count = 500; pkgLabel = 'Paquete Diamante (500 Boletos)'; }
+
+  if (btn) {
+    btn.innerText = 'Creando y Activando...';
+    btn.disabled = true;
+  }
+
+  const manualTickets = [];
+  while (manualTickets.length < count) {
+    const rand = String(Math.floor(Math.random() * TOTAL_BOLETOS)).padStart(5, '0');
+    if (!currentTickets[rand] && !manualTickets.includes(rand)) {
+      manualTickets.push(rand);
+    }
+  }
+
+  const payload = {
+    raffleId: RAFFLE_ID,
+    name: name,
+    whatsapp: whatsapp,
+    loteria: 'Pick 5 Florida',
+    tickets: manualTickets,
+    packageLabel: pkgLabel,
+    estado: status,
+    comprobante: './assets/suerte_rd_iphone17_banner.png'
+  };
+
+  try {
+    const res = await fetch('/api/tickets/reserve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('modalManualOrder').classList.remove('active');
+      document.getElementById('formManualOrder').reset();
+      showToastNotification(
+        status === 'pagado' ? '✅ Compra Creada y Activada' : '⏳ Compra Registrada',
+        `${pkgLabel} creado para ${name} con éxito.`,
+        'check'
+      );
+      await loadTicketsData();
+    } else {
+      alert('Error al crear compra manual: ' + (data.error || ''));
+    }
+  } catch (e) {
+    alert('Error de conexión al servidor');
+  } finally {
+    if (btn) {
+      btn.innerHTML = `<i data-lucide="check-circle"></i> Crear y Activar Compra`;
+      btn.disabled = false;
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
+}
+
+function getPackageBadgeHTML(pkgName, count) {
+  const nameStr = String(pkgName || '').toLowerCase();
+  if (nameStr.includes('500') || nameStr.includes('diamante') || count >= 500) {
+    return `<span style="background:rgba(0,230,118,0.18); color:#00E676; border:1px solid #00E676; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">💎 Paquete Diamante (500)</span>`;
+  }
+  if (nameStr.includes('250') || nameStr.includes('oro') || count >= 250) {
+    return `<span style="background:rgba(255,215,0,0.18); color:#FFD700; border:1px solid #FFD700; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥇 Paquete Oro (250)</span>`;
+  }
+  if (nameStr.includes('150') || nameStr.includes('plata') || count >= 150) {
+    return `<span style="background:rgba(192,192,192,0.18); color:#E0E0E0; border:1px solid #C0C0C0; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥈 Paquete Plata (150)</span>`;
+  }
+  if (nameStr.includes('50') || nameStr.includes('bronce') || count >= 50) {
+    return `<span style="background:rgba(205,127,50,0.18); color:#E69C55; border:1px solid #CD7F32; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥉 Paquete Bronce (50)</span>`;
+  }
+  return `<span style="background:rgba(0,229,255,0.15); color:var(--cyan); border:1px solid var(--cyan); padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🎟️ ${escapeHtml(pkgName || 'Paquete de Boletos')}</span>`;
+}
+
+/* ==========================================
+   MODAL COMPROBANTE HD EXPANDIDO
+   ========================================== */
+let currentReceiptZoom = 1;
+let currentReceiptRotation = 0;
+
+function applyReceiptTransform() {
+  const img = document.getElementById('modalImg');
+  if (img) {
+    img.style.transform = `scale(${currentReceiptZoom}) rotate(${currentReceiptRotation}deg)`;
+  }
+}
+
+function zoomReceiptImage(delta) {
+  currentReceiptZoom = Math.max(0.5, Math.min(3, currentReceiptZoom + delta));
+  applyReceiptTransform();
+}
+
+function rotateReceiptImage(deg) {
+  currentReceiptRotation = (currentReceiptRotation + deg) % 360;
+  applyReceiptTransform();
+}
+
+function resetReceiptImage() {
+  currentReceiptZoom = 1;
+  currentReceiptRotation = 0;
+  applyReceiptTransform();
+}
+
 function initModal() {
   const modal = document.getElementById('receiptModal');
+  const manualModal = document.getElementById('modalManualOrder');
   if (modal) {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.classList.remove('active');
     });
   }
-}
-
-function openReceiptFromCache(key) {
-  if (window.receiptsCache && window.receiptsCache[key]) {
-    openReceiptModal(window.receiptsCache[key]);
+  if (manualModal) {
+    manualModal.addEventListener('click', (e) => {
+      if (e.target === manualModal) manualModal.classList.remove('active');
+    });
   }
 }
 
-function openReceiptModal(imgUrl) {
+function openReceiptFromCache(keyId) {
+  if (window.receiptsCache && window.receiptsCache[keyId]) {
+    openReceiptModal(window.receiptsCache[keyId]);
+  }
+}
+
+function openReceiptModal(groupData) {
   const modal = document.getElementById('receiptModal');
   const img = document.getElementById('modalImg');
   const openExternalBtn = document.getElementById('modalOpenExternalBtn');
+  const clientNameEl = document.getElementById('modalClientName');
+  const clientWaEl = document.getElementById('modalClientWa');
+  const packageBadgeEl = document.getElementById('modalPackageBadge');
+  const ticketsListEl = document.getElementById('modalTicketsList');
+  const approveBtnEl = document.getElementById('modalApproveBtn');
 
-  if (modal && img) {
-    img.src = imgUrl;
-    if (openExternalBtn) openExternalBtn.href = imgUrl;
-    modal.classList.add('active');
+  if (!modal) return;
+
+  resetReceiptImage();
+
+  let imgUrl = './assets/suerte_rd_iphone17_banner.png';
+  if (groupData) {
+    if (typeof groupData === 'string') {
+      imgUrl = groupData;
+    } else if (groupData.comprobante && typeof groupData.comprobante === 'string') {
+      imgUrl = groupData.comprobante;
+    }
   }
+
+  if (img) img.src = imgUrl;
+  if (openExternalBtn) openExternalBtn.href = imgUrl;
+
+  if (groupData && typeof groupData === 'object') {
+    if (clientNameEl) clientNameEl.innerText = groupData.name || 'Cliente';
+    if (clientWaEl) {
+      const cleanPhone = (groupData.whatsapp || '').replace(/\D/g, '');
+      clientWaEl.innerText = `📱 ${groupData.whatsapp || 'Sin WhatsApp'}`;
+      clientWaEl.href = cleanPhone ? `https://wa.me/${cleanPhone}` : '#';
+    }
+    if (packageBadgeEl) {
+      packageBadgeEl.innerHTML = getPackageBadgeHTML(groupData.paquete, groupData.tickets ? groupData.tickets.length : 0);
+    }
+    if (ticketsListEl && groupData.tickets) {
+      ticketsListEl.innerText = groupData.tickets.map(t => `#${t}`).join(', ');
+    }
+    if (approveBtnEl) {
+      if (groupData.estado === 'pagado') {
+        approveBtnEl.style.display = 'none';
+      } else {
+        approveBtnEl.style.display = 'block';
+        approveBtnEl.onclick = () => {
+          modal.classList.remove('active');
+          approveGroup(encodeURIComponent(JSON.stringify(groupData.tickets)), groupData.name, groupData.whatsapp);
+        };
+      }
+    }
+  }
+
+  modal.classList.add('active');
 }
 
 /* ==========================================

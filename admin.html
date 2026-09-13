@@ -431,7 +431,10 @@
       <div class="card">
         <div class="card-title">
           <span>🏦 Validar y Activar Compras de Paquetes</span>
-          <button class="btn btn-cyan" id="btnCreateTest"><i data-lucide="plus-circle"></i> Crear Compra de Prueba</button>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-green" id="btnOpenManualModal"><i data-lucide="user-plus"></i> + Nueva Compra Manual</button>
+            <button class="btn btn-cyan" id="btnCreateTest"><i data-lucide="plus-circle"></i> Crear Compra de Prueba</button>
+          </div>
         </div>
 
         <!-- SEARCH & FILTER BAR -->
@@ -470,23 +473,104 @@
     </div>
   </div>
 
-  <!-- MODAL COMPROBANTE HD -->
+  <!-- MODAL COMPRA MANUAL -->
+  <div class="modal-overlay" id="modalManualOrder">
+    <div class="modal-box" style="max-width: 500px; text-align: left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid var(--border-light); padding-bottom:12px;">
+        <h3 style="color:var(--green); font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="user-plus"></i> Registrar Compra Manual
+        </h3>
+        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="document.getElementById('modalManualOrder').classList.remove('active')"><i data-lucide="x"></i></button>
+      </div>
+
+      <form id="formManualOrder" onsubmit="event.preventDefault(); handleCreateManualOrder();">
+        <label style="font-size:0.8rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">Nombre del Cliente / Usuario</label>
+        <input type="text" id="manualName" placeholder="Ej: Juan Pérez" required>
+
+        <label style="font-size:0.8rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">Número de WhatsApp</label>
+        <input type="tel" id="manualWhatsapp" placeholder="Ej: 8099838626" required>
+
+        <label style="font-size:0.8rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">Tipo de Paquete</label>
+        <select id="manualPackage" style="background:#061118; color:#FFF; margin-bottom:16px;">
+          <option value="bronce">🥉 Paquete Bronce (50 Boletos - RD$150)</option>
+          <option value="plata">🥈 Paquete Plata (150 Boletos - RD$450)</option>
+          <option value="oro" selected>🥇 Paquete Oro (250 Boletos - RD$750)</option>
+          <option value="diamante">💎 Paquete Diamante (500 Boletos - RD$1,500)</option>
+        </select>
+
+        <label style="font-size:0.8rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">Estado de la Compra</label>
+        <select id="manualStatus" style="background:#061118; color:#FFF; margin-bottom:20px;">
+          <option value="pagado" selected>✅ Activar de Una Vez (Pagado)</option>
+          <option value="esperando_validacion">⏳ Pendiente de Validar (Con Comprobante)</option>
+        </select>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalManualOrder').classList.remove('active')">Cancelar</button>
+          <button type="submit" class="btn btn-green" id="btnSubmitManual"><i data-lucide="check-circle"></i> Crear y Activar Compra</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL COMPROBANTE HD EXPANDIDO CON CONTROLES -->
   <div class="modal-overlay" id="receiptModal">
-    <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h3 style="color:var(--cyan); font-weight:800; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
-          <i data-lucide="image"></i> Comprobante de Depósito HD
+    <div class="modal-box" style="max-width: 920px; width: 95%; text-align: left; padding: 24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border-light); padding-bottom:10px;">
+        <h3 style="color:var(--cyan); font-weight:900; font-size:1.25rem; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="file-check"></i> Comprobante de Depósito HD
         </h3>
         <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="document.getElementById('receiptModal').classList.remove('active')"><i data-lucide="x"></i></button>
       </div>
 
-      <div style="background:#000; border-radius:16px; padding:12px; margin-bottom:18px; border:1px solid var(--border-light); max-height:420px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-        <img id="modalImg" style="max-width:100%; max-height:380px; object-fit:contain; border-radius:8px;">
-      </div>
+      <div style="display:grid; grid-template-columns: 1fr 310px; gap: 20px; align-items: start;">
+        <!-- VISOR DE IMAGEN EN GRANDE DE ALTA RESOLUCIÓN -->
+        <div style="background:#02080d; border-radius:18px; padding:16px; border:1px solid var(--border-light); position:relative; min-height:480px; max-height:650px; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden;">
+          <div style="position:absolute; top:12px; right:12px; z-index:10; display:flex; gap:6px; background:rgba(0,0,0,0.7); padding:6px 10px; border-radius:12px; backdrop-filter:blur(8px); border:1px solid var(--border-light);">
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="rotateReceiptImage(-90)" title="Girar Antihorario"><i data-lucide="rotate-ccw" style="width:14px;"></i></button>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="rotateReceiptImage(90)" title="Girar Horario"><i data-lucide="rotate-cw" style="width:14px;"></i></button>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="zoomReceiptImage(0.25)" title="Acercar Zoom"><i data-lucide="zoom-in" style="width:14px;"></i></button>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="zoomReceiptImage(-0.25)" title="Alejar Zoom"><i data-lucide="zoom-out" style="width:14px;"></i></button>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="resetReceiptImage()" title="Restablecer"><i data-lucide="refresh-cw" style="width:14px;"></i></button>
+          </div>
+          
+          <div style="width:100%; height:100%; max-height:600px; overflow:auto; display:flex; align-items:center; justify-content:center;">
+            <img id="modalImg" style="max-width:100%; max-height:580px; object-fit:contain; border-radius:10px; transition:transform 0.25s ease; transform-origin:center center;">
+          </div>
+        </div>
 
-      <div style="display:flex; justify-content:space-between; gap:10px;">
-        <a id="modalOpenExternalBtn" href="#" target="_blank" class="btn btn-cyan" style="flex:1;"><i data-lucide="external-link"></i> Abrir HD</a>
-        <button class="btn btn-red" style="flex:1;" onclick="document.getElementById('receiptModal').classList.remove('active')"><i data-lucide="x"></i> Cerrar</button>
+        <!-- DETALLES Y ACCIONES DIRECTAS EN EL VISOR -->
+        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-light); border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+          <h4 style="color:#FFF; font-weight:800; font-size:1.05rem; margin-bottom:4px; border-bottom:1px solid var(--border-light); padding-bottom:8px;">Resumen de la Orden</h4>
+          
+          <div>
+             <span style="font-size:0.75rem; color:var(--muted); font-weight:700; text-transform:uppercase; display:block;">Cliente</span>
+             <strong id="modalClientName" style="color:#FFF; font-size:1.1rem;">-</strong>
+          </div>
+
+          <div>
+             <span style="font-size:0.75rem; color:var(--muted); font-weight:700; text-transform:uppercase; display:block;">WhatsApp</span>
+             <a id="modalClientWa" href="#" target="_blank" style="color:var(--green); font-family:var(--font-mono); font-weight:700; text-decoration:none; font-size:1rem; display:inline-flex; align-items:center; gap:4px;">-</a>
+          </div>
+
+          <div>
+             <span style="font-size:0.75rem; color:var(--muted); font-weight:700; text-transform:uppercase; display:block;">Paquete</span>
+             <div id="modalPackageBadge" style="margin-top:4px;">-</div>
+          </div>
+
+          <div>
+             <span style="font-size:0.75rem; color:var(--muted); font-weight:700; text-transform:uppercase; display:block;">Boletos Asignados</span>
+             <div id="modalTicketsList" style="font-family:var(--font-mono); color:var(--cyan); font-size:0.85rem; font-weight:700; max-height:90px; overflow-y:auto; margin-top:4px; background:rgba(0,0,0,0.4); padding:8px; border-radius:8px; word-break:break-all;">-</div>
+          </div>
+
+          <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+            <button id="modalApproveBtn" class="btn btn-green" style="width:100%; padding:12px; font-size:0.95rem;">
+              <i data-lucide="check-circle"></i> Aprobar y Activar
+            </button>
+            <a id="modalOpenExternalBtn" href="#" target="_blank" class="btn btn-cyan" style="width:100%; text-align:center;">
+              <i data-lucide="external-link"></i> Abrir en Pestaña HD
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
