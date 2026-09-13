@@ -2170,7 +2170,10 @@
 
     const currentReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64 || "";
 
-    checkedOutCart.forEach(num => {
+    checkedOutCart.forEach((num, index) => {
+      const existingComp = (latestTickets[num] && latestTickets[num].comprobante) ? latestTickets[num].comprobante : '';
+      const finalComp = (currentReceiptImg && currentReceiptImg.length > 20) ? currentReceiptImg : (index === 0 ? existingComp : '');
+
       latestTickets[num] = {
         name,
         nombre: name,
@@ -2179,7 +2182,7 @@
         paquete: detectedPkgLabel,
         packageLabel: detectedPkgLabel,
         estado: "esperando_validacion",
-        comprobante: currentReceiptImg,
+        comprobante: (index === 0) ? finalComp : '',
         timestamp: timestamp,
         groupKey: uniqueGroupKey
       };
@@ -2195,7 +2198,10 @@
     try {
       let currentBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
       const nowIso = new Date().toISOString();
-      checkedOutCart.forEach(tNum => {
+      checkedOutCart.forEach((tNum, index) => {
+        const existingComp = (currentBackup[tNum] && currentBackup[tNum].comprobante) ? currentBackup[tNum].comprobante : '';
+        const finalComp = (currentReceiptImg && currentReceiptImg.length > 20) ? currentReceiptImg : (index === 0 ? existingComp : '');
+
         currentBackup[tNum] = {
           name: name,
           nombre: name,
@@ -2205,7 +2211,7 @@
           paquete: detectedPkgLabel,
           packageLabel: detectedPkgLabel,
           estado: 'esperando_validacion',
-          comprobante: currentReceiptImg,
+          comprobante: (index === 0) ? finalComp : '',
           fecha: nowIso,
           timestamp: timestamp,
           groupKey: uniqueGroupKey
@@ -2359,7 +2365,10 @@
     try {
       let currentBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
       const nowIso = new Date().toISOString();
-      ticketNums.forEach(tNum => {
+      ticketNums.forEach((tNum, index) => {
+        const existingComp = (currentBackup[tNum] && currentBackup[tNum].comprobante) ? currentBackup[tNum].comprobante : '';
+        const finalComp = (activeReceiptImg && activeReceiptImg.length > 20) ? activeReceiptImg : (index === 0 ? existingComp : '');
+
         currentBackup[tNum] = {
           name: name,
           nombre: name,
@@ -2369,7 +2378,7 @@
           paquete: currentPkgTag,
           packageLabel: currentPkgTag,
           estado: 'esperando_validacion',
-          comprobante: activeReceiptImg || '',
+          comprobante: (index === 0) ? finalComp : '',
           fecha: nowIso,
           timestamp: Date.now(),
           groupKey: uniqueGroupKey
@@ -3445,20 +3454,21 @@ ${formattedNumsText}
   });
   $("btnSendWhatsApp").addEventListener("click", handleSendWhatsApp);
 
-  function compressImageFile(file, maxDimension, quality, callback) {
+  function compressImageFile(file, maxDimension = 800, quality = 0.75, callback) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const img = new Image();
       img.onload = function() {
         let width = img.width;
         let height = img.height;
-        if (width > maxDimension || height > maxDimension) {
+        const maxDim = 800;
+        if (width > maxDim || height > maxDim) {
           if (width > height) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
           } else {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
           }
         }
         const canvas = document.createElement("canvas");
@@ -3466,7 +3476,7 @@ ${formattedNumsText}
         canvas.height = height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.75);
         callback(compressedDataUrl);
       };
       img.onerror = function() {
@@ -3478,19 +3488,59 @@ ${formattedNumsText}
   }
 
   function syncUploadedReceipt(compressedBase64) {
-    if (!compressedBase64) return;
-    const tNums = window.lastCheckedOutTickets || [];
-    if (tNums.length === 0) return;
+    if (!compressedBase64 || compressedBase64.length < 20) return;
+    window.selectedPaymentReceiptBase64 = compressedBase64;
+    selectedPaymentReceiptBase64 = compressedBase64;
+
+    let tNums = window.lastCheckedOutTickets || [];
+    if (!tNums || tNums.length === 0) {
+      const rawNum = $("receiptTicketNum") ? ($("receiptTicketNum").getAttribute("data-tickets") || $("receiptTicketNum").textContent) : "";
+      if (rawNum) {
+        tNums = rawNum.split(", ").map(s => s.trim().replace(/^#/, "")).filter(Boolean);
+      }
+    }
+    if (!tNums || tNums.length === 0) return;
 
     try {
       let currentBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
-      tNums.forEach(tNum => {
-        if (currentBackup[tNum]) {
-          currentBackup[tNum].comprobante = compressedBase64;
+      const nowIso = new Date().toISOString();
+      const currentPkg = window.lastCheckedOutPkg || (tNums.length === 500 ? 'Paquete Diamante (500 Boletos)' : 'Paquete');
+      tNums.forEach((tNum, index) => {
+        if (!currentBackup[tNum]) {
+          currentBackup[tNum] = {
+            name: window.lastCheckedOutName || 'Cliente',
+            nombre: window.lastCheckedOutName || 'Cliente',
+            whatsapp: window.lastCheckedOutPhone || '',
+            phone: window.lastCheckedOutPhone || '',
+            loteria: window.lastCheckedOutLottery || 'Pick 5 Florida',
+            paquete: currentPkg,
+            packageLabel: currentPkg,
+            estado: 'esperando_validacion',
+            comprobante: (index === 0) ? compressedBase64 : '',
+            fecha: nowIso,
+            timestamp: Date.now(),
+            groupKey: window.activeCheckoutGroupKey
+          };
+        } else {
+          currentBackup[tNum].comprobante = (index === 0) ? compressedBase64 : '';
         }
       });
       localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentBackup));
     } catch(e) {}
+
+    if (allTickets[activeRaffleId]) {
+      tNums.forEach((tNum, index) => {
+        if (allTickets[activeRaffleId][tNum]) {
+          allTickets[activeRaffleId][tNum].comprobante = (index === 0) ? compressedBase64 : '';
+        }
+      });
+    }
+
+    const btnWa = $("btnSendWhatsApp");
+    if (btnWa) {
+      btnWa.innerHTML = `Confirmar con Comprobante Adjunto <i data-lucide="check-circle" style="width:16px; height:16px; color:var(--green)"></i>`;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
 
     fetch('/api/tickets/reserve', {
       method: 'POST',
@@ -3506,6 +3556,10 @@ ${formattedNumsText}
         estado: 'esperando_validacion',
         groupKey: window.activeCheckoutGroupKey
       })
+    }).then(r => r.json()).then(data => {
+      if (data.success) {
+        showToast("¡Comprobante HD guardado y enviado al administrador!", "ok");
+      }
     }).catch(e => console.warn('Auto receipt sync error:', e));
   }
 
@@ -3517,7 +3571,7 @@ ${formattedNumsText}
       const file = e.target.files[0];
       if (!file) return;
       showToast("Optimizando imagen de comprobante...", "info");
-      compressImageFile(file, 1400, 0.90, (compressedBase64) => {
+      compressImageFile(file, 800, 0.75, (compressedBase64) => {
         selectedPaymentReceiptBase64 = compressedBase64;
         window.selectedPaymentReceiptBase64 = compressedBase64;
         if ($("checkoutReceiptPreview")) $("checkoutReceiptPreview").src = selectedPaymentReceiptBase64;
@@ -3537,7 +3591,7 @@ ${formattedNumsText}
       if ($("paymentReceiptFileName")) $("paymentReceiptFileName").textContent = file.name;
       showToast("Optimizando imagen...", "info");
 
-      compressImageFile(file, 1400, 0.90, (compressedBase64) => {
+      compressImageFile(file, 800, 0.75, (compressedBase64) => {
         selectedPaymentReceiptBase64 = compressedBase64;
         window.selectedPaymentReceiptBase64 = compressedBase64;
         if ($("paymentReceiptPreview")) $("paymentReceiptPreview").src = selectedPaymentReceiptBase64;
@@ -3557,7 +3611,7 @@ ${formattedNumsText}
       if (!file) return;
 
       showToast("Optimizando comprobante...", "info");
-      compressImageFile(file, 1400, 0.90, (compressedBase64) => {
+      compressImageFile(file, 800, 0.75, (compressedBase64) => {
         selectedDirectReceiptBase64 = compressedBase64;
         $("directReceiptPreview").src = selectedDirectReceiptBase64;
         $("directReceiptPreviewContainer").style.display = "block";

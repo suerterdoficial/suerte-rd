@@ -315,12 +315,25 @@ async function loadTicketsData() {
       if (!mergedTickets[tNum]) {
         mergedTickets[tNum] = backupTickets[tNum];
       } else {
-        // Preservar estado 'pagado' o 'rechazado' asignado por el admin si el servidor aún tenía estado antiguo
+        const serverComp = mergedTickets[tNum].comprobante || '';
+        const backupComp = backupTickets[tNum].comprobante || '';
+        const bestComp = (backupComp && backupComp.length > 20 && !backupComp.includes('suerte_rd_iphone17_banner'))
+          ? backupComp
+          : ((serverComp && serverComp.length > 20 && !serverComp.includes('suerte_rd_iphone17_banner')) ? serverComp : (backupComp || serverComp));
+
+        let targetStatus = mergedTickets[tNum].estado;
         if (backupTickets[tNum].estado === 'pagado') {
-          mergedTickets[tNum] = { ...mergedTickets[tNum], ...backupTickets[tNum], estado: 'pagado' };
+          targetStatus = 'pagado';
         } else if (backupTickets[tNum].estado === 'rechazado' && mergedTickets[tNum].estado !== 'pagado') {
-          mergedTickets[tNum] = { ...mergedTickets[tNum], ...backupTickets[tNum], estado: 'rechazado' };
+          targetStatus = 'rechazado';
         }
+
+        mergedTickets[tNum] = {
+          ...mergedTickets[tNum],
+          ...backupTickets[tNum],
+          comprobante: bestComp,
+          estado: targetStatus
+        };
       }
     });
 
@@ -998,6 +1011,16 @@ function openReceiptModal(groupData) {
       rawImg = groupData;
     } else if (groupData.comprobante && typeof groupData.comprobante === 'string') {
       rawImg = groupData.comprobante;
+    }
+
+    if ((!rawImg || rawImg.length < 20) && groupData.tickets && Array.isArray(groupData.tickets)) {
+      for (const tNum of groupData.tickets) {
+        const tObj = currentTickets[tNum];
+        if (tObj && tObj.comprobante && typeof tObj.comprobante === 'string' && tObj.comprobante.length > 20 && !tObj.comprobante.includes('suerte_rd_iphone17_banner')) {
+          rawImg = tObj.comprobante;
+          break;
+        }
+      }
     }
   }
 

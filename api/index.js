@@ -299,14 +299,33 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
   const newStatus = estado || 'esperando_validacion';
   const uniqueGroupKey = groupKey || `order_${now}_${Math.random().toString(36).substring(2, 7)}`;
 
-  tickets.forEach(tNum => {
+  // Find any existing receipt image for this group or ticket
+  const firstTicketNum = tickets[0];
+  let groupExistingComp = (ticketsObj[firstTicketNum] && ticketsObj[firstTicketNum].comprobante) ? ticketsObj[firstTicketNum].comprobante : '';
+  if (!groupExistingComp || groupExistingComp.length < 20) {
+    for (const tNum of tickets) {
+      if (ticketsObj[tNum] && ticketsObj[tNum].comprobante && ticketsObj[tNum].comprobante.length > 20 && !ticketsObj[tNum].comprobante.includes('suerte_rd_iphone17_banner')) {
+        groupExistingComp = ticketsObj[tNum].comprobante;
+        break;
+      }
+    }
+  }
+
+  const finalComp = (comprobante && typeof comprobante === 'string' && comprobante.length > 20 && !comprobante.includes('suerte_rd_iphone17_banner'))
+    ? comprobante
+    : groupExistingComp;
+
+  tickets.forEach((tNum, index) => {
+    // Only store full base64 image on the primary ticket (index 0) to avoid duplicating 100KB x 500 = 50MB payload
+    const ticketComp = (index === 0) ? finalComp : '';
+
     ticketsObj[tNum] = {
       name: name,
       whatsapp: whatsapp,
-      packageLabel: packageLabel || 'Personalizado',
+      packageLabel: packageLabel || (ticketsObj[tNum] && ticketsObj[tNum].packageLabel) || 'Personalizado',
       estado: newStatus,
-      comprobante: comprobante || '',
-      fecha: new Date(now).toISOString(),
+      comprobante: ticketComp,
+      fecha: (ticketsObj[tNum] && ticketsObj[tNum].fecha) ? ticketsObj[tNum].fecha : new Date(now).toISOString(),
       timestamp_reserva: now,
       timestamp_pago: newStatus === 'pagado' ? now : null,
       groupKey: uniqueGroupKey,
@@ -316,6 +335,11 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
 
   const newValueStr = JSON.stringify(ticketsObj);
   db[key] = newValueStr;
+
+  if (finalComp && finalComp.length > 20) {
+    if (!db.receipts) db.receipts = {};
+    db.receipts[uniqueGroupKey] = finalComp;
+  }
 
   // Registrar notificación
   if (!db.notifications) db.notifications = [];
