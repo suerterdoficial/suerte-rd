@@ -604,6 +604,7 @@ async function approveGroup(encodedTickets, name, whatsapp) {
     waWindow = window.open(waUrl, '_blank');
   }
 
+  let isSuccess = false;
   try {
     const res = await fetch('/api/tickets/update-status', {
       method: 'POST',
@@ -618,17 +619,37 @@ async function approveGroup(encodedTickets, name, whatsapp) {
       })
     });
 
-    const data = await res.json();
-    if (data.success) {
-      showToastNotification('✅ Compra Aprobada', `Se han activado ${tickets.length} boletos para ${name}.`, 'check');
-      await loadTicketsData();
-    } else {
-      if (waWindow) waWindow.close();
-      alert('Error al aprobar: ' + (data.error || 'Respuesta no válida del servidor'));
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) isSuccess = true;
     }
-  } catch (e) {
+  } catch (e) {}
+
+  if (!isSuccess) {
+    // Fallback suave a /api/set
+    tickets.forEach(num => {
+      if (currentTickets[num]) {
+        currentTickets[num].estado = 'pagado';
+        currentTickets[num].timestamp_pago = Date.now();
+      }
+    });
+    try {
+      const resFb = await fetch('/api/set', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+        body: JSON.stringify({ key: TICKET_KEY, value: JSON.stringify(currentTickets) })
+      });
+      const dataFb = await resFb.json();
+      if (dataFb && dataFb.success) isSuccess = true;
+    } catch(e) {}
+  }
+
+  if (isSuccess) {
+    showToastNotification('✅ Compra Aprobada', `Se han activado ${tickets.length} boletos para ${name}.`, 'check');
+    await loadTicketsData();
+  } else {
     if (waWindow) waWindow.close();
-    alert('Error al conectar con la base de datos');
+    alert('No se pudo confirmar la activación. Revisa tu conexión.');
   }
 }
 
@@ -638,6 +659,7 @@ async function rejectGroup(encodedTickets) {
   const tickets = JSON.parse(decodeURIComponent(encodedTickets));
   const pin = sessionStorage.getItem('suerte_admin_pin') || '';
 
+  let isSuccess = false;
   try {
     const res = await fetch('/api/tickets/update-status', {
       method: 'POST',
@@ -652,15 +674,32 @@ async function rejectGroup(encodedTickets) {
       })
     });
 
-    const data = await res.json();
-    if (data.success) {
-      showToastNotification('🗑️ Boletos Liberados', `Se han liberado ${tickets.length} boletos.`);
-      await loadTicketsData();
-    } else {
-      alert('Error al rechazar boletos');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) isSuccess = true;
     }
-  } catch (e) {
-    alert('Error de conexión al servidor');
+  } catch (e) {}
+
+  if (!isSuccess) {
+    tickets.forEach(num => {
+      delete currentTickets[num];
+    });
+    try {
+      const resFb = await fetch('/api/set', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+        body: JSON.stringify({ key: TICKET_KEY, value: JSON.stringify(currentTickets) })
+      });
+      const dataFb = await resFb.json();
+      if (dataFb && dataFb.success) isSuccess = true;
+    } catch(e) {}
+  }
+
+  if (isSuccess) {
+    showToastNotification('🗑️ Boletos Liberados', `Se han liberado ${tickets.length} boletos.`);
+    await loadTicketsData();
+  } else {
+    alert('Error al rechazar boletos');
   }
 }
 
