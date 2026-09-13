@@ -378,9 +378,6 @@ async function loadTicketsData() {
     console.error('Error cargando datos de boletos:', e);
   }
 }
-    console.error('Error cargando datos de boletos:', e);
-  }
-}
 
 function getGroupKeyForTicket(t) {
   if (t.groupKey) return t.groupKey;
