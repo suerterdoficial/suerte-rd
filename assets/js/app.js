@@ -3422,13 +3422,13 @@ ${formattedNumsText}
       $("paymentReceiptFileName").textContent = file.name;
       showToast("Optimizando imagen...", "info");
 
-      compressImageFile(file, 700, 0.65, (compressedBase64) => {
+      compressImageFile(file, 1400, 0.90, (compressedBase64) => {
         selectedPaymentReceiptBase64 = compressedBase64;
         window.selectedPaymentReceiptBase64 = compressedBase64;
         $("paymentReceiptPreview").src = selectedPaymentReceiptBase64;
         $("paymentReceiptPreviewContainer").style.display = "block";
         $("btnSendWhatsApp").disabled = false;
-        showToast("Imagen optimizada y lista.", "ok");
+        showToast("Imagen HD optimizada y lista.", "ok");
       });
     });
   }
@@ -3441,7 +3441,7 @@ ${formattedNumsText}
       if (!file) return;
 
       showToast("Optimizando comprobante...", "info");
-      compressImageFile(file, 700, 0.65, (compressedBase64) => {
+      compressImageFile(file, 1400, 0.90, (compressedBase64) => {
         selectedDirectReceiptBase64 = compressedBase64;
         $("directReceiptPreview").src = selectedDirectReceiptBase64;
         $("directReceiptPreviewContainer").style.display = "block";
