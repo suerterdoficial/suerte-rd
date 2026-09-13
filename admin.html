@@ -628,6 +628,12 @@
         <button class="nav-btn" data-target="panePaymentsConfig">
           <i data-lucide="wallet"></i> Cuentas de Pago
         </button>
+        <button class="nav-btn" data-target="panePackages">
+          <i data-lucide="package" style="color: var(--gold);"></i> Paquetes de Números
+        </button>
+        <button class="nav-btn" data-target="paneManualCredits">
+          <i data-lucide="credit-card" style="color: var(--green);"></i> Asignar Boletos
+        </button>
         <button class="nav-btn" data-target="paneWhatsappTemplates">
           <i data-lucide="message-square" style="color: #00E676;"></i> Plantillas WhatsApp
         </button>
@@ -1239,6 +1245,147 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- PANE 11: PAQUETES DE NÚMEROS (Estilo Listo Patrón) -->
+      <div class="pane" id="panePackages">
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between; align-items:center;">
+            <span><i data-lucide="package" style="color:var(--gold);"></i> Gestión de Paquetes de Números</span>
+            <button class="btn btn-primary" id="btnSavePackageConfig" style="margin-bottom:0; padding:8px 16px; font-weight:800; font-size:0.8rem;">
+              <i data-lucide="save"></i> Guardar Paquetes
+            </button>
+          </div>
+          <p style="color:var(--text-grey); font-size:0.85rem; margin-bottom:20px;">
+            Define la cantidad de boletos, precio en RD$ y bonificaciones para cada paquete disponible en Suerte RD.
+          </p>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:18px;" id="packagesGridContainer">
+            <div class="card" style="background:#051720; border:1px solid var(--border-cyan); border-left:4px solid #cd7f32; border-radius:16px; padding:18px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="color:#FFF; font-weight:800; margin:0;">🥉 Paquete Bronce</h4>
+                <span class="badge" style="background:rgba(205,127,50,0.15); color:#cd7f32; border:1px solid #cd7f32;">10 Boletos</span>
+              </div>
+              <div class="field" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Precio en RD$:</label>
+                <input type="number" id="pkgPrice_bronce" value="30" style="font-weight:700; color:var(--green);">
+              </div>
+              <div class="field" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Cantidad de Boletos:</label>
+                <input type="number" id="pkgCount_bronce" value="10" style="font-weight:700;">
+              </div>
+              <div class="field" style="margin-bottom:12px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Boleto Extra de Regalo (Bonus):</label>
+                <input type="number" id="pkgBonus_bronce" value="0" style="font-weight:700; color:var(--gold);">
+              </div>
+            </div>
+
+            <div class="card" style="background:#051720; border:1px solid var(--border-cyan); border-left:4px solid #c0c0c0; border-radius:16px; padding:18px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="color:#FFF; font-weight:800; margin:0;">🥈 Paquete Plata</h4>
+                <span class="badge" style="background:rgba(192,192,192,0.15); color:#e0e0e0; border:1px solid #c0c0c0;">25 Boletos</span>
+              </div>
+              <div class="field" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Precio en RD$:</label>
+                <input type="number" id="pkgPrice_plata" value="75" style="font-weight:700; color:var(--green);">
+              </div>
+              <div class="field" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Cantidad de Boletos:</label>
+                <input type="number" id="pkgCount_plata" value="25" style="font-weight:700;">
+              </div>
+              <div class="field" style="margin-bottom:12px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Boleto Extra de Regalo (Bonus):</label>
+                <input type="number" id="pkgBonus_plata" value="2" style="font-weight:700; color:var(--gold);">
+              </div>
+            </div>
+
+            <div class="card" style="background:#051720; border:1px solid var(--border-cyan); border-left:4px solid #ffd700; border-radius:16px; padding:18px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="color:#FFF; font-weight:800; margin:0;">🥇 Paquete Oro</h4>
+                <span class="badge" style="background:rgba(255,215,0,0.15); color:#ffd700; border:1px solid #ffd700;">50 Boletos</span>
+              </div>
+              <div class="field" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Precio en RD$:</label>
+                <input type="number" id="pkgPrice_oro" value="150" style="font-weight:700; color:var(--green);">
+              </div>
+              <div class="field" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Cantidad de Boletos:</label>
+                <input type="number" id="pkgCount_oro" value="50" style="font-weight:700;">
+              </div>
+              <div class="field" style="margin-bottom:12px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Boleto Extra de Regalo (Bonus):</label>
+                <input type="number" id="pkgBonus_oro" value="5" style="font-weight:700; color:var(--gold);">
+              </div>
+            </div>
+
+            <div class="card" style="background:#051720; border:1px solid var(--border-cyan); border-left:4px solid #00e676; border-radius:16px; padding:18px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="color:#FFF; font-weight:800; margin:0;">💎 Pack VIP Diamante</h4>
+                <span class="badge" style="background:rgba(0,230,118,0.15); color:#00e676; border:1px solid #00e676;">100 Boletos</span>
+              </div>
+              <div class="field" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Precio en RD$:</label>
+                <input type="number" id="pkgPrice_vip" value="300" style="font-weight:700; color:var(--green);">
+              </div>
+              <div class="field" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Cantidad de Boletos:</label>
+                <input type="number" id="pkgCount_vip" value="100" style="font-weight:700;">
+              </div>
+              <div class="field" style="margin-bottom:12px;">
+                <label style="font-size:0.75rem; color:var(--text-grey);">Boleto Extra de Regalo (Bonus):</label>
+                <input type="number" id="pkgBonus_vip" value="12" style="font-weight:700; color:var(--gold);">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANE 12: ASIGNACIÓN MANUAL DE BOLETOS / CRÉDITOS (Estilo Listo Patrón) -->
+      <div class="pane" id="paneManualCredits">
+        <div class="card" style="max-width:700px; margin:0 auto;">
+          <div class="card-title">
+            <i data-lucide="credit-card" style="color:var(--green);"></i> Asignar Boletos Manualmente a Cliente
+          </div>
+          <p style="color:var(--text-grey); font-size:0.85rem; margin-bottom:20px;">
+            Permite regalar boletos promocionales, asignar compras validadas por transferencia o acreditar devoluciones directamente a un cliente.
+          </p>
+
+          <div class="field" style="margin-bottom:15px;">
+            <label for="manualClientName">Nombre Completo del Cliente:</label>
+            <input type="text" id="manualClientName" placeholder="Ej: Juan Pérez">
+          </div>
+
+          <div class="field" style="margin-bottom:15px;">
+            <label for="manualClientPhone">Número de WhatsApp (10 dígitos / Rep. Dom.):</label>
+            <input type="text" id="manualClientPhone" placeholder="Ej: 8099838626">
+          </div>
+
+          <div style="display:flex; gap:15px; margin-bottom:15px;">
+            <div class="field" style="flex:1;">
+              <label for="manualTicketCount">Cantidad de Boletos a Asignar:</label>
+              <input type="number" id="manualTicketCount" value="10" min="1" max="1000" style="font-weight:700; color:var(--cyan);">
+            </div>
+            <div class="field" style="flex:1;">
+              <label for="manualAssignReason">Motivo de Asignación:</label>
+              <select id="manualAssignReason" style="background:#05141b; border:1px solid var(--border-cyan); color:#FFF; font-weight:700; height:45px; border-radius:10px; padding:0 10px; width:100%;">
+                <option value="plan_upgrade">📦 Compra de Paquete Validada</option>
+                <option value="promotional">🎁 Regalo Promocional / Bonus</option>
+                <option value="refund">🔄 Reembolso / Devolución</option>
+                <option value="compensation">⚡ Compensación por Soporte</option>
+                <option value="other">📝 Otro Motivo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:20px;">
+            <label for="manualAssignNotes">Nota Interna (Opcional):</label>
+            <input type="text" id="manualAssignNotes" placeholder="Ej: Pago verificado en Banreservas lote #482">
+          </div>
+
+          <button class="btn btn-primary" id="btnSubmitManualCredits" style="width:100%; font-weight:800; font-size:1rem; padding:14px; background:var(--green); border-color:var(--green); color:#020d0f;">
+            <i data-lucide="check-circle"></i> ✓ Confirmar y Asignar Boletos al Cliente
+          </button>
         </div>
       </div>
 

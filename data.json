@@ -2,207 +2,207 @@
   "suerterd:admin:pin": "123456",
   "suerterd:raffle:ids": "[\"florida5\"]",
   "suerterd:config:v2:florida5": "{\"id\":\"florida5\",\"title\":\"Sorteo Especial iPhone 17 Pro Max 1TB\",\"prize\":\"iPhone 17 Pro Max 1TB\",\"price\":\"RD$3\",\"total\":100000,\"ticketDigits\":5,\"image\":\"./assets/suerte_rd_iphone17_banner.png\",\"active\":true,\"brand\":\"Apple\",\"model\":\"iPhone 17 Pro Max 1TB\",\"year\":\"2026\",\"details\":\"¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.\",\"blessedPct\":0.1,\"blessedPrize\":\"RD$5,000\",\"saleStatus\":\"active\",\"blessedDrawInterval\":5,\"countdownTriggerPct\":80,\"countdownDurationDays\":7,\"blessedNumbers\":[],\"whatsapp\":\"8099838626\"}",
-  "suerterd:tickets:v2:florida5": "{\"10731\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"14602\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"18172\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"18448\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"18458\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"20158\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"20934\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"23076\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"23558\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"24653\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"24916\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"25267\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"26866\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"30726\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"31402\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"35927\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"44499\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"48780\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"50048\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"52442\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"54070\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"58261\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"59243\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"59250\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"62596\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"65769\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"68041\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"69244\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"71596\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"75208\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"75257\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"78144\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"79833\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"80198\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"80437\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"80709\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"81083\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"83256\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"83821\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"86617\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"91168\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"92035\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"92294\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"93656\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"97175\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"97970\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"06099\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"06228\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"00337\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"06735\":{\"name\":\"Prueba Paquete Bronce\",\"nombre\":\"Prueba Paquete Bronce\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"estado\":\"reservado\",\"timestamp\":1789171280761},\"00100\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==\",\"timestamp_comprobante\":1789213528511},\"00101\":{\"name\":\"Juan Prueba\",\"nombre\":\"Juan Prueba\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Grupo (2 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00102\":{\"name\":\"Juan Prueba\",\"nombre\":\"Juan Prueba\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Grupo (2 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00103\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00104\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00105\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00106\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00107\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00108\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00109\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00110\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00111\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00112\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00113\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00114\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00115\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00116\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00117\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00118\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00119\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00120\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00121\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00122\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00123\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00124\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00125\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00126\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00127\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00128\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00129\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00130\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00131\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00132\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00133\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00134\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00135\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00136\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00137\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00138\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00139\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00140\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00141\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00142\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00143\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00144\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00145\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00146\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00147\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00148\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00149\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511}}",
+  "suerterd:tickets:v2:florida5": "{\"00100\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==\",\"timestamp_comprobante\":1789213528511},\"00101\":{\"name\":\"Juan Prueba\",\"nombre\":\"Juan Prueba\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Grupo (2 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00102\":{\"name\":\"Juan Prueba\",\"nombre\":\"Juan Prueba\",\"whatsapp\":\"18099838626\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Grupo (2 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00103\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00104\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00105\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00106\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00107\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00108\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00109\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00110\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00111\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00112\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00113\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00114\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00115\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00116\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00117\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00118\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00119\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00120\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00121\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00122\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00123\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00124\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00125\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00126\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00127\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00128\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00129\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00130\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00131\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00132\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00133\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00134\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00135\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00136\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00137\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00138\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00139\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00140\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00141\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00142\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00143\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00144\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00145\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00146\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00147\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00148\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511},\"00149\":{\"name\":\"Prueba Cliente Paquete\",\"nombre\":\"Prueba Cliente Paquete\",\"whatsapp\":\"18099998877\",\"loteria\":\"Pick 5 Florida\",\"paquete\":\"Paquete Bronce (50 Boletos)\",\"estado\":\"esperando_validacion\",\"timestamp\":1789213528511,\"comprobante\":true,\"timestamp_comprobante\":1789213528511}}",
   "notifications": [
     {
-      "text": "Boleto #01540 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #06735 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #01855 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #00337 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #07314 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #06228 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #07464 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #06099 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #07493 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #97970 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #99426 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #97175 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #98414 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #93656 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #97451 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #92294 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #93644 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #92035 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #93451 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #91168 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #92061 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #86617 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #90791 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #83821 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #90523 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #83256 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #84314 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #81083 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #80786 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #80709 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #79467 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #80437 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #78536 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #80198 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #77839 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #79833 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #77788 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #78144 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #77433 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #75257 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #76420 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #75208 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #74941 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #71596 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #71474 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #69244 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #70226 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #68041 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #69657 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #65769 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #67746 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #62596 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #66522 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #59250 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #62686 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #59243 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #56765 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #58261 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #54214 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #54070 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #53691 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #52442 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #52343 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #50048 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #49972 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #48780 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #48385 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #44499 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #43884 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #35927 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #42249 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #31402 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #41726 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #30726 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #38065 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #26866 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #35403 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #25267 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #34751 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #24916 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #31783 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #24653 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #30051 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #23558 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #28824 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #23076 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #24276 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #20934 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #24239 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #20158 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #20502 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #18458 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #19337 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #18448 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #16522 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #18172 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #15722 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #14602 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     },
     {
-      "text": "Boleto #14495 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
-      "timestamp": 1789257604658
+      "text": "Boleto #10731 liberado automáticamente tras 24 horas sin pago (Cliente: Prueba Paquete Bronce)",
+      "timestamp": 1789257904604
     }
   ],
   "supportMessages": "[{\"name\":\"Lucas Peralta\",\"whatsapp\":\"18095550011\",\"category\":\"Error en la web\",\"message\":\"No puedo ver mis boletos comprados en el historial.\",\"timestamp\":1787967290962}]",

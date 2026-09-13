@@ -338,6 +338,10 @@
           renderWinnersTable();
         } else if (target === "panePaymentsConfig") {
           renderBankAccountsTable();
+        } else if (target === "panePackages") {
+          loadPackageConfig();
+        } else if (target === "paneManualCredits") {
+          initManualCreditsForm();
         } else if (target === "paneWhatsappTemplates") {
           loadWhatsappTemplates();
         } else if (target === "paneFinancialReports") {
@@ -443,9 +447,11 @@
     safeAddListener("btnRotateReceiptImg", "click", rotateReceiptImage);
     safeAddListener("btnOpenReceiptNewTab", "click", openReceiptNewTab);
 
-    // WhatsApp Templates & Financial Reports
+    // WhatsApp Templates & Financial Reports & Packages
     safeAddListener("btnSaveWaTemplates", "click", saveWhatsappTemplates);
     safeAddListener("btnExportFinancialCSV", "click", exportFinancialCSV);
+    safeAddListener("btnSavePackageConfig", "click", savePackageConfig);
+    safeAddListener("btnSubmitManualCredits", "click", submitManualTicketAssignment);
 
     // Change PIN
     safeAddListener("btnUpdatePin", "click", updateAdminPinCode);
@@ -2599,6 +2605,171 @@ Por favor reenvíanos tu foto de transferencia actualizada para validar y activa
     link.click();
     document.body.removeChild(link);
     showNotification("Reporte financiero exportado en CSV.", "success");
+  }
+
+  // --- PACKAGE MANAGEMENT & MANUAL CREDITS (Estilo Listo Patrón) ---
+  const DEFAULT_PACKAGES = {
+    bronce: { id: "bronce", title: "Paquete Bronce", count: 10, price: 30, bonus: 0 },
+    plata: { id: "plata", title: "Paquete Plata", count: 25, price: 75, bonus: 2 },
+    oro: { id: "oro", title: "Paquete Oro", count: 50, price: 150, bonus: 5 },
+    vip: { id: "vip", title: "Pack VIP Diamante", count: 100, price: 300, bonus: 12 }
+  };
+
+  async function loadPackageConfig() {
+    try {
+      const raw = await getStorageItem("suerterd:packages:v1");
+      const parsed = safeParse(raw, null);
+      const pkgs = parsed || DEFAULT_PACKAGES;
+      
+      if ($("pkgPrice_bronce")) $("pkgPrice_bronce").value = pkgs.bronce?.price || 30;
+      if ($("pkgCount_bronce")) $("pkgCount_bronce").value = pkgs.bronce?.count || 10;
+      if ($("pkgBonus_bronce")) $("pkgBonus_bronce").value = pkgs.bronce?.bonus || 0;
+
+      if ($("pkgPrice_plata")) $("pkgPrice_plata").value = pkgs.plata?.price || 75;
+      if ($("pkgCount_plata")) $("pkgCount_plata").value = pkgs.plata?.count || 25;
+      if ($("pkgBonus_plata")) $("pkgBonus_plata").value = pkgs.plata?.bonus || 2;
+
+      if ($("pkgPrice_oro")) $("pkgPrice_oro").value = pkgs.oro?.price || 150;
+      if ($("pkgCount_oro")) $("pkgCount_oro").value = pkgs.oro?.count || 50;
+      if ($("pkgBonus_oro")) $("pkgBonus_oro").value = pkgs.oro?.bonus || 5;
+
+      if ($("pkgPrice_vip")) $("pkgPrice_vip").value = pkgs.vip?.price || 300;
+      if ($("pkgCount_vip")) $("pkgCount_vip").value = pkgs.vip?.count || 100;
+      if ($("pkgBonus_vip")) $("pkgBonus_vip").value = pkgs.vip?.bonus || 12;
+    } catch(e) {
+      console.warn("Failed loading package configs", e);
+    }
+  }
+
+  async function savePackageConfig() {
+    showNotification("Guardando configuración de paquetes...", "info");
+    const pkgs = {
+      bronce: {
+        id: "bronce", title: "Paquete Bronce",
+        price: Number($("pkgPrice_bronce")?.value) || 30,
+        count: Number($("pkgCount_bronce")?.value) || 10,
+        bonus: Number($("pkgBonus_bronce")?.value) || 0
+      },
+      plata: {
+        id: "plata", title: "Paquete Plata",
+        price: Number($("pkgPrice_plata")?.value) || 75,
+        count: Number($("pkgCount_plata")?.value) || 25,
+        bonus: Number($("pkgBonus_plata")?.value) || 2
+      },
+      oro: {
+        id: "oro", title: "Paquete Oro",
+        price: Number($("pkgPrice_oro")?.value) || 150,
+        count: Number($("pkgCount_oro")?.value) || 50,
+        bonus: Number($("pkgBonus_oro")?.value) || 5
+      },
+      vip: {
+        id: "vip", title: "Pack VIP Diamante",
+        price: Number($("pkgPrice_vip")?.value) || 300,
+        count: Number($("pkgCount_vip")?.value) || 100,
+        bonus: Number($("pkgBonus_vip")?.value) || 12
+      }
+    };
+    await setStorageItem("suerterd:packages:v1", JSON.stringify(pkgs));
+    showNotification("¡Configuración de paquetes guardada correctamente!", "success");
+  }
+
+  function initManualCreditsForm() {
+    if ($("manualClientName")) $("manualClientName").focus();
+  }
+
+  async function submitManualTicketAssignment() {
+    const name = $("manualClientName") ? $("manualClientName").value.trim() : "";
+    const phone = $("manualClientPhone") ? $("manualClientPhone").value.trim() : "";
+    const count = Number($("manualTicketCount") ? $("manualTicketCount").value : 10) || 10;
+    const reason = $("manualAssignReason") ? $("manualAssignReason").value : "plan_upgrade";
+    const notes = $("manualAssignNotes") ? $("manualAssignNotes").value.trim() : "";
+
+    if (!name || !phone) {
+      alert("Por favor ingresa el nombre y teléfono del cliente.");
+      return;
+    }
+
+    if (count <= 0 || count > 1000) {
+      alert("La cantidad de boletos debe ser mayor a 0 y hasta 1000.");
+      return;
+    }
+
+    showNotification(`Asignando ${count} boletos a ${name}...`, "info");
+
+    const conf = configs[activeRaffleId] || DEFAULT_CONFIGS[activeRaffleId] || { total: 100000 };
+    const tickets = allTickets[activeRaffleId] || {};
+
+    // Find available ticket numbers
+    const assignedNums = [];
+    for (let i = 1; i <= (conf.total || 100000); i++) {
+      const numStr = pad5(i);
+      if (!tickets[numStr]) {
+        assignedNums.push(numStr);
+        if (assignedNums.length >= count) break;
+      }
+    }
+
+    if (assignedNums.length < count) {
+      alert(`No hay suficientes boletos disponibles en el sorteo activo. Solo quedan ${assignedNums.length} boletos libres.`);
+      return;
+    }
+
+    const timestamp = Date.now();
+    const reasonMap = {
+      plan_upgrade: "Compra de Paquete Validada",
+      promotional: "Regalo Promocional / Bonus",
+      refund: "Reembolso / Devolución",
+      compensation: "Compensación por Soporte",
+      other: "Asignación Manual Admin"
+    };
+    const reasonLabel = reasonMap[reason] || "Asignación Manual";
+
+    assignedNums.forEach(nStr => {
+      tickets[nStr] = {
+        name: name,
+        nombre: name,
+        whatsapp: phone,
+        loteria: "Pick 5 Florida",
+        estado: "pagado",
+        timestamp: timestamp,
+        origen: "admin_manual",
+        motivo: reasonLabel,
+        nota: notes
+      };
+    });
+
+    const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
+    await setStorageItem(key, JSON.stringify(tickets));
+
+    showNotification(`¡${count} boletos asignados con éxito a ${name}!`, "success");
+
+    // Open WhatsApp confirmation link
+    const sampleNumsDisplay = assignedNums.length <= 5 ? assignedNums.map(n => `#${n}`).join(", ") : assignedNums.slice(0, 5).map(n => `#${n}`).join(", ") + `... y ${assignedNums.length - 5} más`;
+    const textMsg = 
+`🎰 *SUERTE RD* | *ASIGNACIÓN OFICIAL DE BOLETO(S)* 🎰
+═════════════════════════════
+👤 *CLIENTE:* ${name}
+📱 *WHATSAPP:* ${phone}
+
+🏆 *SORTEO:* ${conf.title}
+🎟️ *CANTIDAD:* *${count} Boletos*
+🔢 *BOLETOS:* ${sampleNumsDisplay}
+📝 *MOTIVO:* ${reasonLabel}
+
+🟢 *ESTADO:* *PAGADOS Y ACTIVOS* 🟢
+═════════════════════════════
+✨ ¡Muchas gracias por participar en Suerte RD! Te deseamos la mayor de las suertes. 🍀🔥`;
+
+    const encoded = encodeURIComponent(textMsg);
+    const cleanPhone = formatWhatsAppPhone(phone);
+    window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
+
+    // Clear form
+    if ($("manualClientName")) $("manualClientName").value = "";
+    if ($("manualClientPhone")) $("manualClientPhone").value = "";
+    if ($("manualAssignNotes")) $("manualAssignNotes").value = "";
+
+    loadRaffleState(activeRaffleId);
   }
 
   // Run navigation setup immediately so sidebar buttons are always active & clickable
