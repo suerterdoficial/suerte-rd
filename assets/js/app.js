@@ -910,6 +910,9 @@
       const bankAccountsRaw = await getStorageItem("suerterd:payment:methods");
       if (bankAccountsRaw) {
         bankAccounts = JSON.parse(bankAccountsRaw);
+        if (Array.isArray(bankAccounts) && !bankAccounts.some(m => m.number === "29848790017")) {
+          bankAccounts.push({ bank: "Banco BHD", type: "Cuenta de Ahorro", number: "29848790017", owner: "Katherine Daniela Rodriguez Roque" });
+        }
       } else {
         bankAccounts = [...DEFAULT_BANK_ACCOUNTS];
       }

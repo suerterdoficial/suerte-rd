@@ -148,6 +148,26 @@ async function readDb(forceFresh = false) {
     db['suerterd:raffle:ids'] = JSON.stringify(["florida5"]);
   }
 
+  const payKey = "suerterd:payment:methods";
+  const defaultBankAccounts = [
+    { bank: "Banco Qik", type: "Cuenta de Ahorro", number: "1000490608", owner: "Luis Fernando Alvarez" },
+    { bank: "Banreservas", type: "Cuenta de Ahorro", number: "9602059888", owner: "Cristhofer Sosa" },
+    { bank: "Banco Popular", type: "Cuenta de Ahorro", number: "823386362", owner: "Erika Santos Francisco" },
+    { bank: "Scotiabank", type: "Cuenta corriente", number: "03100039851", owner: "Luis Fernando Alvarez" },
+    { bank: "Banco BHD", type: "Cuenta de Ahorro", number: "29848790017", owner: "Katherine Daniela Rodriguez Roque" }
+  ];
+  if (!db[payKey]) {
+    db[payKey] = JSON.stringify(defaultBankAccounts);
+  } else {
+    try {
+      let methods = typeof db[payKey] === 'string' ? JSON.parse(db[payKey]) : db[payKey];
+      if (Array.isArray(methods) && !methods.some(m => m.number === "29848790017")) {
+        methods.push({ bank: "Banco BHD", type: "Cuenta de Ahorro", number: "29848790017", owner: "Katherine Daniela Rodriguez Roque" });
+        db[payKey] = JSON.stringify(methods);
+      }
+    } catch(e) {}
+  }
+
   for (const id in DEFAULT_CONFIGS) {
     const key = `suerterd:config:v2:${id}`;
     if (!db[key]) {
