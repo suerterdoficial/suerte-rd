@@ -599,7 +599,12 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
       };
 
       if (comprobante) {
-        ticketsObj[tNum].comprobante = (index === 0) ? comprobante : true;
+        // Safe check: If comprobante is a huge Base64 string, store boolean/preview to keep db under 50KB
+        if (typeof comprobante === 'string' && comprobante.startsWith('data:image/') && comprobante.length > 50000) {
+          ticketsObj[tNum].comprobante = comprobante.substring(0, 100) + '...'; // lightweight indicator
+        } else {
+          ticketsObj[tNum].comprobante = (index === 0) ? comprobante : true;
+        }
         ticketsObj[tNum].timestamp_comprobante = now;
       }
     });
