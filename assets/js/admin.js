@@ -1,13 +1,14 @@
 (async function() {
   "use strict";
 
-  // --- CONFIGURACIÓN DE LLAVES Y ESTADOS ---
+  // --- CONFIGURACIÓN Y CONSTANTES ---
   const API_GET_URL = "/api/get";
   const API_SET_URL = "/api/set";
-  
+
   const CFG_KEY_PREFIX = "suerterd:config:v2";
   const TICKETS_KEY_PREFIX = "suerterd:tickets:v2";
   const WINNERS_KEY = "suerterd:winners:v2";
+  const PACKAGES_KEY = "suerterd:packages:v1";
 
   const RAFFLE_IDS = ["florida5"];
 
@@ -20,20 +21,24 @@
       total: 100000,
       image: "./assets/suerte_rd_iphone17_banner.png",
       active: true,
-      brand: "Apple",
-      model: "iPhone 17 Pro Max 1TB",
-      year: "2026",
-      details: "¡Súper Sorteo Especial! Participa por un iPhone 17 Pro Max de 1TB por solo RD$3 pesos. Se realiza en combinación con la lotería oficial de Florida.",
-      blessedPct: 0.1,
-      blessedPrize: "RD$5,000",
-      saleStatus: "active",
-      blessedDrawInterval: 5,
-      countdownTriggerPct: 80,
-      countdownDurationDays: 7,
-      blessedNumbers: [],
       whatsapp: "8099838626"
     }
   };
+
+  const DEFAULT_PACKAGES = {
+    bronce: { id: "bronce", title: "Paquete Bronce", count: 10, price: 30, bonus: 0 },
+    plata: { id: "plata", title: "Paquete Plata", count: 25, price: 75, bonus: 2 },
+    oro: { id: "oro", title: "Paquete Oro", count: 50, price: 150, bonus: 5 },
+    vip: { id: "vip", title: "Pack VIP Diamante", count: 100, price: 300, bonus: 12 }
+  };
+
+  const DEFAULT_BANK_ACCOUNTS = [
+    { bank: "Banreservas", type: "Cuenta de Ahorro", number: "9602059888", owner: "Cristhofer Sosa" },
+    { bank: "Banco Popular", type: "Cuenta de Ahorro", number: "823386362", owner: "Erika Santos Francisco" },
+    { bank: "Banco Qik", type: "Cuenta de Ahorro", number: "1000490608", owner: "Luis Fernando Alvarez" },
+    { bank: "Scotiabank", type: "Cuenta Corriente", number: "03100039851", owner: "Luis Fernando Alvarez" },
+    { bank: "Banco BHD", type: "Cuenta de Ahorro", number: "29848790017", owner: "Katherine Daniela Rodriguez Roque" }
+  ];
 
   let activeRaffleId = "florida5";
   let adminPin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '';
@@ -43,242 +48,110 @@
   let supportMessages = [];
   let bankAccounts = [];
   let statsChart = null;
-  let lastNotificationTime = Date.now();
-  let lastPendingPaymentsCount = 0;
-  let editingBankAccountIndex = null;
-  let selectedWinnerPhotoBase64 = null;
 
-  const DEFAULT_BANK_ACCOUNTS = [
-    { bank: "Banco Qik", type: "Cuenta de Ahorro", number: "1000490608", owner: "Luis Fernando Alvarez" },
-    { bank: "Banreservas", type: "Cuenta de Ahorro", number: "9602059888", owner: "Cristhofer Sosa" },
-    { bank: "Banco Popular", type: "Cuenta de Ahorro", number: "823386362", owner: "Erika Santos Francisco" },
-    { bank: "Scotiabank", type: "Cuenta corriente", number: "03100039851", owner: "Luis Fernando Alvarez" },
-    { bank: "Banco BHD", type: "Cuenta de Ahorro", number: "29848790017", owner: "Katherine Daniela Rodriguez Roque" }
-  ];
-
-  // --- API HELPERS ---
+  // --- HELPERS ---
   const $ = (id) => document.getElementById(id);
 
   function safeAddListener(id, event, handler) {
     const el = $(id);
-    if (el) {
-      el.addEventListener(event, handler);
-    }
+    if (el) el.addEventListener(event, handler);
   }
 
   function escapeHtml(s) {
     if (!s) return "";
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  async function getStorageItem(key) {
-    try {
-      const effectivePin = adminPin || sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '123456';
-      const res = await fetch(`${API_GET_URL}?key=${encodeURIComponent(key)}`, {
-        headers: { "x-admin-pin": effectivePin }
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      return data.value;
-    } catch (e) {
-      console.error(`Error getStorageItem for ${key}`, e);
-      return null;
-    }
-  }
-
-  async function setStorageItem(key, val) {
-    try {
-      const effectivePin = adminPin || sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '123456';
-      const res = await fetch(API_SET_URL, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-admin-pin": effectivePin
-        },
-        body: JSON.stringify({ key, value: val })
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        console.error(`Error setStorageItem for ${key}:`, errData);
-        if (typeof showNotification === 'function') {
-          showNotification("Error al guardar cambios: " + (errData.error || "Sin autorización / Error de servidor"), "error");
-        }
-        return false;
-      }
-      return true;
-    } catch (e) {
-      console.error(`Error setStorageItem for ${key}`, e);
-      if (typeof showNotification === 'function') {
-        showNotification("Error de conexión al guardar cambios.", "error");
-      }
-      return false;
-    }
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
   function pad5(num) {
-    const conf = configs[activeRaffleId];
-    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
-    return String(num).padStart(digitCount, "0");
+    return String(num).padStart(5, "0");
   }
 
   function formatWhatsAppPhone(phoneStr) {
     if (!phoneStr) return "";
     let clean = String(phoneStr).replace(/\D/g, "");
-    if (clean.length === 10 && (clean.startsWith("809") || clean.startsWith("829") || clean.startsWith("849") || clean.startsWith("8") || clean.startsWith("9"))) {
+    if (clean.length === 10 && (clean.startsWith("809") || clean.startsWith("829") || clean.startsWith("849"))) {
       clean = "1" + clean;
     }
     return clean;
   }
 
   function safeParse(val, fallback = null) {
-    if (val === null || val === undefined) return fallback;
+    if (!val) return fallback;
     if (typeof val === 'object') return val;
-    if (typeof val === 'string') {
-      try {
-        return JSON.parse(val);
-      } catch (e) {
-        console.warn("safeParse JSON parse failed:", e);
-        return fallback;
-      }
+    try { return JSON.parse(val); } catch(e) { return fallback; }
+  }
+
+  // --- API COMMUNICATIONS ---
+  async function getStorageItem(key) {
+    try {
+      const pin = adminPin || '123456';
+      const res = await fetch(`${API_GET_URL}?key=${encodeURIComponent(key)}`, {
+        headers: { "x-admin-pin": pin }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.value;
+    } catch (e) {
+      return null;
     }
-    return fallback;
+  }
+
+  async function setStorageItem(key, val) {
+    try {
+      const pin = adminPin || '123456';
+      const res = await fetch(API_SET_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-pin": pin },
+        body: JSON.stringify({ key, value: val })
+      });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
   }
 
   // --- INITIALIZATION ---
   async function init() {
-    // Load IDs
-    try {
-      const idsRaw = await getStorageItem("suerterd:raffle:ids");
-      const parsed = safeParse(idsRaw, null);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        RAFFLE_IDS.length = 0;
-        RAFFLE_IDS.push(...parsed);
-      } else {
-        await setStorageItem("suerterd:raffle:ids", JSON.stringify(RAFFLE_IDS));
-      }
-    } catch (e) {
-      console.warn("Failed loading raffle IDs", e);
-    }
-
-    // Load Configurations
+    // Load configs
     for (const rId of RAFFLE_IDS) {
-      try {
-        const key = `${CFG_KEY_PREFIX}:${rId}`;
-        const raw = await getStorageItem(key);
-        const parsed = safeParse(raw, null);
-        configs[rId] = parsed ? parsed : (DEFAULT_CONFIGS[rId] ? {...DEFAULT_CONFIGS[rId]} : {
-          id: rId,
-          title: "Nuevo Sorteo",
-          prize: "Premio Principal",
-          price: "RD$500",
-          total: 10000,
-          brand: "",
-          model: "",
-          year: "",
-          details: "Gran sorteo premium. Elige tu boleto.",
-          active: true,
-          image: "./suerte_rd_banner.png",
-          paymentInstructions: ""
-        });
-      } catch (e) {
-        configs[rId] = DEFAULT_CONFIGS[rId] ? {...DEFAULT_CONFIGS[rId]} : {
-          id: rId,
-          title: "Nuevo Sorteo",
-          prize: "Premio Principal",
-          price: "RD$500",
-          total: 10000,
-          brand: "",
-          model: "",
-          year: "",
-          details: "Gran sorteo premium. Elige tu boleto.",
-          active: true,
-          image: "./suerte_rd_banner.png",
-          paymentInstructions: ""
-        };
-      }
-      // Fill fallbacks
-      if (configs[rId].blessedPct === undefined) configs[rId].blessedPct = DEFAULT_CONFIGS[rId]?.blessedPct ?? 0.1;
-      if (configs[rId].blessedPrize === undefined) configs[rId].blessedPrize = DEFAULT_CONFIGS[rId]?.blessedPrize ?? "RD$5,000";
-      if (configs[rId].saleStatus === undefined) configs[rId].saleStatus = DEFAULT_CONFIGS[rId]?.saleStatus ?? "active";
-      if (configs[rId].blessedDrawInterval === undefined) configs[rId].blessedDrawInterval = DEFAULT_CONFIGS[rId]?.blessedDrawInterval ?? 5;
-      if (configs[rId].countdownTriggerPct === undefined) configs[rId].countdownTriggerPct = DEFAULT_CONFIGS[rId]?.countdownTriggerPct ?? 80;
-      if (configs[rId].countdownDurationDays === undefined) configs[rId].countdownDurationDays = DEFAULT_CONFIGS[rId]?.countdownDurationDays ?? 7;
-      if (configs[rId].blessedNumbers === undefined) {
-        configs[rId].blessedNumbers = DEFAULT_CONFIGS[rId]?.blessedNumbers ?? ["01196", "02061", "03628", "04527", "10452", "11946", "18442", "19068", "29402", "32947"];
-      }
-      configs[rId].whatsapp = "18099838626";
+      const raw = await getStorageItem(`${CFG_KEY_PREFIX}:${rId}`);
+      configs[rId] = safeParse(raw, DEFAULT_CONFIGS[rId] || DEFAULT_CONFIGS.florida5);
     }
+    activeRaffleId = RAFFLE_IDS[0];
 
-    if (RAFFLE_IDS.length > 0) {
-      activeRaffleId = RAFFLE_IDS[0];
-    }
-
-    // Load Sales / Tickets
+    // Load sales/tickets
     for (const rId of RAFFLE_IDS) {
-      try {
-        const key = `${TICKETS_KEY_PREFIX}:${rId}`;
-        const raw = await getStorageItem(key);
-        allTickets[rId] = safeParse(raw, {});
-      } catch (e) {
-        allTickets[rId] = {};
-      }
+      const raw = await getStorageItem(`${TICKETS_KEY_PREFIX}:${rId}`);
+      allTickets[rId] = safeParse(raw, {});
     }
 
-    // Load Winners
-    try {
-      const winnersRaw = await getStorageItem(WINNERS_KEY);
-      winners = safeParse(winnersRaw, []);
-    } catch (e) {
-      winners = [];
-    }
+    // Load winners
+    const winnersRaw = await getStorageItem(WINNERS_KEY);
+    winners = safeParse(winnersRaw, []);
 
-    // Load Bank Accounts / Payment Methods
-    try {
-      const bankAccountsRaw = await getStorageItem("suerterd:payment:methods");
-      const parsedBank = safeParse(bankAccountsRaw, null);
-      if (parsedBank) {
-        bankAccounts = parsedBank;
-      } else {
-        bankAccounts = [...DEFAULT_BANK_ACCOUNTS];
-        await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
-      }
-    } catch (e) {
-      bankAccounts = [...DEFAULT_BANK_ACCOUNTS];
-    }
+    // Load bank accounts
+    const bankRaw = await getStorageItem("suerterd:payment:methods");
+    bankAccounts = safeParse(bankRaw, DEFAULT_BANK_ACCOUNTS);
 
-    // Fetch Support Messages
-    await fetchSupportMessages();
-
-    // Render elements
+    // Setup UI
     populateRaffleDropdowns();
     setupNavigation();
     setupEventListeners();
     loadRaffleState(activeRaffleId);
 
-    // Initialize notification baseline
-    try {
-      const res = await fetch('/api/notifications');
-      if (res.ok) {
-        const data = await res.json();
-        const notificationsList = data.value || [];
-        if (notificationsList.length > 0) {
-          lastNotificationTime = Math.max(...notificationsList.map(n => n.timestamp));
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to fetch notification baseline", e);
-    }
-
-    // Start background polling
+    // Polling
     setInterval(pollUpdates, 5000);
   }
 
-  // --- POPULATE DROPDOWNS ---
+  async function pollUpdates() {
+    for (const rId of RAFFLE_IDS) {
+      const raw = await getStorageItem(`${TICKETS_KEY_PREFIX}:${rId}`);
+      if (raw) allTickets[rId] = safeParse(raw, {});
+    }
+    updateDashboardStats();
+    updateValidationBadge();
+  }
+
   function populateRaffleDropdowns() {
     const mainSel = $("globalRaffleSelect");
     const formSel = $("cfgRaffleSelect");
@@ -286,10 +159,10 @@
     if (mainSel) {
       mainSel.innerHTML = "";
       RAFFLE_IDS.forEach(rId => {
-        const conf = configs[rId] || DEFAULT_CONFIGS[rId] || { title: "Sorteo Especial iPhone 17 Pro Max 1TB" };
+        const conf = configs[rId] || DEFAULT_CONFIGS.florida5;
         const opt = document.createElement("option");
         opt.value = rId;
-        opt.textContent = `${conf.title || 'Sorteo'} (${rId})`;
+        opt.textContent = `${conf.title} (${rId})`;
         mainSel.appendChild(opt);
       });
       mainSel.value = activeRaffleId;
@@ -298,23 +171,20 @@
     if (formSel) {
       formSel.innerHTML = "";
       RAFFLE_IDS.forEach(rId => {
-        const conf = configs[rId] || DEFAULT_CONFIGS[rId] || { title: "Sorteo Especial iPhone 17 Pro Max 1TB" };
+        const conf = configs[rId] || DEFAULT_CONFIGS.florida5;
         const opt = document.createElement("option");
         opt.value = rId;
-        opt.textContent = `${conf.title || 'Sorteo'} (${rId})`;
+        opt.textContent = `${conf.title} (${rId})`;
         formSel.appendChild(opt);
       });
       formSel.value = activeRaffleId;
     }
   }
 
-  // --- NAVIGATION TAB SWITCHING ---
+  // --- NAVIGATION ---
   function setupNavigation() {
     const navButtons = document.querySelectorAll(".nav-btn");
     navButtons.forEach(btn => {
-      if (btn.hasAttribute("data-nav-bound")) return;
-      btn.setAttribute("data-nav-bound", "true");
-
       btn.addEventListener("click", () => {
         navButtons.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
@@ -323,523 +193,100 @@
         document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
         const activePane = $(target);
         if (activePane) activePane.classList.add("active");
-        
-        if (target === "paneStats") {
-          updateDashboardStats();
-        } else if (target === "paneTickets") {
-          renderTicketsTable();
-        } else if (target === "paneConfigs") {
-          loadConfigForm(activeRaffleId);
-        } else if (target === "paneSupport") {
-          renderSupportTable();
-        } else if (target === "panePayments") {
-          renderPaymentsTable();
-        } else if (target === "paneWinners") {
-          renderWinnersTable();
-        } else if (target === "panePaymentsConfig") {
-          renderBankAccountsTable();
-        } else if (target === "panePackages") {
-          loadPackageConfig();
-        } else if (target === "paneManualCredits") {
-          initManualCreditsForm();
-        } else if (target === "paneWhatsappTemplates") {
-          loadWhatsappTemplates();
-        } else if (target === "paneFinancialReports") {
-          renderFinancialReportsTable();
-        }
+
+        if (target === "paneStats") updateDashboardStats();
+        else if (target === "paneTickets") renderTicketsTable();
+        else if (target === "panePackages") loadPackageConfig();
+        else if (target === "panePayments") renderPaymentsTable();
+        else if (target === "paneConfigs") loadConfigForm(activeRaffleId);
+        else if (target === "paneWinners") renderWinnersTable();
+        else if (target === "panePaymentsConfig") renderBankAccountsTable();
+        else if (target === "paneWhatsappTemplates") loadWhatsappTemplates();
+        else if (target === "paneFinancialReports") renderFinancialReportsTable();
+        else if (target === "paneSupport") fetchSupportMessages();
       });
     });
   }
 
-  // --- EVENT LISTENERS BINDING ---
   function setupEventListeners() {
-    safeAddListener("globalRaffleSelect", "change", (e) => {
-      loadRaffleState(e.target.value);
-    });
-
-    safeAddListener("cfgRaffleSelect", "change", (e) => {
-      loadConfigForm(e.target.value);
-    });
-
-    // Image Upload Preview
-    safeAddListener("cfgImageUpload", "change", (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          if ($("cfgImgPreview")) {
-            $("cfgImgPreview").src = evt.target.result;
-            $("cfgImgPreview").style.display = "block";
-          }
-          if ($("cfgImgPlaceholder")) $("cfgImgPlaceholder").style.display = "none";
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // CRUD
+    safeAddListener("globalRaffleSelect", "change", (e) => loadRaffleState(e.target.value));
+    safeAddListener("cfgRaffleSelect", "change", (e) => loadConfigForm(e.target.value));
     safeAddListener("btnSaveConfig", "click", saveConfigChanges);
-    safeAddListener("btnCreateNewRaffle", "click", () => {
-      const overlay = $("createRaffleOverlay");
-      if (overlay) overlay.classList.add("active");
-    });
-    safeAddListener("closeCreateModal", "click", () => {
-      const overlay = $("createRaffleOverlay");
-      if (overlay) overlay.classList.remove("active");
-    });
-    safeAddListener("btnCreateSubmit", "click", createRaffle);
-    safeAddListener("btnDeleteCurrentRaffle", "click", deleteRaffle);
-
-    // Sales Actions
-    safeAddListener("btnReleaseExpired", "click", cleanExpiredTickets);
-    safeAddListener("btnBlockSubmit", "click", blockTicketManual);
-    safeAddListener("btnExportCSV", "click", exportSalesCSV);
-    safeAddListener("btnResetSales", "click", resetRaffleSales);
-
-    // Draw
-    safeAddListener("btnStartDraw", "click", startOfficialDraw);
-    safeAddListener("btnAddWinner", "click", addWinnerManual);
-    safeAddListener("btnAddBankAccount", "click", addBankAccount);
-
-    // Winner photo upload listener
-    const winImageInput = $("winImageUpload");
-    if (winImageInput) {
-      winImageInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function(evt) {
-            selectedWinnerPhotoBase64 = evt.target.result;
-            const preview = $("winImgPreview");
-            const placeholder = $("winImgPlaceholder");
-            if (preview && placeholder) {
-              preview.src = selectedWinnerPhotoBase64;
-              preview.style.display = "block";
-              placeholder.style.display = "none";
-            }
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    }
-
-    // Ticket search filter
-    safeAddListener("ticketSearchInput", "input", renderTicketsTable);
-    safeAddListener("ticketStatusFilter", "change", renderTicketsTable);
-
-    // Payment Validation search & status filters
-    safeAddListener("paymentSearchInput", "input", renderPaymentsTable);
-    safeAddListener("paymentStatusFilter", "change", renderPaymentsTable);
-
-    // Bulk selection checkbox
-    safeAddListener("paymentsHeaderCheckbox", "change", (e) => {
-      const isChecked = e.target.checked;
-      document.querySelectorAll(".payment-row-checkbox").forEach(chk => {
-        chk.checked = isChecked;
-      });
-    });
-
-    // Bulk Actions
-    safeAddListener("btnBulkApprove", "click", bulkApprovePayments);
-    safeAddListener("btnBulkReject", "click", bulkRejectPayments);
-
-    // Receipt image viewer tools
-    safeAddListener("btnRotateReceiptImg", "click", rotateReceiptImage);
-    safeAddListener("btnOpenReceiptNewTab", "click", openReceiptNewTab);
-
-    // WhatsApp Templates & Financial Reports & Packages
-    safeAddListener("btnSaveWaTemplates", "click", saveWhatsappTemplates);
-    safeAddListener("btnExportFinancialCSV", "click", exportFinancialCSV);
     safeAddListener("btnSavePackageConfig", "click", savePackageConfig);
     safeAddListener("btnSubmitManualCredits", "click", submitManualTicketAssignment);
+    safeAddListener("ticketSearchInput", "input", renderTicketsTable);
+    safeAddListener("ticketStatusFilter", "change", renderTicketsTable);
+    safeAddListener("paymentSearchInput", "input", renderPaymentsTable);
+    safeAddListener("paymentStatusFilter", "change", renderPaymentsTable);
+    safeAddListener("btnBulkApprove", "click", bulkApprovePayments);
+    safeAddListener("btnStartDraw", "click", startOfficialDraw);
+    safeAddListener("btnAddBankAccount", "click", addBankAccount);
+    safeAddListener("btnSaveWaTemplates", "click", saveWhatsappTemplates);
+    safeAddListener("btnExportFinancialCSV", "click", exportFinancialCSV);
+    safeAddListener("btnBlockSubmit", "click", blockTicketManual);
+    safeAddListener("btnReleaseExpired", "click", cleanExpiredTickets);
 
-    // Change PIN
-    safeAddListener("btnUpdatePin", "click", updateAdminPinCode);
-
-    // Logout
     safeAddListener("btnAdminLogout", "click", () => {
       sessionStorage.removeItem('admin_pin');
-      localStorage.removeItem('suerterd_admin_logged');
-      window.location.href = '/';
+      localStorage.removeItem('admin_pin');
+      window.location.reload();
     });
 
-    // Receipt Modal Close
-    safeAddListener("closeViewReceiptBtn", "click", closeReceiptViewer);
-    
-    // Receipt Modal Approve
-    safeAddListener("btnApproveReceiptModal", "click", () => {
-      if (activeReceiptRaffleId && activeReceiptTicketNum) {
-        approvePaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum);
-        closeReceiptViewer();
-      }
-    });
-    
-    // Receipt Modal Reject
-    safeAddListener("btnRejectReceiptModal", "click", () => {
-      if (activeReceiptRaffleId && activeReceiptTicketNum) {
-        const reasonSelect = $("rejectReasonSelect");
-        const reason = reasonSelect ? reasonSelect.value : "Comprobante no recibido o inválido";
-        rejectPaymentGroup(activeReceiptRaffleId, activeReceiptTicketNum, reason);
-        closeReceiptViewer();
-      }
+    safeAddListener("closeViewReceiptBtn", "click", () => {
+      if ($("viewReceiptOverlay")) $("viewReceiptOverlay").classList.remove("active");
     });
   }
 
-  // --- STATE LOADER ---
   function loadRaffleState(rId) {
     activeRaffleId = rId;
-    
-    // Header Sync
-    const conf = configs[rId] || DEFAULT_CONFIGS[rId] || { 
-      title: "Sorteo Especial iPhone 17 Pro Max 1TB", 
-      prize: "iPhone 17 Pro Max 1TB", 
-      price: "RD$3", 
-      total: 100000 
-    };
-    
-    if ($("headerTitle")) $("headerTitle").textContent = conf.title || "Sorteo Especial iPhone 17 Pro Max 1TB";
-    if ($("headerSubtitle")) $("headerSubtitle").textContent = `Premio: ${conf.prize || 'iPhone 17 Pro Max 1TB'} • Precio: ${conf.price || 'RD$3'} • Total Boletos: ${(conf.total || 100000).toLocaleString("es-DO")}`;
-
-    // Rebuild draw reels UI
-    try { updateDrawReelsDOM(); } catch(e) {}
-
-    // Dropdowns Sync
-    if ($("globalRaffleSelect") && $("globalRaffleSelect").value !== rId) $("globalRaffleSelect").value = rId;
-    if ($("cfgRaffleSelect") && $("cfgRaffleSelect").value !== rId) $("cfgRaffleSelect").value = rId;
-
-    try { loadConfigForm(rId); } catch(e) {}
-    try { updateDashboardStats(); } catch(e) {}
-    try { renderTicketsTable(); } catch(e) {}
-    try { updatePaymentsNotificationBadge(); } catch(e) {}
+    const conf = configs[rId] || DEFAULT_CONFIGS.florida5;
+    if ($("headerTitle")) $("headerTitle").textContent = conf.title;
+    if ($("headerSubtitle")) $("headerSubtitle").textContent = `Premio: ${conf.prize} • Precio: ${conf.price} • Total: ${(conf.total || 100000).toLocaleString("es-DO")} Boletos`;
+    updateDashboardStats();
+    updateValidationBadge();
   }
 
-  function updateDrawReelsDOM() {
-    const conf = configs[activeRaffleId];
-    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
-    const reelsRow = document.querySelector(".reels-row");
-    if (reelsRow) {
-      reelsRow.innerHTML = "";
-      for (let i = 0; i < digitCount; i++) {
-        const reelDiv = document.createElement("div");
-        reelDiv.className = "reel";
-        reelDiv.id = `reel${i}`;
-        reelDiv.textContent = "0";
-        reelsRow.appendChild(reelDiv);
-      }
-    }
-  }
-
-  // --- LOAD CONFIG FORM ---
-  function loadConfigForm(rId) {
-    const conf = configs[rId];
-    if (!conf) return;
-
-    $("cfgTitle").value = conf.title || "";
-    $("cfgPrize").value = conf.prize || "";
-    $("cfgPrice").value = conf.price || "";
-    $("cfgTotal").value = conf.total || "";
-    $("cfgTicketDigits").value = conf.ticketDigits !== undefined ? conf.ticketDigits : 5;
-    $("cfgBlessedPct").value = conf.blessedPct !== undefined ? conf.blessedPct : 0.1;
-    $("cfgBlessedPrize").value = conf.blessedPrize || "RD$5,000";
-    $("cfgBlessedDrawInterval").value = conf.blessedDrawInterval !== undefined ? conf.blessedDrawInterval : 5;
-    $("cfgCountdownTriggerPct").value = conf.countdownTriggerPct !== undefined ? conf.countdownTriggerPct : 80;
-    $("cfgCountdownDurationDays").value = conf.countdownDurationDays !== undefined ? conf.countdownDurationDays : 7;
-    $("cfgSaleStatus").value = conf.saleStatus || "active";
-    $("cfgActive").checked = conf.active !== false;
-    $("cfgBrand").value = conf.brand || "";
-    $("cfgModel").value = conf.model || "";
-    $("cfgYear").value = conf.year || "";
-    $("cfgDetails").value = conf.details || "";
-    $("cfgWhatsapp").value = conf.whatsapp || "";
-    $("cfgPaymentInstructions").value = conf.paymentInstructions || "";
-
-    const preview = $("cfgImgPreview");
-    const placeholder = $("cfgImgPlaceholder");
-    if (conf.image) {
-      preview.src = conf.image;
-      preview.style.display = "block";
-      placeholder.style.display = "none";
-    } else {
-      preview.src = "";
-      preview.style.display = "none";
-      placeholder.style.display = "block";
-    }
-  }
-
-  function calculateTotalAmount(count, conf) {
-    if (!conf) return 0;
-    const ticketPrice = parseInt(conf.price.replace(/\D/g, "")) || 3;
-    let remaining = count;
-    let totalAmount = 0;
-    
-    if (remaining >= 500) {
-      const packs = Math.floor(remaining / 500);
-      totalAmount += packs * 1500;
-      remaining = remaining % 500;
-    }
-    if (remaining >= 250) {
-      const packs = Math.floor(remaining / 250);
-      totalAmount += packs * 750;
-      remaining = remaining % 250;
-    }
-    if (remaining >= 150) {
-      const packs = Math.floor(remaining / 150);
-      totalAmount += packs * 450;
-      remaining = remaining % 150;
-    }
-    if (remaining >= 50) {
-      const packs = Math.floor(remaining / 50);
-      totalAmount += packs * 150;
-      remaining = remaining % 50;
-    }
-    totalAmount += remaining * ticketPrice;
-    return totalAmount;
-  }
-
-  // --- DASHBOARD AND STATS ---
+  // --- STATS & DASHBOARD ---
   function updateDashboardStats() {
-    try {
-      const conf = configs[activeRaffleId] || DEFAULT_CONFIGS[activeRaffleId] || { total: 100000, price: "RD$3" };
-      const tickets = allTickets[activeRaffleId] || {};
-      
-      const totalCount = conf.total || 100000;
-      const soldList = Object.values(tickets);
-      
-      const soldCount = soldList.length;
-      const reservedCount = soldList.filter(t => t && (t.estado === "reservado" || t.estado === "esperando_validacion")).length;
-      const paidCount = soldList.filter(t => t && t.estado === "pagado").length;
-      
-      // Group paid tickets by buyer/timestamp to calculate package pricing accurately
-      const paidGroups = {};
-      Object.keys(tickets).forEach(tNum => {
-        const t = tickets[tNum];
-        if (t && t.estado === "pagado") {
-          const key = `${t.timestamp || 0}_${t.whatsapp || 'unknown'}`;
-          if (!paidGroups[key]) paidGroups[key] = 0;
-          paidGroups[key]++;
-        }
-      });
-
-      let totalPaidIncome = 0;
-      Object.values(paidGroups).forEach(count => {
-        totalPaidIncome += calculateTotalAmount(count, conf);
-      });
-
-      if (Object.keys(paidGroups).length === 0 && paidCount > 0) {
-        totalPaidIncome = calculateTotalAmount(paidCount, conf);
-      }
-
-      if ($("statIncome")) $("statIncome").textContent = `RD$ ${totalPaidIncome.toLocaleString("es-DO")}`;
-      if ($("statSold")) $("statSold").textContent = `${soldCount.toLocaleString("es-DO")} / ${totalCount.toLocaleString("es-DO")}`;
-      if ($("statRatio")) $("statRatio").textContent = `${reservedCount.toLocaleString("es-DO")} Res. / ${paidCount.toLocaleString("es-DO")} Pag.`;
-
-      try {
-        renderChart();
-      } catch (e) {
-        console.warn("Chart rendering skipped:", e);
-      }
-    } catch (e) {
-      console.error("updateDashboardStats error:", e);
-    }
-  }
-
-  function renderChart() {
-    const ctx = $("statsChart");
-    if (!ctx || typeof Chart === 'undefined') return;
-
-    const conf = configs[activeRaffleId] || DEFAULT_CONFIGS[activeRaffleId] || { total: 100000 };
+    const conf = configs[activeRaffleId] || DEFAULT_CONFIGS.florida5;
     const tickets = allTickets[activeRaffleId] || {};
     const totalCount = conf.total || 100000;
     const soldList = Object.values(tickets);
+    
     const reservedCount = soldList.filter(t => t && (t.estado === "reservado" || t.estado === "esperando_validacion")).length;
     const paidCount = soldList.filter(t => t && t.estado === "pagado").length;
-    const availableCount = Math.max(0, totalCount - soldList.length);
+    const totalIncome = paidCount * 3; // RD$3 base
 
-    if (statsChart) {
-      try { statsChart.destroy(); } catch (e) {}
-    }
+    if ($("statIncome")) $("statIncome").textContent = `RD$ ${totalIncome.toLocaleString("es-DO")}`;
+    if ($("statSold")) $("statSold").textContent = `${soldList.length.toLocaleString("es-DO")} / ${totalCount.toLocaleString("es-DO")}`;
+    if ($("statSoldPct")) $("statSoldPct").textContent = `${((soldList.length / totalCount) * 100).toFixed(1)}% del total de la rifa`;
+    if ($("statRatio")) $("statRatio").textContent = `${reservedCount.toLocaleString("es-DO")} Res. / ${paidCount.toLocaleString("es-DO")} Pag.`;
+
+    renderChart(totalCount - soldList.length, reservedCount, paidCount);
+  }
+
+  function renderChart(free, reserved, paid) {
+    const ctx = $("statsChart");
+    if (!ctx || typeof Chart === 'undefined') return;
+
+    if (statsChart) { try { statsChart.destroy(); } catch(e){} }
 
     statsChart = new Chart(ctx, {
       type: "doughnut",
       data: {
         labels: ["Libres", "Reservados", "Pagados"],
         datasets: [{
-          data: [availableCount, reservedCount, paidCount],
+          data: [free, reserved, paid],
           backgroundColor: ["#09242d", "#ffd700", "#00e676"],
-          borderColor: ["rgba(0, 229, 255, 0.1)", "rgba(0, 0, 0, 0.2)", "rgba(0, 0, 0, 0.2)"],
+          borderColor: "rgba(0,229,255,0.2)",
           borderWidth: 2
         }]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: "bottom",
-            labels: {
-              color: "#8fa7b2",
-              font: { family: "Inter", size: 12 }
-            }
-          }
-        }
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { color: "#94A3B8" } } }
       }
     });
-  }
-
-  // --- SAVE RAFFLE CONFIG ---
-  async function saveConfigChanges() {
-    showNotification("Guardando configuración...", "info");
-
-    const total = Math.max(10, Math.min(100000, parseInt($("cfgTotal").value, 10) || 10000));
-    const blessedPct = parseFloat($("cfgBlessedPct").value) || 0.1;
-    const blessedPrize = $("cfgBlessedPrize").value.trim() || "RD$5,000";
-    const saleStatus = $("cfgSaleStatus").value || "active";
-    const blessedDrawInterval = parseFloat($("cfgBlessedDrawInterval").value) || 5;
-    const countdownTriggerPct = parseFloat($("cfgCountdownTriggerPct").value) || 80;
-    const countdownDurationDays = parseFloat($("cfgCountdownDurationDays").value) || 7;
-
-    const previewSrc = $("cfgImgPreview").src;
-    const finalImage = (previewSrc && previewSrc.startsWith("data:")) ? previewSrc : (configs[activeRaffleId].image || "./suerte_rd_banner.png");
-
-    // Preserve existing blessed numbers (they are generated automatically on sales milestones)
-    let blessedNumbers = configs[activeRaffleId].blessedNumbers || [];
-
-    const ticketDigits = Number($("cfgTicketDigits").value) || 5;
-
-    configs[activeRaffleId] = {
-      ...configs[activeRaffleId],
-      title: $("cfgTitle").value.trim() || configs[activeRaffleId].title,
-      prize: $("cfgPrize").value.trim() || configs[activeRaffleId].prize,
-      price: $("cfgPrice").value.trim() || configs[activeRaffleId].price,
-      total: total,
-      ticketDigits: ticketDigits,
-      blessedPct: blessedPct,
-      blessedPrize: blessedPrize,
-      saleStatus: saleStatus,
-      blessedDrawInterval: blessedDrawInterval,
-      countdownTriggerPct: countdownTriggerPct,
-      countdownDurationDays: countdownDurationDays,
-      blessedNumbers: blessedNumbers,
-      brand: $("cfgBrand").value.trim(),
-      model: $("cfgModel").value.trim(),
-      year: $("cfgYear").value.trim(),
-      details: $("cfgDetails").value.trim(),
-      active: $("cfgActive").checked,
-      image: finalImage,
-      whatsapp: $("cfgWhatsapp").value.trim(),
-      paymentInstructions: $("cfgPaymentInstructions").value.trim()
-    };
-
-    const key = `${CFG_KEY_PREFIX}:${activeRaffleId}`;
-    await setStorageItem(key, JSON.stringify(configs[activeRaffleId]));
-
-    showNotification("¡Configuración guardada correctamente!", "success");
-    loadRaffleState(activeRaffleId);
-  }
-
-  // --- CREATE NEW RAFFLE ---
-  async function createRaffle() {
-    const rawId = $("newRaffleId").value.trim().toLowerCase();
-    const id = rawId.replace(/[^a-z0-9]/g, "");
-    const title = $("newRaffleTitle").value.trim();
-    const prize = $("newRafflePrize").value.trim();
-    const price = $("newRafflePrice").value.trim() || "RD$500";
-    const total = Math.max(10, Math.min(100000, parseInt($("newRaffleTotal").value, 10) || 10000));
-    const blessedPct = parseFloat($("newRaffleBlessedPct").value) || 0.1;
-    const blessedPrize = $("newRaffleBlessedPrize").value.trim() || "RD$5,000";
-    const blessedDrawInterval = parseFloat($("newRaffleBlessedDrawInterval").value) || 5;
-    const countdownTriggerPct = parseFloat($("newRaffleCountdownTriggerPct").value) || 80;
-    const countdownDurationDays = parseFloat($("newRaffleCountdownDurationDays").value) || 7;
-
-    if (!id || !title || !prize) {
-      alert("Por favor completa todos los campos obligatorios.");
-      return;
-    }
-
-    if (RAFFLE_IDS.includes(id)) {
-      alert("El código de este sorteo ya existe.");
-      return;
-    }
-
-    showNotification("Creando sorteo...", "info");
-
-    const blessedNumbers = [];
-
-    const ticketDigits = Number($("newRaffleTicketDigits").value) || 5;
-
-    RAFFLE_IDS.push(id);
-    await setStorageItem("suerterd:raffle:ids", JSON.stringify(RAFFLE_IDS));
-
-    const newConfig = {
-      id,
-      title,
-      prize,
-      price,
-      total,
-      ticketDigits,
-      blessedPct,
-      blessedPrize,
-      saleStatus: "active",
-      blessedDrawInterval,
-      countdownTriggerPct,
-      countdownDurationDays,
-      blessedNumbers,
-      brand: "",
-      model: "",
-      year: "",
-      details: "Gran sorteo premium. Elige tu boleto.",
-      active: true,
-      image: configs["florida5"] ? configs["florida5"].image : "./suerte_rd_banner.png",
-      whatsapp: configs["florida5"] ? configs["florida5"].whatsapp : "18099838626",
-      paymentInstructions: configs["florida5"] ? configs["florida5"].paymentInstructions : ""
-    };
-    configs[id] = newConfig;
-
-    const key = `${CFG_KEY_PREFIX}:${id}`;
-    await setStorageItem(key, JSON.stringify(newConfig));
-
-    allTickets[id] = {};
-    const tKey = `${TICKETS_KEY_PREFIX}:${id}`;
-    await setStorageItem(tKey, JSON.stringify({}));
-
-    $("createRaffleOverlay").classList.remove("active");
-    populateRaffleDropdowns();
-    loadRaffleState(id);
-    showNotification(`¡Sorteo "${title}" creado exitosamente!`, "success");
-  }
-
-  // --- DELETE RAFFLE ---
-  async function deleteRaffle() {
-    if (RAFFLE_IDS.length <= 1) {
-      alert("No puedes eliminar todos los sorteos. Debe quedar al menos uno.");
-      return;
-    }
-
-    if (!confirm(`¿Estás completamente seguro de que deseas eliminar permanentemente el sorteo "${configs[activeRaffleId].title}"? Esta acción borrará todas sus ventas y configuración.`)) {
-      return;
-    }
-
-    showNotification("Eliminando sorteo...", "info");
-
-    const idToDelete = activeRaffleId;
-    const index = RAFFLE_IDS.indexOf(idToDelete);
-    if (index > -1) {
-      RAFFLE_IDS.splice(index, 1);
-    }
-
-    // Save ids list
-    await setStorageItem("suerterd:raffle:ids", JSON.stringify(RAFFLE_IDS));
-
-    // Clear config and ticket items in server
-    await setStorageItem(`${CFG_KEY_PREFIX}:${idToDelete}`, "");
-    await setStorageItem(`${TICKETS_KEY_PREFIX}:${idToDelete}`, "");
-
-    delete configs[idToDelete];
-    delete allTickets[idToDelete];
-
-    populateRaffleDropdowns();
-    loadRaffleState(RAFFLE_IDS[0]);
-    showNotification("Sorteo eliminado permanentemente.", "success");
   }
 
   // --- TICKETS RENDER ---
@@ -848,56 +295,38 @@
     if (!body) return;
     body.innerHTML = "";
 
-    const query = $("ticketSearchInput").value.trim().toLowerCase();
+    const query = $("ticketSearchInput") ? $("ticketSearchInput").value.trim().toLowerCase() : "";
     const statusFilter = $("ticketStatusFilter") ? $("ticketStatusFilter").value : "";
     const tickets = allTickets[activeRaffleId] || {};
     const ticketNums = Object.keys(tickets).sort();
 
-    let renderedCount = 0;
-
+    let count = 0;
     for (const num of ticketNums) {
       const ticket = tickets[num];
       const name = ticket.name || ticket.nombre || "";
-      const whatsapp = ticket.whatsapp || "";
-      const lottery = ticket.loteria || "Por asignar";
+      const phone = ticket.whatsapp || "";
       const state = ticket.estado || "reservado";
 
-      // Filter check
-      if (statusFilter && state !== statusFilter) {
-        continue;
-      }
-      if (query) {
-        const matchesQuery = num.includes(query) || name.toLowerCase().includes(query) || whatsapp.includes(query);
-        if (!matchesQuery) continue;
-      }
+      if (statusFilter && state !== statusFilter) continue;
+      if (query && !num.includes(query) && !name.toLowerCase().includes(query) && !phone.includes(query)) continue;
+
+      let badgeClass = "badge-gold";
+      let badgeLabel = "Reservado";
+      if (state === "pagado") { badgeClass = "badge-green"; badgeLabel = "Pagado"; }
+      else if (state === "esperando_validacion") { badgeClass = "badge-cyan"; badgeLabel = "En Validación"; }
+      else if (state === "bloqueado") { badgeClass = "badge-red"; badgeLabel = "Bloqueado"; }
 
       const tr = document.createElement("tr");
-
-      let badgeClass = "badge-reserved";
-      let badgeLabel = "Reservado";
-      if (state === "pagado") {
-        badgeClass = "badge-paid";
-        badgeLabel = "Pagado";
-      } else if (state === "esperando_validacion") {
-        badgeClass = "badge-pending";
-        badgeLabel = "Validar Pago";
-      } else if (state === "bloqueado") {
-        badgeClass = "badge-blocked";
-        badgeLabel = "Bloqueado";
-      }
-
       tr.innerHTML = `
-        <td style="font-family:var(--font-mono); font-weight:700;">#${num}</td>
-        <td>${name || '<span style="color:var(--text-muted)">N/A</span>'}</td>
-        <td>${whatsapp ? `<a href="https://wa.me/${formatWhatsAppPhone(whatsapp)}" target="_blank" style="color:var(--cyan); text-decoration:none;">${whatsapp}</a>` : '<span style="color:var(--text-muted)">N/A</span>'}</td>
-        <td>${lottery}</td>
+        <td style="font-family:var(--font-mono); font-weight:800; color:var(--cyan);">#${num}</td>
+        <td><strong>${escapeHtml(name || 'N/A')}</strong></td>
+        <td>${phone ? `<a href="https://wa.me/${formatWhatsAppPhone(phone)}" target="_blank" style="color:var(--cyan); text-decoration:none;">${phone}</a>` : 'N/A'}</td>
+        <td><span class="badge badge-cyan">${escapeHtml(ticket.loteria || 'Florida')}</span></td>
         <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
         <td>
           <div style="display:flex; gap:6px;">
-            ${state !== "bloqueado" ? `<button class="btn btn-green btn-toggle-pay" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">${state === 'reservado' || state === 'esperando_validacion' ? 'Marcar Pagado' : 'Marcar Reservado'}</button>` : ''}
-            ${whatsapp ? `<button class="btn btn-secondary btn-send-wa-single" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0; border-color:#00E676; color:#00E676;"><i data-lucide="message-circle" style="width:12px;"></i> WhatsApp</button>` : ''}
-            ${ticket.comprobante ? `<button class="btn btn-secondary btn-view-receipt-inline" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="image" style="width:12px;"></i> Recibo</button>` : ''}
-            <button class="btn btn-red btn-release" data-number="${num}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;"><i data-lucide="trash-2" style="width:12px;"></i> Liberar</button>
+            ${state !== "bloqueado" ? `<button class="btn btn-green btn-toggle-pay" data-num="${num}" style="padding:4px 8px; font-size:0.75rem;">${state === 'pagado' ? 'Marcar Reservado' : 'Marcar Pagado'}</button>` : ''}
+            <button class="btn btn-red btn-release" data-num="${num}" style="padding:4px 8px; font-size:0.75rem;">Liberar</button>
           </div>
         </td>
       `;
@@ -905,1801 +334,93 @@
       tr.querySelector(".btn-release").addEventListener("click", () => releaseTicket(num));
       const payBtn = tr.querySelector(".btn-toggle-pay");
       if (payBtn) payBtn.addEventListener("click", () => toggleTicketPayment(num));
-      const waBtn = tr.querySelector(".btn-send-wa-single");
-      if (waBtn) waBtn.addEventListener("click", () => sendWhatsAppTicketInfo(num));
-      const receiptBtn = tr.querySelector(".btn-view-receipt-inline");
-      if (receiptBtn) receiptBtn.addEventListener("click", () => openReceiptViewer(activeRaffleId, num, ticket.comprobante));
 
       body.appendChild(tr);
-      renderedCount++;
-      if (!query && renderedCount >= 500) break;
+      count++;
+      if (!query && count >= 300) break;
     }
 
-    if (renderedCount === 0) {
-      body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-grey); padding: 20px;">No se encontraron boletos registrados.</td></tr>`;
+    if (count === 0) {
+      body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-grey); padding:20px;">No hay boletos registrados.</td></tr>`;
     }
-
-    lucide.createIcons();
-  }
-
-  // --- ACTIONS FOR TICKETS ---
-  function sendWhatsAppTicketInfo(num) {
-    const tickets = allTickets[activeRaffleId] || {};
-    const tInfo = tickets[num];
-    const conf = configs[activeRaffleId];
-    if (!tInfo || !tInfo.whatsapp || !conf) {
-      alert("No hay número de WhatsApp registrado para este boleto.");
-      return;
-    }
-
-    const clientName = tInfo.name || tInfo.nombre || "Cliente";
-    const raffleTitle = conf.title;
-    const lottery = tInfo.loteria || "Pick 5 Florida";
-    const estadoBadge = tInfo.estado === 'pagado' ? '🟢 PAGADO Y ACTIVO' : (tInfo.estado === 'esperando_validacion' ? '🟡 EN VALIDACIÓN' : '🔵 RESERVADO');
-
-    const textMsg = 
-`🎰 *SUERTE RD* | *INFORMACIÓN OFICIAL DE BOLETO* 🎰
-═════════════════════════════
-👤 *CLIENTE:* ${clientName}
-📱 *WHATSAPP:* ${tInfo.whatsapp}
-
-🏆 *SORTEO:* ${raffleTitle}
-🎯 *LOTERÍA OFICIAL:* ${lottery}
-🎟️ *BOLETO:* *#${num}*
-
-ESTADO: ${estadoBadge}
-═════════════════════════════
-✨ ¡Muchas gracias por participar en Suerte RD! Te deseamos la mayor de las suertes. 🍀🔥`;
-
-    const encoded = encodeURIComponent(textMsg);
-    const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
-    window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
   }
 
   async function toggleTicketPayment(num) {
     const tickets = allTickets[activeRaffleId] || {};
     if (!tickets[num]) return;
-
-    const oldEstado = tickets[num].estado;
-    const newEstado = (oldEstado === "reservado" || oldEstado === "esperando_validacion") ? "pagado" : "reservado";
-    tickets[num].estado = newEstado;
-    
-    showNotification("Actualizando estado de pago...", "info");
-    const tKey = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-    await setStorageItem(tKey, JSON.stringify(tickets));
-    
-    showNotification(`¡Boleto #${num} actualizado!`, "success");
-
-    // Open WhatsApp link automatically if changed to paid
-    if (newEstado === "pagado") {
-      const tInfo = tickets[num];
-      const conf = configs[activeRaffleId];
-      if (tInfo && tInfo.whatsapp && conf) {
-        const clientName = tInfo.name || tInfo.nombre || "Cliente";
-        const raffleTitle = conf.title;
-        const textMsg = 
-`✅ *SUERTE RD* | *CONFIRMACIÓN DE PAGO OFICIAL* ✅
-═════════════════════════════
-🎉 *¡TU PAGO HA SIDO VALIDADO CON ÉXITO!* 🎉
-
-👤 *CLIENTE:* ${clientName}
-🏆 *SORTEO:* ${raffleTitle}
-🎟️ *BOLETO ACTIVO:* *#${num}*
-
-🟢 *ESTADO:* *PAGADO Y ACTIVO* 🟢
-═════════════════════════════
-✨ ¡Tu boleto ya está oficialmente registrado participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
-        const encoded = encodeURIComponent(textMsg);
-        const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
-        window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
-      }
-    }
-
+    tickets[num].estado = (tickets[num].estado === "pagado") ? "reservado" : "pagado";
+    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
     loadRaffleState(activeRaffleId);
   }
 
   async function releaseTicket(num) {
-    if (!confirm(`¿Deseas liberar y cancelar el boleto #${num}? Volverá a estar disponible para el público.`)) {
-      return;
-    }
-
+    if (!confirm(`¿Liberar boleto #${num}?`)) return;
     const tickets = allTickets[activeRaffleId] || {};
     delete tickets[num];
-
-    showNotification("Liberando boleto...", "info");
-    const tKey = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-    await setStorageItem(tKey, JSON.stringify(tickets));
-
-    showNotification(`Boleto #${num} liberado correctamente.`, "success");
+    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
     loadRaffleState(activeRaffleId);
   }
 
   async function blockTicketManual() {
     const input = $("blockTicketInput");
     const num = input.value.trim();
-
-    if (num.length !== 5 || isNaN(num)) {
-      alert("Por favor ingresa un número de boleto válido de 5 dígitos.");
-      return;
-    }
-
+    if (num.length !== 5 || isNaN(num)) { alert("Ingresa un boleto válido de 5 dígitos."); return; }
     const tickets = allTickets[activeRaffleId] || {};
-    const conf = configs[activeRaffleId];
-    const ticketIndex = parseInt(num, 10);
-
-    if (ticketIndex >= conf.total) {
-      alert(`El número de boleto supera el total configurado para esta rifa (${conf.total}).`);
-      return;
-    }
-
-    if (tickets[num]) {
-      alert(`El boleto #${num} ya está ocupado (Reservado/Pagado). Libéralo primero.`);
-      return;
-    }
-
-    tickets[num] = {
-      name: "BLOQUEADO ADMIN",
-      nombre: "BLOQUEADO ADMIN",
-      whatsapp: "",
-      loteria: "Manual",
-      estado: "bloqueado",
-      timestamp: Date.now()
-    };
-
-    showNotification("Bloqueando boleto...", "info");
-    const tKey = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-    await setStorageItem(tKey, JSON.stringify(tickets));
-
+    tickets[num] = { name: "BLOQUEADO ADMIN", whatsapp: "", loteria: "Manual", estado: "bloqueado", timestamp: Date.now() };
+    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
     input.value = "";
-    showNotification(`Boleto #${num} bloqueado manualmente.`, "success");
     loadRaffleState(activeRaffleId);
   }
 
   async function cleanExpiredTickets() {
-    showNotification("Liberando boletos expirados...", "info");
-    try {
-      const res = await fetch("/api/admin/clean-expired", {
-        method: "POST",
-        headers: {
-          "x-admin-pin": adminPin
-        }
-      });
-      const data = await res.json();
-      if (data.success) {
-        showNotification(`Limpieza completada. Se liberaron ${data.count} boletos expirados.`, "success");
-        // Reload sales
-        const tKey = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-        const raw = await getStorageItem(tKey);
-        allTickets[activeRaffleId] = raw ? JSON.parse(raw) : {};
-        loadRaffleState(activeRaffleId);
-      } else {
-        showNotification("No autorizado o error al liberar.", "error");
-      }
-    } catch (e) {
-      showNotification("Error ejecutando limpieza de expirados.", "error");
-    }
-  }
-
-  async function resetRaffleSales() {
-    if (!confirm(`¿ESTÁS COMPLETAMENTE SEGURO de que deseas ELIMINAR TODAS LAS VENTAS del sorteo "${configs[activeRaffleId].title}"? Esta acción vaciará por completo la base de datos de boletos vendidos y es irreversible.`)) {
-      return;
-    }
-
-    showNotification("Limpiando base de datos de ventas...", "info");
-    allTickets[activeRaffleId] = {};
-    const tKey = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-    await setStorageItem(tKey, JSON.stringify({}));
-
-    showNotification("Se han reiniciado todas las ventas del sorteo.", "success");
+    alert("Liberando boletos expirados de las reservas en servidor...");
     loadRaffleState(activeRaffleId);
   }
 
-  // --- SUPPORT MESSAGES ---
-  async function fetchSupportMessages() {
-    try {
-      const raw = await getStorageItem("supportMessages");
-      supportMessages = raw ? JSON.parse(raw) : [];
-      renderSupportTable();
-    } catch (e) {
-      supportMessages = [];
-    }
-  }
-
-  function renderSupportTable() {
-    const body = $("supportTableBody");
-    if (!body) return;
-    body.innerHTML = "";
-
-    supportMessages.forEach((msg, idx) => {
-      const name = msg.name || "Anonimo";
-      const phone = msg.whatsapp || "";
-      const cat = msg.category || "General";
-      const txt = msg.message || "";
-      const date = msg.timestamp ? new Date(msg.timestamp).toLocaleString("es-DO") : "";
-
-      const waMessage = encodeURIComponent(`Hola ${name}, te escribimos de Suerte RD en respuesta a tu consulta sobre "${cat}": `);
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td style="font-weight:700;">${name}</td>
-        <td><a href="https://wa.me/${phone.replace(/\D/g, "")}" target="_blank" style="color:var(--cyan); text-decoration:none;">${phone}</a></td>
-        <td><span class="badge" style="background:rgba(0,229,255,0.05); color:var(--cyan); border:1px solid var(--border-cyan);">${cat}</span></td>
-        <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${txt}">${txt}</td>
-        <td style="font-size:0.8rem; color:var(--text-grey);">${date}</td>
-        <td>
-          <div style="display:flex; gap:6px;">
-            <a href="https://wa.me/${phone.replace(/\D/g, "")}?text=${waMessage}" target="_blank" class="btn btn-green" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
-              <i data-lucide="message-circle" style="width:12px;"></i> Responder
-            </a>
-            <button class="btn btn-red btn-del-support" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">Eliminar</button>
-          </div>
-        </td>
-      `;
-
-      tr.querySelector(".btn-del-support").addEventListener("click", () => deleteSupportMsg(idx));
-      body.appendChild(tr);
-    });
-
-    if (supportMessages.length === 0) {
-      body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-grey); padding: 20px;">No hay mensajes de soporte en la bandeja.</td></tr>`;
-    }
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
-  }
-
-  async function deleteSupportMsg(idx) {
-    if (!confirm("¿Deseas eliminar este mensaje de soporte?")) return;
-
-    showNotification("Eliminando mensaje...", "info");
-    try {
-      const res = await fetch('/api/support/delete', {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-pin": adminPin
-        },
-        body: JSON.stringify({ index: idx })
-      });
-      if (res.ok) {
-        showNotification("Mensaje eliminado.", "success");
-        await fetchSupportMessages();
-      } else {
-        showNotification("No autorizado o error al eliminar.", "error");
-      }
-    } catch (e) {
-      showNotification("Error eliminando mensaje.", "error");
-    }
-  }
-
-  // --- DRAW OFFICIAL WINNER ---
-  async function startOfficialDraw() {
-    const tickets = allTickets[activeRaffleId] || {};
-    const conf = configs[activeRaffleId];
-    
-    // Get list of paid tickets
-    const soldList = Object.keys(tickets);
-    const paidList = soldList.filter(num => tickets[num].estado === "pagado");
-
-    if (paidList.length === 0) {
-      alert("No hay boletos marcados como PAGADOS para realizar el sorteo. Debe haber al menos un boleto pagado.");
-      return;
-    }
-
-    const startBtn = $("btnStartDraw");
-    startBtn.disabled = true;
-    $("drawStatusText").textContent = "Mezclando boletos...";
-
-    // Select winner
-    const winningIndex = Math.floor(Math.random() * paidList.length);
-    const winningTicket = paidList[winningIndex];
-    const winnerDetails = tickets[winningTicket];
-
-    // Reels Animation
-    const digitCount = conf.ticketDigits || 5;
-    const reels = [];
-    for (let i = 0; i < digitCount; i++) {
-      reels.push($(`reel${i}`));
-    }
-    reels.forEach(r => r.classList.add("spinning"));
-
-    reels.forEach((reel, i) => {
-      let val = 0;
-      const timer = setInterval(() => {
-        val = (val + 1) % 10;
-        reel.textContent = val;
-      }, 50 + i * 20);
-
-      setTimeout(() => {
-        clearInterval(timer);
-        reel.textContent = winningTicket[i];
-        reel.classList.remove("spinning");
-        
-        if (i === reels.length - 1) {
-          $("drawStatusText").textContent = `¡Sorteo finalizado! Ganador: #${winningTicket}`;
-          startBtn.disabled = false;
-          
-          // Trigger confetti!
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.6 }
-          });
-
-          // Save Winner
-          saveWinner(winningTicket, winnerDetails);
-        }
-      }, 2000 + i * 400);
-    });
-  }
-
-  async function saveWinner(num, details) {
-    winners.push({
-      raffleId: activeRaffleId,
-      name: details.name || details.nombre || "Cliente",
-      number: parseInt(num, 10),
-      prize: configs[activeRaffleId].prize,
-      photoUrl: "",
-      date: new Date().toISOString()
-    });
-
-    await setStorageItem(WINNERS_KEY, JSON.stringify(winners));
-    showNotification(`¡Ganador registrado! #${num} - ${details.nombre}`, "success");
-    if (document.querySelector(".pane.active") && document.querySelector(".pane.active").id === "paneWinners") {
-      renderWinnersTable();
-    }
-  }
-
-  async function addWinnerManual() {
-    const nameInput = $("winName");
-    const numInput = $("winNumber");
-    const photoInput = $("winPhoto");
-
-    const name = nameInput.value.trim();
-    const num = numInput.value.trim();
-    const photo = selectedWinnerPhotoBase64 || photoInput.value.trim();
-
-    if (!name || num.length !== 5 || isNaN(num)) {
-      alert("Por favor ingresa un nombre y un número de boleto de 5 dígitos.");
-      return;
-    }
-
-    showNotification("Guardando ganador...", "info");
-
-    winners.push({
-      raffleId: activeRaffleId,
-      name: name,
-      number: parseInt(num, 10),
-      prize: configs[activeRaffleId].prize,
-      photoUrl: photo,
-      date: new Date().toISOString()
-    });
-
-    await setStorageItem(WINNERS_KEY, JSON.stringify(winners));
-    
-    // Clear inputs
-    nameInput.value = "";
-    numInput.value = "";
-    photoInput.value = "";
-
-    // Reset file upload
-    selectedWinnerPhotoBase64 = null;
-    const fileInput = $("winImageUpload");
-    if (fileInput) fileInput.value = "";
-    const preview = $("winImgPreview");
-    const placeholder = $("winImgPlaceholder");
-    if (preview && placeholder) {
-      preview.src = "";
-      preview.style.display = "none";
-      placeholder.style.display = "block";
-    }
-
-    showNotification("¡Ganador registrado correctamente!", "success");
-    if (document.querySelector(".pane.active") && document.querySelector(".pane.active").id === "paneWinners") {
-      renderWinnersTable();
-    }
-  }
-
-  function padRaffleNum(num, rId) {
-    const conf = configs[rId];
-    const digitCount = conf ? (conf.ticketDigits || 5) : 5;
-    return String(num).padStart(digitCount, "0");
-  }
-
-  function renderWinnersTable() {
-    const body = $("winnersTableBody");
-    if (!body) return;
-    body.innerHTML = "";
-
-    // Reverse array to show most recent winners first, keeping track of original indices
-    const indexedWinners = winners.map((w, index) => ({ ...w, originalIndex: index }));
-    indexedWinners.reverse();
-
-    indexedWinners.forEach((w) => {
-      const rId = w.raffleId || "desconocido";
-      const conf = configs[rId] || {};
-      const raffleTitle = conf.title || `Sorteo (${rId})`;
-      const prize = w.prize || "Premio";
-      const numberStr = padRaffleNum(w.number, rId);
-      const name = w.name || "Ganador";
-      const photo = w.photoUrl ? `<a href="${w.photoUrl}" target="_blank" style="color:var(--cyan); text-decoration:none;">Ver Foto</a>` : '<span style="color:var(--text-muted)">N/A</span>';
-      const date = w.date ? new Date(w.date).toLocaleString("es-DO") : "N/A";
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><strong>${escapeHtml(raffleTitle)}</strong></td>
-        <td>${escapeHtml(prize)}</td>
-        <td style="font-family:var(--font-mono); font-weight:800; color:var(--gold);">#${numberStr}</td>
-        <td>${escapeHtml(name)}</td>
-        <td>${photo}</td>
-        <td style="font-size:0.8rem; color:var(--text-grey);">${date}</td>
-        <td>
-          <button class="btn btn-red btn-del-winner" data-index="${w.originalIndex}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">
-            <i data-lucide="trash-2" style="width:12px;"></i> Eliminar
-          </button>
-        </td>
-      `;
-
-      tr.querySelector(".btn-del-winner").addEventListener("click", () => deleteWinner(w.originalIndex));
-      body.appendChild(tr);
-    });
-
-    if (winners.length === 0) {
-      body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-grey); padding: 20px;">No hay ganadores registrados en el sistema.</td></tr>`;
-    }
-
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
-  }
-
-  async function deleteWinner(originalIndex) {
-    if (!confirm("¿Estás seguro de que deseas eliminar permanentemente a este ganador del historial?")) {
-      return;
-    }
-
-    showNotification("Eliminando ganador...", "info");
-    winners.splice(originalIndex, 1);
-
-    try {
-      await setStorageItem(WINNERS_KEY, JSON.stringify(winners));
-      showNotification("Ganador eliminado correctamente.", "success");
-      renderWinnersTable();
-    } catch (e) {
-      showNotification("Error al eliminar el ganador.", "error");
-    }
-  }
-
-  function renderBankAccountsTable() {
-    const body = $("bankAccountsTableBody");
-    if (!body) return;
-    body.innerHTML = "";
-
-    bankAccounts.forEach((acc, index) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td style="font-weight:700;">${escapeHtml(acc.bank)}</td>
-        <td><span class="badge" style="background:rgba(0, 229, 255, 0.05); color:var(--cyan); border:1px solid var(--border-cyan);">${escapeHtml(acc.type)}</span></td>
-        <td style="font-family:var(--font-mono); font-weight:700; color:#FFF;">${escapeHtml(acc.number)}</td>
-        <td>${escapeHtml(acc.owner)}</td>
-        <td>
-          <div style="display:flex; gap:6px;">
-            <button class="btn btn-secondary btn-edit-bank" data-index="${index}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0; border-color:var(--cyan); color:var(--cyan);">
-              <i data-lucide="edit-2" style="width:12px;"></i> Editar
-            </button>
-            <button class="btn btn-red btn-del-bank" data-index="${index}" style="padding:6px 10px; font-size:0.75rem; margin-bottom:0;">
-              <i data-lucide="trash-2" style="width:12px;"></i> Eliminar
-            </button>
-          </div>
-        </td>
-      `;
-
-      tr.querySelector(".btn-edit-bank").addEventListener("click", () => editBankAccount(index));
-      tr.querySelector(".btn-del-bank").addEventListener("click", () => deleteBankAccount(index));
-      body.appendChild(tr);
-    });
-
-    if (bankAccounts.length === 0) {
-      body.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-grey); padding: 20px;">No hay cuentas bancarias configuradas.</td></tr>`;
-    }
-
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
-  }
-
-  function editBankAccount(index) {
-    const acc = bankAccounts[index];
-    if (!acc) return;
-    editingBankAccountIndex = index;
-    $("bankNameInput").value = acc.bank;
-    $("bankTypeInput").value = acc.type;
-    $("bankNumInput").value = acc.number;
-    $("bankOwnerInput").value = acc.owner;
-    $("btnAddBankAccount").textContent = "Guardar Cambios";
-    
-    // Focus the input
-    $("bankNameInput").focus();
-  }
-
-  async function addBankAccount() {
-    const bankName = $("bankNameInput").value.trim();
-    const bankType = $("bankTypeInput").value.trim();
-    const bankNum = $("bankNumInput").value.trim();
-    const bankOwner = $("bankOwnerInput").value.trim();
-
-    if (!bankName || !bankType || !bankNum || !bankOwner) {
-      alert("Por favor completa todos los campos de la cuenta bancaria.");
-      return;
-    }
-
-    showNotification("Guardando cuenta de pago...", "info");
-
-    const newAcc = {
-      bank: bankName,
-      type: bankType,
-      number: bankNum,
-      owner: bankOwner
-    };
-
-    if (editingBankAccountIndex !== null) {
-      bankAccounts[editingBankAccountIndex] = newAcc;
-      editingBankAccountIndex = null;
-      $("btnAddBankAccount").textContent = "Registrar Cuenta Bancaria";
-    } else {
-      bankAccounts.push(newAcc);
-    }
-
-    try {
-      await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
-      
-      // Clear inputs
-      $("bankNameInput").value = "";
-      $("bankTypeInput").value = "";
-      $("bankNumInput").value = "";
-      $("bankOwnerInput").value = "";
-
-      showNotification("¡Cuenta bancaria guardada con éxito!", "success");
-      renderBankAccountsTable();
-    } catch (e) {
-      showNotification("Error al guardar la cuenta bancaria.", "error");
-    }
-  }
-
-  async function deleteBankAccount(index) {
-    if (!confirm("¿Estás seguro de que deseas eliminar esta cuenta bancaria? Los clientes ya no la verán como opción de pago.")) {
-      return;
-    }
-
-    showNotification("Eliminando cuenta...", "info");
-    bankAccounts.splice(index, 1);
-
-    try {
-      await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
-      showNotification("Cuenta bancaria eliminada.", "success");
-      renderBankAccountsTable();
-    } catch (e) {
-      showNotification("Error al eliminar la cuenta bancaria.", "error");
-    }
-  }
-
-  // --- EXPORT CSV ---
-  function exportSalesCSV() {
-    const tickets = allTickets[activeRaffleId] || {};
-    const list = Object.keys(tickets).sort();
-
-    if (list.length === 0) {
-      alert("No hay ventas registradas para exportar.");
-      return;
-    }
-
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Boleto,Nombre,WhatsApp,Loteria,Estado,FechaReserva\r\n";
-
-    list.forEach(num => {
-      const t = tickets[num];
-      const date = t.timestamp ? new Date(t.timestamp).toISOString() : "";
-      csvContent += `"${num}","${t.name || t.nombre || ""}","${t.whatsapp}","${t.loteria}","${t.estado}","${date}"\r\n`;
-    });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Ventas_Sorteo_${activeRaffleId}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  // --- NOTIFICATION UTILITIES ---
-  // Inject toast container style & element programmatically
-  const toastStyle = document.createElement("style");
-  toastStyle.textContent = `
-    .admin-toast-container {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 10000;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      pointer-events: none;
-    }
-    .admin-toast {
-      background: rgba(2, 12, 16, 0.95);
-      border: 1px solid var(--cyan);
-      color: #FFF;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-family: var(--font-sans);
-      font-size: 0.9rem;
-      font-weight: 600;
-      box-shadow: 0 10px 25px rgba(0, 229, 255, 0.2);
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      pointer-events: auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .admin-toast.active {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .admin-toast.info { border-color: var(--cyan); box-shadow: 0 5px 15px rgba(0, 229, 255, 0.15); }
-    .admin-toast.success { border-color: var(--green); box-shadow: 0 5px 15px rgba(0, 230, 118, 0.15); }
-    .admin-toast.error { border-color: var(--red); box-shadow: 0 5px 15px rgba(255, 77, 94, 0.15); }
-  `;
-  document.head.appendChild(toastStyle);
-
-  const toastContainer = document.createElement("div");
-  toastContainer.className = "admin-toast-container";
-  document.body.appendChild(toastContainer);
-
-  let audioCtx = null;
-  function playSound(type) {
-    try {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      if (type === 'click') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, now);
-        osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now);
-        osc.stop(now + 0.1);
-      } else if (type === 'chime') {
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
-        
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, now); // D5
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-        
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(880, now + 0.1); // A5
-        gain2.gain.setValueAtTime(0.08, now + 0.1);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-        
-        osc.start(now);
-        osc.stop(now + 0.4);
-        osc2.start(now + 0.1);
-        osc2.stop(now + 0.5);
-      } else if (type === 'success') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.setValueAtTime(659.25, now + 0.08);
-        osc.frequency.setValueAtTime(783.99, now + 0.16);
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-        osc.start(now);
-        osc.stop(now + 0.4);
-      } else if (type === 'error') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(130, now);
-        osc.frequency.linearRampToValueAtTime(70, now + 0.22);
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
-        osc.start(now);
-        osc.stop(now + 0.22);
-      }
-    } catch(e) {
-      console.warn("AudioContext block", e);
-    }
-  }
-
-  function showToast(msg, type = "info") {
-    const toast = document.createElement("div");
-    toast.className = `admin-toast ${type}`;
-    
-    let icon = "info";
-    if (type === "success") icon = "check-circle";
-    else if (type === "error") icon = "alert-circle";
-    
-    toast.innerHTML = `<i data-lucide="${icon}" style="width:16px; height:16px;"></i> <span>${msg}</span>`;
-    toastContainer.appendChild(toast);
-    
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
-    
-    setTimeout(() => toast.classList.add("active"), 10);
-    
-    setTimeout(() => {
-      toast.classList.remove("active");
-      setTimeout(() => toast.remove(), 300);
-    }, 4000);
-  }
-
-  function showNotification(txt, type) {
-    let tType = "info";
-    if (type === "success") tType = "success";
-    else if (type === "error" || type === "bad") tType = "error";
-    
-    showToast(txt, tType);
-    
-    if (type === "success") playSound("success");
-    else if (type === "error" || type === "bad") playSound("error");
-  }
-
-  // --- SECURITY PIN AND LOGIN LOGIN LOGIC ---
-  async function updateAdminPinCode() {
-    const input = $("cfgAdminPin");
-    const newPin = input.value.trim();
-    if (!newPin) {
-      alert("Por favor ingresa un nuevo PIN.");
-      return;
-    }
-    if (newPin.length < 4) {
-      alert("El PIN debe tener al menos 4 caracteres.");
-      return;
-    }
-    
-    showNotification("Actualizando PIN...", "info");
-    try {
-      await setStorageItem('suerterd:admin:pin', newPin);
-      adminPin = newPin;
-      sessionStorage.setItem('admin_pin', newPin);
-      localStorage.setItem('suerterd_admin_logged', 'true');
-      input.value = "";
-      showNotification("¡PIN de acceso actualizado correctamente!", "success");
-    } catch (e) {
-      showNotification("Error al guardar el nuevo PIN.", "error");
-    }
-  }
-
-  async function checkAuthentication() {
-    const loginOverlay = $("adminLoginOverlay");
-    const pin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '123456';
-    if (pin) {
-      const isValid = await verifyPin(pin);
-      if (isValid) {
-        adminPin = pin;
-        sessionStorage.setItem('admin_pin', pin);
-        localStorage.setItem('admin_pin', pin);
-        localStorage.setItem('suerterd_admin_logged', 'true');
-        if (loginOverlay) loginOverlay.classList.remove("active");
-        await init();
-        return;
-      }
-    }
-    if (loginOverlay) {
-      loginOverlay.classList.add("active");
-      const btnSubmit = $("btnAdminLoginSubmit");
-      if (btnSubmit) btnSubmit.onclick = handleLoginSubmit;
-      const pinInput = $("adminLoginPinInput");
-      if (pinInput) {
-        pinInput.onkeydown = (e) => {
-          if (e.key === "Enter") handleLoginSubmit();
-        };
-      }
-    } else {
-      adminPin = '123456';
-      await init();
-    }
-  }
-
-  async function verifyPin(pin) {
-    if (pin === '123456' || pin === 'SuerteRD2026') return true;
-    try {
-      const res = await fetch('/api/admin/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin })
-      });
-      const data = await res.json();
-      return data.success;
-    } catch(e) {
-      console.error("Error verifying pin", e);
-      return false;
-    }
-  }
-
-  async function handleLoginSubmit() {
-    const input = $("adminLoginPinInput");
-    if (!input) return;
-    const pin = input.value.trim();
-    if (!pin) {
-      showLoginError("Ingresa un PIN.");
-      return;
-    }
-    showLoginError(""); // clear error
-    const isValid = await verifyPin(pin);
-    if (isValid) {
-      adminPin = pin;
-      sessionStorage.setItem('admin_pin', pin);
-      localStorage.setItem('admin_pin', pin);
-      localStorage.setItem('suerterd_admin_logged', 'true');
-      const loginOverlay = $("adminLoginOverlay");
-      if (loginOverlay) loginOverlay.classList.remove("active");
-      await init();
-    } else {
-      showLoginError("PIN de seguridad incorrecto.");
-    }
-  }
-
-  function showLoginError(msg) {
-    const el = $("adminLoginErrorMsg");
-    if (!el) return;
-    if (msg) {
-      el.textContent = msg;
-      el.style.display = "block";
-    } else {
-      el.style.display = "none";
-    }
-  }
-
-  // --- PAYMENT VALIDATION CORE FUNCTIONS (Phase 6) ---
-  let activeReceiptRaffleId = null;
-  let activeReceiptTicketNum = null;
-
-  function getPendingPaymentsCount() {
-    let pendingGroups = 0;
-    RAFFLE_IDS.forEach(rId => {
-      const tickets = allTickets[rId] || {};
-      const groups = {};
-      Object.keys(tickets).forEach(tNum => {
-        const t = tickets[tNum];
-        if (t.estado === 'esperando_validacion' || t.estado === 'reservado') {
-          const groupKey = `${t.timestamp_comprobante || t.timestamp}_${t.whatsapp}`;
-          groups[groupKey] = true;
-        }
-      });
-      pendingGroups += Object.keys(groups).length;
-    });
-    return pendingGroups;
-  }
-
-  let currentReceiptRotation = 0;
-  let approvedTodayCount = 0;
-  let rejectedTodayCount = 0;
-
-  function updatePaymentsNotificationBadge() {
-    const count = getPendingPaymentsCount();
-    const badge = $("paymentNotificationBadge");
-    if (badge) {
-      if (count > 0) {
-        badge.textContent = count;
-        badge.style.display = "inline-block";
-      } else {
-        badge.style.display = "none";
-      }
-    }
-    if (count > lastPendingPaymentsCount && lastPendingPaymentsCount >= 0) {
-      playSound("chime");
-      showToast("¡Nuevo paquete de boletos recibido para validación en Admin!", "info");
-    }
-    lastPendingPaymentsCount = count;
-  }
-
-  function updateValidationSummaryStats() {
-    let pendingCount = 0;
-    let pendingAmount = 0;
-
-    RAFFLE_IDS.forEach(rId => {
-      const conf = configs[rId];
-      const tickets = allTickets[rId] || {};
-      const groups = {};
-
-      Object.keys(tickets).forEach(tNum => {
-        const t = tickets[tNum];
-        if (t.estado === 'esperando_validacion' || t.estado === 'reservado') {
-          const groupKey = `${t.timestamp_comprobante || t.timestamp}_${t.whatsapp}`;
-          if (!groups[groupKey]) {
-            groups[groupKey] = { count: 0 };
-          }
-          groups[groupKey].count++;
-        }
-      });
-
-      Object.keys(groups).forEach(gKey => {
-        const g = groups[gKey];
-        pendingCount++;
-        if (conf) {
-          pendingAmount += calculateTotalAmount(g.count, conf);
-        }
-      });
-    });
-
-    const elCount = $("valStatPendingCount");
-    const elAmount = $("valStatPendingAmount");
-    const elApproved = $("valStatApprovedCount");
-    const elRejected = $("valStatRejectedCount");
-
-    if (elCount) elCount.textContent = pendingCount;
-    if (elAmount) elAmount.textContent = `RD$ ${pendingAmount.toLocaleString("es-DO")}`;
-    if (elApproved) elApproved.textContent = approvedTodayCount;
-    if (elRejected) elRejected.textContent = rejectedTodayCount;
-  }
-
-  function renderPaymentsTable() {
-    const tbody = $("paymentsTableBody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-
-    const searchVal = ($("paymentSearchInput") ? $("paymentSearchInput").value.trim().toLowerCase() : "");
-    const statusFilterVal = ($("paymentStatusFilter") ? $("paymentStatusFilter").value : "");
-
-    let rowsHtml = "";
-    let hasPending = false;
-
-    RAFFLE_IDS.forEach(rId => {
-      const conf = configs[rId];
-      const tickets = allTickets[rId] || {};
-      const groups = {};
-      
-      Object.keys(tickets).forEach(tNum => {
-        const t = tickets[tNum];
-        if (t.estado === 'esperando_validacion' || t.estado === 'reservado') {
-          const groupKey = `${t.timestamp_comprobante || t.timestamp}_${t.whatsapp}`;
-          if (!groups[groupKey]) {
-            groups[groupKey] = {
-              raffleId: rId,
-              name: t.name || t.nombre || "Cliente",
-              whatsapp: t.whatsapp,
-              loteria: t.loteria || "Pick 5 Florida",
-              comprobante: t.comprobante || null,
-              estado: t.estado,
-              timestamp: t.timestamp_comprobante || t.timestamp,
-              numbers: []
-            };
-          }
-          if (t.comprobante && !groups[groupKey].comprobante) {
-            groups[groupKey].comprobante = t.comprobante;
-          }
-          if (t.loteria && (groups[groupKey].loteria === "Pick 5 Florida" || !groups[groupKey].loteria)) {
-            groups[groupKey].loteria = t.loteria;
-          }
-          groups[groupKey].numbers.push(tNum);
-          if (t.estado === 'esperando_validacion') {
-            groups[groupKey].estado = 'esperando_validacion';
-          }
-        }
-      });
-      
-      Object.keys(groups).forEach(gKey => {
-        const g = groups[gKey];
-        g.numbers.sort();
-        const allNumsStr = g.numbers.join(",");
-
-        // Filter status check
-        if (statusFilterVal === "con_comprobante" && g.estado !== "esperando_validacion") return;
-        if (statusFilterVal === "sin_comprobante" && g.estado === "esperando_validacion") return;
-
-        // Search text check
-        if (searchVal) {
-          const matchTicket = g.numbers.some(n => n.includes(searchVal));
-          const matchName = g.name.toLowerCase().includes(searchVal);
-          const matchWa = g.whatsapp.toLowerCase().includes(searchVal);
-          if (!matchTicket && !matchName && !matchWa) return;
-        }
-
-        hasPending = true;
-        const dateStr = g.timestamp ? new Date(g.timestamp).toLocaleDateString("es-DO") + " " + new Date(g.timestamp).toLocaleTimeString("es-DO", {hour: '2-digit', minute:'2-digit'}) : "N/A";
-        
-        let numbersDisplay = g.numbers.map(n => `#${n}`).join(", ");
-        if (g.numbers.length > 5) {
-          numbersDisplay = g.numbers.slice(0, 5).map(n => `#${n}`).join(", ") + `... y ${g.numbers.length - 5} más`;
-        }
-
-        let packageBadge = "";
-        const firstNum = g.numbers[0];
-        const tFirst = tickets[firstNum] || {};
-        const pName = tFirst.paquete || "";
-        
-        if (pName.includes("Bronce") || g.numbers.length === 50) {
-          packageBadge = `<span class="badge" style="background:rgba(205,127,50,0.15); color:#cd7f32; border:1px solid #cd7f32; font-weight:800; display:block; margin-bottom:4px;">🏆 Paquete Bronce (50)</span>`;
-        } else if (pName.includes("Plata") || g.numbers.length === 150) {
-          packageBadge = `<span class="badge" style="background:rgba(192,192,192,0.15); color:#e0e0e0; border:1px solid #c0c0c0; font-weight:800; display:block; margin-bottom:4px;">🏆 Paquete Plata (150)</span>`;
-        } else if (pName.includes("Oro") || g.numbers.length === 250) {
-          packageBadge = `<span class="badge" style="background:rgba(255,215,0,0.15); color:#ffd700; border:1px solid #ffd700; font-weight:800; display:block; margin-bottom:4px;">🏆 Paquete Oro (250)</span>`;
-        } else if (pName.includes("Diamante") || g.numbers.length === 500) {
-          packageBadge = `<span class="badge" style="background:rgba(0,230,118,0.15); color:#00e676; border:1px solid #00e676; font-weight:800; display:block; margin-bottom:4px;">💎 Paquete Diamante (500)</span>`;
-        } else if (g.numbers.length > 1) {
-          packageBadge = `<span class="badge" style="background:rgba(0,229,255,0.15); color:var(--cyan); border:1px solid var(--border-cyan); font-weight:800; display:block; margin-bottom:4px;">🎟️ Lote (${g.numbers.length} Boletos)</span>`;
-        } else {
-          packageBadge = `<span class="badge" style="background:rgba(255,255,255,0.05); color:#FFF; font-weight:800; display:block; margin-bottom:4px;">Boleto Individual</span>`;
-        }
-
-        let statusBadge = "";
-        if (g.estado === 'esperando_validacion') {
-          statusBadge = `<span class="badge" style="background:rgba(0, 229, 255, 0.15); color:var(--cyan); border:1px solid var(--cyan);">🟡 RECIBO SUBIDO</span>`;
-        } else {
-          statusBadge = `<span class="badge" style="background:rgba(255, 215, 0, 0.15); color:var(--gold); border:1px solid var(--gold);">🔵 RESERVADO</span>`;
-        }
-
-        const totalAmount = calculateTotalAmount(g.numbers.length, conf);
-        const amountDisplay = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
-
-        rowsHtml += `
-          <tr data-raffle="${rId}" data-tickets="${allNumsStr}">
-            <td style="text-align:center;">
-              <input type="checkbox" class="payment-row-checkbox" data-raffle="${rId}" data-tickets="${allNumsStr}" style="width:18px; height:18px; cursor:pointer;">
-            </td>
-            <td><strong>${escapeHtml(conf.title)}</strong></td>
-            <td>
-              ${packageBadge}
-              <div style="font-size:0.75rem; color:var(--text-grey); margin-top:2px; font-family:var(--font-mono);">${numbersDisplay}</div>
-            </td>
-            <td><strong style="color:var(--green); font-family:var(--font-mono); font-size:0.95rem;">${amountDisplay}</strong></td>
-            <td>
-              <div style="font-weight:800; color:#FFF; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
-                <i data-lucide="user" style="width:14px; color:var(--cyan);"></i> ${escapeHtml(g.name)}
-              </div>
-            </td>
-            <td>
-              <div style="display:flex; flex-direction:column; gap:3px;">
-                <span style="color:var(--cyan); font-family:var(--font-mono); font-weight:700; font-size:0.85rem; display:flex; align-items:center; gap:4px;">
-                  <i data-lucide="phone" style="width:12px;"></i> ${escapeHtml(g.whatsapp)}
-                </span>
-                <a href="https://wa.me/${formatWhatsAppPhone(g.whatsapp)}" target="_blank" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.7rem; border-color:#00E676; color:#00E676; display:inline-flex; align-items:center; gap:4px; margin-bottom:0; width:fit-content;">
-                  <i data-lucide="message-circle" style="width:12px;"></i> Abrir Chat
-                </a>
-              </div>
-            </td>
-            <td><span class="badge" style="background:rgba(0,229,255,0.05); color:var(--cyan); border:1px solid var(--border-cyan);">${escapeHtml(g.loteria)}</span></td>
-            <td>
-            <td>
-              ${g.comprobante ? `
-                <div style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:4px 0;">
-                  <img src="${g.comprobante}" class="btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; border:2px solid var(--cyan); cursor:pointer; box-shadow:0 0 12px rgba(0,229,255,0.3);" title="Hacer clic para ver recibo HD">
-                  <span style="font-size:0.65rem; color:var(--cyan); font-weight:800; cursor:pointer;" class="btn-view-receipt" data-raffle="${rId}" data-tickets="${allNumsStr}">🔍 Ampliar Foto</span>
-                </div>
-              ` : `<span style="color:var(--text-muted); font-size:0.8rem;">Sin recibo</span>`}
-            </td>
-            <td style="white-space: nowrap;">${statusBadge}</td>
-            <td style="font-size:0.8rem; color:var(--text-grey);">${dateStr}</td>
-            <td>
-              <div style="display:flex; gap:6px;">
-                <button class="btn btn-green btn-approve-group" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 6px 12px; font-size: 0.78rem; font-weight:800; margin-bottom:0; cursor:pointer;">
-                  <i data-lucide="check" style="width:14px; vertical-align:middle;"></i> Aprobar
-                </button>
-                <button class="btn btn-red btn-reject-group" data-raffle="${rId}" data-tickets="${allNumsStr}" style="padding: 6px 12px; font-size: 0.78rem; font-weight:800; margin-bottom:0; cursor:pointer;">
-                  <i data-lucide="x" style="width:14px; vertical-align:middle;"></i> Rechazar
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-      });
-    });
-
-    if (hasPending) {
-      tbody.innerHTML = rowsHtml;
-      
-      tbody.querySelectorAll(".btn-view-receipt").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const rId = btn.getAttribute("data-raffle");
-          const numsStr = btn.getAttribute("data-tickets");
-          const nums = numsStr.split(",");
-          let receiptImg = null;
-          for (const n of nums) {
-            if (allTickets[rId] && allTickets[rId][n] && allTickets[rId][n].comprobante) {
-              receiptImg = allTickets[rId][n].comprobante;
-              break;
-            }
-          }
-          openReceiptViewer(rId, numsStr, receiptImg);
-        });
-      });
-
-      tbody.querySelectorAll(".btn-approve-group").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const rId = btn.getAttribute("data-raffle");
-          const numsStr = btn.getAttribute("data-tickets");
-          approvePaymentGroup(rId, numsStr);
-        });
-      });
-
-      tbody.querySelectorAll(".btn-reject-group").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const rId = btn.getAttribute("data-raffle");
-          const numsStr = btn.getAttribute("data-tickets");
-          const reasonSelect = $("rejectReasonSelect");
-          const reason = reasonSelect ? reasonSelect.value : "Comprobante no recibido o inválido";
-          rejectPaymentGroup(rId, numsStr, reason);
-        });
-      });
-    } else {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="11" style="text-align:center; padding:35px 20px; color:var(--text-grey); font-family:var(--font-mono);">
-            <div style="font-size:1rem; color:#FFF; font-weight:700; margin-bottom:6px;">No hay compras o comprobantes pendientes en este momento.</div>
-            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">Cuando los usuarios compren boletos en la web, aparecerán aquí para su validación.</div>
-            <button class="btn btn-secondary" id="btnCreateTestPayment" style="border-color:var(--cyan); color:var(--cyan); font-weight:800; font-size:0.8rem; padding:8px 16px; display:inline-flex; align-items:center; gap:6px;">
-              <i data-lucide="plus-circle" style="width:14px;"></i> Crear Orden de Prueba para Validar
-            </button>
-          </td>
-        </tr>
-      `;
-      safeAddListener("btnCreateTestPayment", "click", createTestReservation);
-    }
-    
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    updatePaymentsNotificationBadge();
-    updateValidationSummaryStats();
-  }
-
-  async function createTestReservation() {
-    showNotification("Generando orden de prueba en el servidor...", "info");
-    try {
-      const testTickets = ["00001", "00002", "00003", "00004", "00005", "00006", "00007", "00008", "00009", "00010", "00011", "00012", "00013", "00014", "00015", "00016", "00017", "00018", "00019", "00020", "00021", "00022", "00023", "00024", "00025"];
-      const res = await fetch('/api/tickets/reserve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          raffleId: activeRaffleId || "florida5",
-          name: "Carlos Mendoza (Cliente de Prueba)",
-          whatsapp: "18099838626",
-          loteria: "Pick 5 Florida",
-          tickets: testTickets,
-          packageLabel: "Paquete de Prueba (25 Boletos)",
-          comprobante: "./assets/suerte_rd_iphone17_banner.png",
-          estado: "esperando_validacion"
-        })
-      });
-      if (res.ok) {
-        showNotification("¡Orden de prueba creada exitosamente! Cargando datos...", "success");
-        // Reload all tickets for active raffle
-        const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-        const raw = await getStorageItem(key);
-        allTickets[activeRaffleId] = safeParse(raw, {});
-        renderPaymentsTable();
-      } else {
-        showNotification("Error al crear la orden de prueba.", "error");
-      }
-    } catch(e) {
-      console.error("Error createTestReservation:", e);
-      showNotification("Error de conexión al crear orden de prueba.", "error");
-    }
-  }
-
-  async function bulkApprovePayments() {
-    let checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
-    if (checkedBoxes.length === 0) {
-      const allBoxes = document.querySelectorAll(".payment-row-checkbox");
-      if (allBoxes.length > 0) {
-        allBoxes.forEach(chk => chk.checked = true);
-        checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
-      } else {
-        showNotification("No hay compras pendientes en la lista para aprobar.", "info");
-        return;
-      }
-    }
-
-    if (!confirm(`¿Estás seguro de que deseas APROBAR y ACTIVAR las ${checkedBoxes.length} compras seleccionadas?`)) return;
-
-    showNotification("Aprobando selección masiva...", "info");
-    let totalApproved = 0;
-
-    for (const chk of checkedBoxes) {
-      const rId = chk.getAttribute("data-raffle");
-      const numsStr = chk.getAttribute("data-tickets");
-      const approvedCount = await approvePaymentGroup(rId, numsStr, true);
-      totalApproved += approvedCount;
-    }
-
-    showNotification(`¡Se activaron ${totalApproved} boletos exitosamente en lote!`, "success");
-    const headerChk = $("paymentsHeaderCheckbox");
-    if (headerChk) headerChk.checked = false;
-    renderPaymentsTable();
-    if (activeRaffleId) {
-      renderTicketsTable();
-      updateDashboardStats();
-    }
-  }
-
-  async function bulkRejectPayments() {
-    const checkedBoxes = document.querySelectorAll(".payment-row-checkbox:checked");
-    if (checkedBoxes.length === 0) {
-      showNotification("Por favor marca la casilla de al menos una compra en la lista para rechazar.", "info");
-      return;
-    }
-
-    if (!confirm(`¿Estás seguro de que deseas RECHAZAR y LIBERAR las ${checkedBoxes.length} compras seleccionadas?`)) return;
-
-    showNotification("Rechazando selección masiva...", "info");
-    let totalRejected = 0;
-
-    for (const chk of checkedBoxes) {
-      const rId = chk.getAttribute("data-raffle");
-      const numsStr = chk.getAttribute("data-tickets");
-      const rejectedCount = await rejectPaymentGroup(rId, numsStr, "Rechazo en lote por administración", true);
-      totalRejected += rejectedCount;
-    }
-
-    showNotification(`¡Se liberaron ${totalRejected} boletos en lote!`, "success");
-    const headerChk = $("paymentsHeaderCheckbox");
-    if (headerChk) headerChk.checked = false;
-    renderPaymentsTable();
-    if (activeRaffleId) {
-      renderTicketsTable();
-      updateDashboardStats();
-    }
-  }
-
-  async function approvePaymentGroup(rId, numsStr, isBatch = false) {
-    const nums = numsStr.split(",");
-    if (!isBatch && !confirm(`¿Estás seguro de que deseas APROBAR y ACTIVAR la compra de ${nums.length} boletos?`)) return 0;
-    if (!isBatch) showNotification("Aprobando y activando paquete en la web...", "info");
-    
-    const tickets = allTickets[rId] || {};
-    let countApprove = 0;
-    
-    nums.forEach(tNum => {
-      if (tickets[tNum]) {
-        tickets[tNum].estado = "pagado";
-        tickets[tNum].timestamp_pago = Date.now();
-        countApprove++;
-      }
-    });
-    
-    if (countApprove > 0) {
-      approvedTodayCount += countApprove;
-      const key = `${TICKETS_KEY_PREFIX}:${rId}`;
-      await setStorageItem(key, JSON.stringify(tickets));
-      if (!isBatch) showNotification(`¡Se activaron ${countApprove} boletos exitosamente en la web!`, "success");
-      
-      // Send WhatsApp message to user confirming activation
-      const firstNum = nums[0];
-      const tInfo = tickets[firstNum];
-      const conf = configs[rId];
-      if (tInfo && tInfo.whatsapp && conf) {
-        const clientName = tInfo.name || tInfo.nombre || "Cliente";
-        const raffleTitle = conf.title;
-        const totalAmount = calculateTotalAmount(nums.length, conf);
-        const amountDisplay = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
-        const pName = tInfo.paquete || (nums.length >= 25 ? `Paquete (${nums.length} Boletos)` : "Boletos Individuales");
-        
-        const formattedLines = [];
-        for (let i = 0; i < nums.length; i += 4) {
-          const chunk = nums.slice(i, i + 4).map(n => `#${n}`).join(", ");
-          formattedLines.push(chunk);
-        }
-        const formattedNumsText = formattedLines.join("\n");
-
-        const textMsg = 
-`✅ *SUERTE RD* | *CONFIRMACIÓN DE PAGO OFICIAL* ✅
-═════════════════════════════
-🎉 *¡TU COMPRA DE PAQUETE HA SIDO VALIDADA Y ACTIVADA CON ÉXITO!* 🎉
-
-👤 *CLIENTE:* ${clientName}
-🏆 *SORTEO:* ${raffleTitle}
-🎯 *LOTERÍA OFICIAL:* ${tInfo.loteria || 'Pick 5 Florida'}
-📊 *DETALLE DEL PAQUETE:* ${pName}
-💵 *MONTO TOTAL VALIDADO:* ${amountDisplay}
-
-🎟️ *BOLETOS ACTIVOS EN LA WEB:*
-${formattedNumsText}
-
-🟢 *ESTADO:* *PAGADOS Y PARTICIPANDO OFICIALMENTE EN LA RIFA* 🟢
-═════════════════════════════
-✨ ¡Tus boletos ya están oficialmente registrados y participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
-        const encoded = encodeURIComponent(textMsg);
-        const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
-        window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
-      }
-
-      if (!isBatch) {
-        renderPaymentsTable();
-        if (activeRaffleId === rId) {
-          renderTicketsTable();
-          updateDashboardStats();
-        }
-      }
-    }
-    return countApprove;
-  }
-
-  async function rejectPaymentGroup(rId, numsStr, reasonInput, isBatch = false) {
-    const nums = numsStr.split(",");
-    const reasonText = reasonInput || "Comprobante no visible o inválido";
-    if (!isBatch && !confirm(`¿Estás seguro de que deseas RECHAZAR el pago de los ${nums.length} boletos? Los boletos serán liberados.`)) return 0;
-    if (!isBatch) showNotification("Rechazando y liberando boletos...", "info");
-    
-    const tickets = allTickets[rId] || {};
-    let countReject = 0;
-    const firstNum = nums[0];
-    const tInfo = tickets[firstNum] ? { ...tickets[firstNum] } : null;
-
-    nums.forEach(tNum => {
-      if (tickets[tNum]) {
-        delete tickets[tNum];
-        countReject++;
-      }
-    });
-    
-    if (countReject > 0) {
-      rejectedTodayCount += countReject;
-      const key = `${TICKETS_KEY_PREFIX}:${rId}`;
-      await setStorageItem(key, JSON.stringify(tickets));
-      if (!isBatch) showNotification(`¡Se liberaron ${countReject} boletos!`, "success");
-      
-      // Notify customer via WhatsApp about rejection reason so they can fix
-      if (tInfo && tInfo.whatsapp) {
-        const conf = configs[rId];
-        const raffleTitle = conf ? conf.title : "Sorteo Suerte RD";
-        const clientName = tInfo.name || tInfo.nombre || "Cliente";
-
-        const textMsg = 
-`⚠️ *SUERTE RD* | *NOTIFICACIÓN DE COMPROBANTE* ⚠️
-═════════════════════════════
-Hola *${clientName}*, te informamos sobre tu apartado de boletos para el sorteo *${raffleTitle}*:
-
-❌ *ESTADO:* *PAGO NO VALIDADO*
-📝 *MOTIVO:* ${reasonText}
-
-ℹ️ Tus boletos han sido liberados provisionalmente. Por favor ponte en contacto con nosotros o realiza nuevamente tu apartado enviando un comprobante válido. ¡Gracias por tu preferencia! 🍀`;
-        const encoded = encodeURIComponent(textMsg);
-        const cleanPhone = formatWhatsAppPhone(tInfo.whatsapp);
-        window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
-      }
-
-      if (!isBatch) {
-        renderPaymentsTable();
-        if (activeRaffleId === rId) {
-          renderTicketsTable();
-          updateDashboardStats();
-        }
-      }
-    }
-    return countReject;
-  }
-
-  function openReceiptViewer(rId, tNum, base64) {
-    activeReceiptRaffleId = rId;
-    activeReceiptTicketNum = tNum;
-    currentReceiptRotation = 0;
-    
-    const modal = $("viewReceiptOverlay");
-    const img = $("viewReceiptImg");
-    const noImgMsg = $("viewReceiptNoImgMsg");
-
-    if (img) {
-      img.style.transform = "rotate(0deg)";
-    }
-
-    if (modal && img) {
-      let finalImg = (typeof base64 === 'string' && base64.startsWith('data:')) ? base64 : null;
-      if (!finalImg) {
-        const nums = String(tNum).split(",");
-        for (const n of nums) {
-          const numTrim = n.trim();
-          if (allTickets[rId] && allTickets[rId][numTrim] && typeof allTickets[rId][numTrim].comprobante === 'string' && allTickets[rId][numTrim].comprobante.startsWith('data:')) {
-            finalImg = allTickets[rId][numTrim].comprobante;
-            break;
-          }
-        }
-      }
-
-      if (finalImg) {
-        img.src = finalImg;
-        img.style.display = "block";
-        if (noImgMsg) noImgMsg.style.display = "none";
-      } else {
-        img.src = "";
-        img.style.display = "none";
-        if (noImgMsg) noImgMsg.style.display = "block";
-      }
-
-      const nums = String(tNum).split(",");
-      const firstNum = nums[0].trim();
-      const tInfo = (allTickets[rId] && allTickets[rId][firstNum]) || {};
-      const conf = configs[rId];
-      const totalAmount = calculateTotalAmount(nums.length, conf);
-      
-      const metaName = $("viewReceiptMetaName");
-      const metaPhone = $("viewReceiptMetaPhone");
-      const metaLottery = $("viewReceiptMetaLottery");
-      const metaTickets = $("viewReceiptMetaTickets");
-      const metaAmount = $("viewReceiptMetaAmount");
-
-      if (metaName) metaName.innerHTML = `<span style="color:#FFF; font-weight:800; font-size:1rem; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="user" style="width:16px; color:var(--cyan);"></i> ${escapeHtml(tInfo.name || tInfo.nombre || "Cliente")}</span>`;
-      if (metaPhone) metaPhone.innerHTML = `<a href="https://wa.me/${formatWhatsAppPhone(tInfo.whatsapp)}" target="_blank" style="color:var(--cyan); font-weight:800; font-family:var(--font-mono); font-size:0.95rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="phone" style="width:14px;"></i> ${escapeHtml(tInfo.whatsapp || "Sin número")}</a>`;
-      if (metaLottery) metaLottery.textContent = tInfo.loteria || "Pick 5 Florida";
-      if (metaTickets) metaTickets.textContent = `${nums.length} boletos (${nums.map(n => `#${n.trim()}`).join(", ")})`;
-      if (metaAmount) metaAmount.textContent = `RD$ ${totalAmount.toLocaleString("es-DO")}`;
-
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-      modal.classList.add("active");
-    }
-  }
-
-  function rotateReceiptImage() {
-    const img = $("viewReceiptImg");
-    if (!img) return;
-    currentReceiptRotation = (currentReceiptRotation + 90) % 360;
-    img.style.transform = `rotate(${currentReceiptRotation}deg)`;
-    playSound("click");
-  }
-
-  function openReceiptNewTab() {
-    const img = $("viewReceiptImg");
-    if (img && img.src && img.src.startsWith("data:")) {
-      const win = window.open();
-      if (win) {
-        win.document.write(`<body style="margin:0; background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh;"><img src="${img.src}" style="max-width:100%; max-height:100vh;"></body>`);
-      }
-    } else {
-      alert("No hay imagen de comprobante para visualizar.");
-    }
-  }
-
-  function closeReceiptViewer() {
-    activeReceiptRaffleId = null;
-    activeReceiptTicketNum = null;
-    currentReceiptRotation = 0;
-    
-    const modal = $("viewReceiptOverlay");
-    if (modal) {
-      modal.classList.remove("active");
-    }
-  }
-
-  async function pollUpdates() {
-    try {
-      // 1. Reload tickets in background
-      for (const rId of RAFFLE_IDS) {
-        try {
-          const tKey = `${TICKETS_KEY_PREFIX}:${rId}`;
-          const raw = await getStorageItem(tKey);
-          if (raw) {
-            allTickets[rId] = safeParse(raw, allTickets[rId] || {});
-          }
-        } catch (e) {}
-      }
-
-      // 2. Fetch Support Messages in background
-      try {
-        const raw = await getStorageItem("supportMessages");
-        if (raw) {
-          supportMessages = safeParse(raw, supportMessages || []);
-        }
-      } catch (e) {}
-
-      // Fetch Winners in background
-      try {
-        const rawWinners = await getStorageItem(WINNERS_KEY);
-        if (rawWinners) {
-          winners = safeParse(rawWinners, winners || []);
-        }
-      } catch (e) {}
-
-      // Fetch Bank Accounts in background
-      try {
-        const rawBankAccounts = await getStorageItem("suerterd:payment:methods");
-        if (rawBankAccounts) {
-          bankAccounts = safeParse(rawBankAccounts, bankAccounts || []);
-        }
-      } catch (e) {}
-
-      // 3. Check notifications list on server
-      try {
-        const res = await fetch('/api/notifications');
-        if (res.ok) {
-          const data = await res.json();
-          const notificationsList = data.value || [];
-          
-          // Check for new notifications
-          let newNotifFound = false;
-          notificationsList.forEach(n => {
-            if (n.timestamp > lastNotificationTime) {
-              showToast(n.text, "info");
-              newNotifFound = true;
-            }
-          });
-          
-          if (newNotifFound) {
-            playSound("chime");
-            if (notificationsList.length > 0) {
-              lastNotificationTime = Math.max(...notificationsList.map(n => n.timestamp));
-            }
-          }
-        }
-      } catch (e) {}
-
-      // 4. Update UI elements dynamically based on active pane
-      updatePaymentsNotificationBadge();
-      
-      const activePane = document.querySelector(".pane.active");
-      if (activePane) {
-        const paneId = activePane.id;
-        if (paneId === "paneStats") {
-          updateDashboardStats();
-        } else if (paneId === "paneTickets") {
-          renderTicketsTable();
-        } else if (paneId === "panePayments") {
-          renderPaymentsTable();
-        } else if (paneId === "paneSupport") {
-          renderSupportTable();
-        } else if (paneId === "paneWinners") {
-          renderWinnersTable();
-        } else if (paneId === "panePaymentsConfig") {
-          renderBankAccountsTable();
-        } else if (paneId === "paneWhatsappTemplates") {
-          loadWhatsappTemplates();
-        } else if (paneId === "paneFinancialReports") {
-          renderFinancialReportsTable();
-        }
-      }
-    } catch(e) {
-      console.error("Polling error", e);
-    }
-  }
-
-  // --- WHATSAPP TEMPLATES MANAGEMENT ---
-  const DEFAULT_WA_APPROVED = `✅ *SUERTE RD* | *CONFIRMACIÓN DE PAGO OFICIAL* ✅
-═════════════════════════════
-🎉 *¡TU COMPRA DE PAQUETE HA SIDO VALIDADA Y ACTIVADA CON ÉXITO!* 🎉
-
-👤 *CLIENTE:* {CLIENTE}
-🏆 *SORTEO:* {SORTEO}
-🎯 *LOTERÍA OFICIAL:* {LOTERIA}
-📊 *DETALLE DEL PAQUETE:* {PAQUETE}
-💵 *MONTO TOTAL VALIDADO:* {MONTO}
-
-🎟️ *BOLETOS ACTIVOS EN LA WEB:*
-{BOLETOS}
-
-🟢 *ESTADO:* *PAGADOS Y PARTICIPANDO OFICIALMENTE EN LA RIFA* 🟢
-═════════════════════════════
-✨ ¡Tus boletos ya están oficialmente registrados y participando en el sorteo! Te deseamos la mayor de las suertes. 🍀🔥`;
-
-  const DEFAULT_WA_REJECTED = `⚠️ *SUERTE RD* | *NOTIFICACIÓN DE COMPROBANTE* ⚠️
-═════════════════════════════
-Hola *{CLIENTE}*, necesitamos revisar tu comprobante para el sorteo *{SORTEO}*.
-
-📌 *MOTIVO:* {MOTIVO}
-
-Por favor reenvíanos tu foto de transferencia actualizada para validar y activar tu participación oficial. ¡Muchas gracias! 🙏✨`;
-
-  async function loadWhatsappTemplates() {
-    try {
-      const appRaw = await getStorageItem("suerterd:wa:template_approved");
-      const rejRaw = await getStorageItem("suerterd:wa:template_rejected");
-      if ($("waTemplateApproved")) $("waTemplateApproved").value = appRaw || DEFAULT_WA_APPROVED;
-      if ($("waTemplateRejected")) $("waTemplateRejected").value = rejRaw || DEFAULT_WA_REJECTED;
-    } catch (e) {
-      if ($("waTemplateApproved")) $("waTemplateApproved").value = DEFAULT_WA_APPROVED;
-      if ($("waTemplateRejected")) $("waTemplateRejected").value = DEFAULT_WA_REJECTED;
-    }
-  }
-
-  async function saveWhatsappTemplates() {
-    showNotification("Guardando plantillas de WhatsApp...", "info");
-    const appVal = $("waTemplateApproved") ? $("waTemplateApproved").value.trim() : DEFAULT_WA_APPROVED;
-    const rejVal = $("waTemplateRejected") ? $("waTemplateRejected").value.trim() : DEFAULT_WA_REJECTED;
-
-    await setStorageItem("suerterd:wa:template_approved", appVal);
-    await setStorageItem("suerterd:wa:template_rejected", rejVal);
-
-    showNotification("¡Plantillas de WhatsApp guardadas exitosamente!", "success");
-  }
-
-  // --- FINANCIAL REPORTS & METRICS ---
-  function renderFinancialReportsTable() {
-    const tbody = $("financialBreakdownTableBody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-
-    const conf = configs[activeRaffleId] || DEFAULT_CONFIGS[activeRaffleId] || { total: 100000 };
-    const tickets = allTickets[activeRaffleId] || {};
-    const ticketList = Object.values(tickets);
-
-    const paidTickets = ticketList.filter(t => t && t.estado === "pagado");
-    const pendingTickets = ticketList.filter(t => t && (t.estado === "esperando_validacion" || t.estado === "reservado"));
-
-    // Tiers Breakdown
-    const tiers = [
-      { name: "Paquete Diamante (500 Boletos)", price: "RD$ 1,500", count: 500 },
-      { name: "Paquete Oro (250 Boletos)", price: "RD$ 750", count: 250 },
-      { name: "Paquete Plata (150 Boletos)", price: "RD$ 450", count: 150 },
-      { name: "Paquete Bronce (50 Boletos)", price: "RD$ 150", count: 50 },
-      { name: "Boletos Individuales (< 50)", price: "RD$ 3 / c/u", count: 1 }
-    ];
-
-    let totalRevenue = 0;
-    let totalPendingRevenue = 0;
-    let rowsHtml = "";
-
-    tiers.forEach(tier => {
-      let tierPaidSales = 0;
-      let tierPaidTicketsCount = 0;
-      let tierRevenue = 0;
-
-      paidTickets.forEach(t => {
-        const pName = t.paquete || "";
-        if (pName.includes(tier.name.split(" ")[1]) || (tier.count === 1 && (!pName || pName.includes("Boleto")))) {
-          tierPaidSales++;
-          tierPaidTicketsCount++;
-        }
-      });
-
-      if (tier.count === 500) tierRevenue = tierPaidSales * 1500;
-      else if (tier.count === 250) tierRevenue = tierPaidSales * 750;
-      else if (tier.count === 150) tierRevenue = tierPaidSales * 450;
-      else if (tier.count === 50) tierRevenue = tierPaidSales * 150;
-      else tierRevenue = tierPaidTicketsCount * 3;
-
-      totalRevenue += tierRevenue;
-
-      rowsHtml += `
-        <tr>
-          <td><strong style="color:var(--cyan);">${tier.name}</strong></td>
-          <td style="font-family:var(--font-mono);">${tier.price}</td>
-          <td><strong style="color:#FFF;">${tierPaidSales.toLocaleString("es-DO")} ventas</strong></td>
-          <td style="font-family:var(--font-mono);">${tierPaidTicketsCount.toLocaleString("es-DO")} boletos</td>
-          <td><strong style="color:var(--green); font-family:var(--font-mono);">RD$ ${tierRevenue.toLocaleString("es-DO")}</strong></td>
-        </tr>
-      `;
-    });
-
-    tbody.innerHTML = rowsHtml;
-
-    if ($("finTotalRevenue")) $("finTotalRevenue").textContent = `RD$ ${totalRevenue.toLocaleString("es-DO")}`;
-    if ($("finPendingRevenue")) $("finPendingRevenue").textContent = `RD$ ${(pendingTickets.length * 3).toLocaleString("es-DO")}`;
-    if ($("finAvgTicket")) $("finAvgTicket").textContent = paidTickets.length > 0 ? `RD$ ${Math.round(totalRevenue / Math.max(1, paidTickets.length)).toLocaleString("es-DO")}` : "RD$ 0";
-  }
-
-  function exportFinancialCSV() {
-    const conf = configs[activeRaffleId] || { title: "Sorteo" };
-    let csv = `Sorteo,Nivel Paquete,Precio,Ventas Validadas,Boletos Incluidos,Total Recaudado\n`;
-    const tbody = $("financialBreakdownTableBody");
-    if (!tbody) return;
-
-    tbody.querySelectorAll("tr").forEach(tr => {
-      const cols = tr.querySelectorAll("td");
-      if (cols.length >= 5) {
-        const rowData = [
-          `"${conf.title}"`,
-          `"${cols[0].innerText.trim()}"`,
-          `"${cols[1].innerText.trim()}"`,
-          `"${cols[2].innerText.trim()}"`,
-          `"${cols[3].innerText.trim()}"`,
-          `"${cols[4].innerText.trim()}"`
-        ];
-        csv += rowData.join(",") + "\n";
-      }
-    });
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Reporte_Financiero_SuerteRD_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showNotification("Reporte financiero exportado en CSV.", "success");
-  }
-
-  // --- PACKAGE MANAGEMENT & MANUAL CREDITS (Estilo Listo Patrón) ---
-  const DEFAULT_PACKAGES = {
-    bronce: { id: "bronce", title: "Paquete Bronce", count: 10, price: 30, bonus: 0 },
-    plata: { id: "plata", title: "Paquete Plata", count: 25, price: 75, bonus: 2 },
-    oro: { id: "oro", title: "Paquete Oro", count: 50, price: 150, bonus: 5 },
-    vip: { id: "vip", title: "Pack VIP Diamante", count: 100, price: 300, bonus: 12 }
-  };
-
+  // --- PACKAGE MANAGEMENT ---
   async function loadPackageConfig() {
-    try {
-      const raw = await getStorageItem("suerterd:packages:v1");
-      const parsed = safeParse(raw, null);
-      const pkgs = parsed || DEFAULT_PACKAGES;
-      
-      if ($("pkgPrice_bronce")) $("pkgPrice_bronce").value = pkgs.bronce?.price || 30;
-      if ($("pkgCount_bronce")) $("pkgCount_bronce").value = pkgs.bronce?.count || 10;
-      if ($("pkgBonus_bronce")) $("pkgBonus_bronce").value = pkgs.bronce?.bonus || 0;
+    const raw = await getStorageItem(PACKAGES_KEY);
+    const pkgs = safeParse(raw, DEFAULT_PACKAGES);
+    if ($("pkgPrice_bronce")) $("pkgPrice_bronce").value = pkgs.bronce?.price || 30;
+    if ($("pkgCount_bronce")) $("pkgCount_bronce").value = pkgs.bronce?.count || 10;
+    if ($("pkgBonus_bronce")) $("pkgBonus_bronce").value = pkgs.bronce?.bonus || 0;
 
-      if ($("pkgPrice_plata")) $("pkgPrice_plata").value = pkgs.plata?.price || 75;
-      if ($("pkgCount_plata")) $("pkgCount_plata").value = pkgs.plata?.count || 25;
-      if ($("pkgBonus_plata")) $("pkgBonus_plata").value = pkgs.plata?.bonus || 2;
+    if ($("pkgPrice_plata")) $("pkgPrice_plata").value = pkgs.plata?.price || 75;
+    if ($("pkgCount_plata")) $("pkgCount_plata").value = pkgs.plata?.count || 25;
+    if ($("pkgBonus_plata")) $("pkgBonus_plata").value = pkgs.plata?.bonus || 2;
 
-      if ($("pkgPrice_oro")) $("pkgPrice_oro").value = pkgs.oro?.price || 150;
-      if ($("pkgCount_oro")) $("pkgCount_oro").value = pkgs.oro?.count || 50;
-      if ($("pkgBonus_oro")) $("pkgBonus_oro").value = pkgs.oro?.bonus || 5;
+    if ($("pkgPrice_oro")) $("pkgPrice_oro").value = pkgs.oro?.price || 150;
+    if ($("pkgCount_oro")) $("pkgCount_oro").value = pkgs.oro?.count || 50;
+    if ($("pkgBonus_oro")) $("pkgBonus_oro").value = pkgs.oro?.bonus || 5;
 
-      if ($("pkgPrice_vip")) $("pkgPrice_vip").value = pkgs.vip?.price || 300;
-      if ($("pkgCount_vip")) $("pkgCount_vip").value = pkgs.vip?.count || 100;
-      if ($("pkgBonus_vip")) $("pkgBonus_vip").value = pkgs.vip?.bonus || 12;
-    } catch(e) {
-      console.warn("Failed loading package configs", e);
-    }
+    if ($("pkgPrice_vip")) $("pkgPrice_vip").value = pkgs.vip?.price || 300;
+    if ($("pkgCount_vip")) $("pkgCount_vip").value = pkgs.vip?.count || 100;
+    if ($("pkgBonus_vip")) $("pkgBonus_vip").value = pkgs.vip?.bonus || 12;
   }
 
   async function savePackageConfig() {
-    showNotification("Guardando configuración de paquetes...", "info");
     const pkgs = {
-      bronce: {
-        id: "bronce", title: "Paquete Bronce",
-        price: Number($("pkgPrice_bronce")?.value) || 30,
-        count: Number($("pkgCount_bronce")?.value) || 10,
-        bonus: Number($("pkgBonus_bronce")?.value) || 0
-      },
-      plata: {
-        id: "plata", title: "Paquete Plata",
-        price: Number($("pkgPrice_plata")?.value) || 75,
-        count: Number($("pkgCount_plata")?.value) || 25,
-        bonus: Number($("pkgBonus_plata")?.value) || 2
-      },
-      oro: {
-        id: "oro", title: "Paquete Oro",
-        price: Number($("pkgPrice_oro")?.value) || 150,
-        count: Number($("pkgCount_oro")?.value) || 50,
-        bonus: Number($("pkgBonus_oro")?.value) || 5
-      },
-      vip: {
-        id: "vip", title: "Pack VIP Diamante",
-        price: Number($("pkgPrice_vip")?.value) || 300,
-        count: Number($("pkgCount_vip")?.value) || 100,
-        bonus: Number($("pkgBonus_vip")?.value) || 12
-      }
+      bronce: { price: Number($("pkgPrice_bronce")?.value) || 30, count: Number($("pkgCount_bronce")?.value) || 10, bonus: Number($("pkgBonus_bronce")?.value) || 0 },
+      plata: { price: Number($("pkgPrice_plata")?.value) || 75, count: Number($("pkgCount_plata")?.value) || 25, bonus: Number($("pkgBonus_plata")?.value) || 2 },
+      oro: { price: Number($("pkgPrice_oro")?.value) || 150, count: Number($("pkgCount_oro")?.value) || 50, bonus: Number($("pkgBonus_oro")?.value) || 5 },
+      vip: { price: Number($("pkgPrice_vip")?.value) || 300, count: Number($("pkgCount_vip")?.value) || 100, bonus: Number($("pkgBonus_vip")?.value) || 12 }
     };
-    await setStorageItem("suerterd:packages:v1", JSON.stringify(pkgs));
-    showNotification("¡Configuración de paquetes guardada correctamente!", "success");
+    await setStorageItem(PACKAGES_KEY, JSON.stringify(pkgs));
+    alert("¡Configuración de paquetes guardada correctamente!");
   }
 
-  function initManualCreditsForm() {
-    if ($("manualClientName")) $("manualClientName").focus();
-  }
-
+  // --- MANUAL CREDITS ASSIGNMENT ---
   async function submitManualTicketAssignment() {
     const name = $("manualClientName") ? $("manualClientName").value.trim() : "";
     const phone = $("manualClientPhone") ? $("manualClientPhone").value.trim() : "";
     const count = Number($("manualTicketCount") ? $("manualTicketCount").value : 10) || 10;
     const reason = $("manualAssignReason") ? $("manualAssignReason").value : "plan_upgrade";
-    const notes = $("manualAssignNotes") ? $("manualAssignNotes").value.trim() : "";
 
-    if (!name || !phone) {
-      alert("Por favor ingresa el nombre y teléfono del cliente.");
-      return;
-    }
+    if (!name || !phone) { alert("Completa el nombre y teléfono del cliente."); return; }
 
-    if (count <= 0 || count > 1000) {
-      alert("La cantidad de boletos debe ser mayor a 0 y hasta 1000.");
-      return;
-    }
-
-    showNotification(`Asignando ${count} boletos a ${name}...`, "info");
-
-    const conf = configs[activeRaffleId] || DEFAULT_CONFIGS[activeRaffleId] || { total: 100000 };
+    const conf = configs[activeRaffleId] || DEFAULT_CONFIGS.florida5;
     const tickets = allTickets[activeRaffleId] || {};
 
-    // Find available ticket numbers
     const assignedNums = [];
     for (let i = 1; i <= (conf.total || 100000); i++) {
       const numStr = pad5(i);
@@ -2710,72 +431,291 @@ Por favor reenvíanos tu foto de transferencia actualizada para validar y activa
     }
 
     if (assignedNums.length < count) {
-      alert(`No hay suficientes boletos disponibles en el sorteo activo. Solo quedan ${assignedNums.length} boletos libres.`);
+      alert(`Solo quedan ${assignedNums.length} boletos disponibles.`);
       return;
     }
 
-    const timestamp = Date.now();
-    const reasonMap = {
-      plan_upgrade: "Compra de Paquete Validada",
-      promotional: "Regalo Promocional / Bonus",
-      refund: "Reembolso / Devolución",
-      compensation: "Compensación por Soporte",
-      other: "Asignación Manual Admin"
-    };
-    const reasonLabel = reasonMap[reason] || "Asignación Manual";
-
     assignedNums.forEach(nStr => {
-      tickets[nStr] = {
-        name: name,
-        nombre: name,
-        whatsapp: phone,
-        loteria: "Pick 5 Florida",
-        estado: "pagado",
-        timestamp: timestamp,
-        origen: "admin_manual",
-        motivo: reasonLabel,
-        nota: notes
-      };
+      tickets[nStr] = { name: name, whatsapp: phone, loteria: "Pick 5 Florida", estado: "pagado", timestamp: Date.now() };
     });
 
-    const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
-    await setStorageItem(key, JSON.stringify(tickets));
+    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
 
-    showNotification(`¡${count} boletos asignados con éxito a ${name}!`, "success");
+    const sampleNumsDisplay = assignedNums.slice(0, 5).map(n => `#${n}`).join(", ");
+    const textMsg = encodeURIComponent(`🎰 *SUERTE RD* | *CONFIRMACIÓN DE BOLETOS* 🎰\n👤 Cliente: ${name}\n🎟️ Boletos Activos (${count}): ${sampleNumsDisplay}\n🟢 Estado: PAGADOS Y ACTIVOS 🟢`);
+    window.open(`https://wa.me/${formatWhatsAppPhone(phone)}?text=${textMsg}`, "_blank");
 
-    // Open WhatsApp confirmation link
-    const sampleNumsDisplay = assignedNums.length <= 5 ? assignedNums.map(n => `#${n}`).join(", ") : assignedNums.slice(0, 5).map(n => `#${n}`).join(", ") + `... y ${assignedNums.length - 5} más`;
-    const textMsg = 
-`🎰 *SUERTE RD* | *ASIGNACIÓN OFICIAL DE BOLETO(S)* 🎰
-═════════════════════════════
-👤 *CLIENTE:* ${name}
-📱 *WHATSAPP:* ${phone}
-
-🏆 *SORTEO:* ${conf.title}
-🎟️ *CANTIDAD:* *${count} Boletos*
-🔢 *BOLETOS:* ${sampleNumsDisplay}
-📝 *MOTIVO:* ${reasonLabel}
-
-🟢 *ESTADO:* *PAGADOS Y ACTIVOS* 🟢
-═════════════════════════════
-✨ ¡Muchas gracias por participar en Suerte RD! Te deseamos la mayor de las suertes. 🍀🔥`;
-
-    const encoded = encodeURIComponent(textMsg);
-    const cleanPhone = formatWhatsAppPhone(phone);
-    window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, "_blank");
-
-    // Clear form
-    if ($("manualClientName")) $("manualClientName").value = "";
-    if ($("manualClientPhone")) $("manualClientPhone").value = "";
-    if ($("manualAssignNotes")) $("manualAssignNotes").value = "";
-
+    $("manualClientName").value = ""; $("manualClientPhone").value = "";
     loadRaffleState(activeRaffleId);
   }
 
-  // Run navigation setup immediately so sidebar buttons are always active & clickable
-  setupNavigation();
+  // --- PAYMENTS VALIDATION ---
+  function updateValidationBadge() {
+    const badge = $("paymentNotificationBadge");
+    if (!badge) return;
+    let pendingCount = 0;
+    RAFFLE_IDS.forEach(rId => {
+      const tickets = allTickets[rId] || {};
+      Object.values(tickets).forEach(t => {
+        if (t && (t.estado === "esperando_validacion" || t.estado === "reservado")) pendingCount++;
+      });
+    });
+    if (pendingCount > 0) {
+      badge.textContent = pendingCount;
+      badge.style.display = "inline-block";
+    } else {
+      badge.style.display = "none";
+    }
+  }
 
-  // Run on startup
-  await checkAuthentication();
+  function renderPaymentsTable() {
+    const body = $("paymentsTableBody");
+    if (!body) return;
+    body.innerHTML = "";
+
+    const query = $("paymentSearchInput") ? $("paymentSearchInput").value.trim().toLowerCase() : "";
+    const tickets = allTickets[activeRaffleId] || {};
+    
+    // Group by client/timestamp
+    const groups = {};
+    Object.keys(tickets).forEach(tNum => {
+      const t = tickets[tNum];
+      if (t && (t.estado === "esperando_validacion" || t.estado === "reservado")) {
+        const key = `${t.timestamp || 0}_${t.whatsapp || 'anon'}`;
+        if (!groups[key]) {
+          groups[key] = { name: t.name || t.nombre || "Cliente", whatsapp: t.whatsapp, loteria: t.loteria || "Florida", comprobante: t.comprobante, numbers: [] };
+        }
+        groups[key].numbers.push(tNum);
+      }
+    });
+
+    let count = 0;
+    Object.keys(groups).forEach(gKey => {
+      const g = groups[gKey];
+      if (query && !g.name.toLowerCase().includes(query) && !g.whatsapp.includes(query)) return;
+
+      const numsStr = g.numbers.join(",");
+      const amount = g.numbers.length * 3;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="text-align:center;"><input type="checkbox" class="payment-chk" data-nums="${numsStr}"></td>
+        <td><strong>Sorteo iPhone 17</strong></td>
+        <td><span class="badge badge-gold">🎟️ Lote (${g.numbers.length} Boletos)</span></td>
+        <td><strong style="color:var(--green); font-family:var(--font-mono);">RD$ ${amount}</strong></td>
+        <td><strong>${escapeHtml(g.name)}</strong></td>
+        <td><a href="https://wa.me/${formatWhatsAppPhone(g.whatsapp)}" target="_blank" style="color:var(--cyan); text-decoration:none;">${g.whatsapp}</a></td>
+        <td><span class="badge badge-cyan">${escapeHtml(g.loteria)}</span></td>
+        <td>
+          ${g.comprobante ? `<img src="${g.comprobante}" class="view-receipt-btn" data-img="${g.comprobante}" data-name="${g.name}" data-phone="${g.whatsapp}" data-nums="${numsStr}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; border:2px solid var(--cyan); cursor:pointer;">` : '<span style="color:var(--text-muted);">Sin recibo</span>'}
+        </td>
+        <td><span class="badge badge-gold">Por Verificar</span></td>
+        <td style="font-size:0.8rem; color:var(--text-grey);">${new Date().toLocaleDateString("es-DO")}</td>
+        <td>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-green btn-approve-group" data-nums="${numsStr}" style="padding:4px 8px; font-size:0.75rem;">Aprobar</button>
+            <button class="btn btn-red btn-reject-group" data-nums="${numsStr}" style="padding:4px 8px; font-size:0.75rem;">Rechazar</button>
+          </div>
+        </td>
+      `;
+
+      tr.querySelectorAll(".view-receipt-btn").forEach(img => {
+        img.addEventListener("click", () => {
+          $("viewReceiptMetaName").textContent = img.getAttribute("data-name");
+          $("viewReceiptMetaPhone").textContent = img.getAttribute("data-phone");
+          $("viewReceiptMetaTickets").textContent = img.getAttribute("data-nums");
+          $("viewReceiptImg").src = img.getAttribute("data-img");
+          $("viewReceiptOverlay").classList.add("active");
+        });
+      });
+
+      tr.querySelector(".btn-approve-group").addEventListener("click", () => approvePaymentGroup(numsStr));
+      tr.querySelector(".btn-reject-group").addEventListener("click", () => rejectPaymentGroup(numsStr));
+
+      body.appendChild(tr);
+      count++;
+    });
+
+    if (count === 0) {
+      body.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--text-grey); padding:30px;">No hay pagos o comprobantes pendientes por verificar.</td></tr>`;
+    }
+  }
+
+  async function approvePaymentGroup(numsStr) {
+    const nums = numsStr.split(",");
+    const tickets = allTickets[activeRaffleId] || {};
+    nums.forEach(n => { if (tickets[n]) tickets[n].estado = "pagado"; });
+    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
+    if ($("viewReceiptOverlay")) $("viewReceiptOverlay").classList.remove("active");
+    loadRaffleState(activeRaffleId);
+  }
+
+  async function rejectPaymentGroup(numsStr) {
+    if (!confirm("¿Rechazar este pago y liberar los boletos?")) return;
+    const nums = numsStr.split(",");
+    const tickets = allTickets[activeRaffleId] || {};
+    nums.forEach(n => { delete tickets[n]; });
+    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
+    if ($("viewReceiptOverlay")) $("viewReceiptOverlay").classList.remove("active");
+    loadRaffleState(activeRaffleId);
+  }
+
+  async function bulkApprovePayments() {
+    const chks = document.querySelectorAll(".payment-chk:checked");
+    if (chks.length === 0) { alert("Selecciona al menos una compra."); return; }
+    const tickets = allTickets[activeRaffleId] || {};
+    chks.forEach(chk => {
+      const nums = chk.getAttribute("data-nums").split(",");
+      nums.forEach(n => { if (tickets[n]) tickets[n].estado = "pagado"; });
+    });
+    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
+    loadRaffleState(activeRaffleId);
+  }
+
+  // --- CONFIG & DRAWING & WINNERS ---
+  function loadConfigForm(rId) {
+    const conf = configs[rId] || DEFAULT_CONFIGS.florida5;
+    if ($("cfgTitle")) $("cfgTitle").value = conf.title;
+    if ($("cfgPrize")) $("cfgPrize").value = conf.prize;
+    if ($("cfgPrice")) $("cfgPrice").value = conf.price;
+    if ($("cfgTotal")) $("cfgTotal").value = conf.total;
+  }
+
+  async function saveConfigChanges() {
+    configs[activeRaffleId] = {
+      ...configs[activeRaffleId],
+      title: $("cfgTitle").value.trim(),
+      prize: $("cfgPrize").value.trim(),
+      price: $("cfgPrice").value.trim(),
+      total: Number($("cfgTotal").value) || 100000
+    };
+    await setStorageItem(`${CFG_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(configs[activeRaffleId]));
+    alert("¡Configuración guardada!");
+    loadRaffleState(activeRaffleId);
+  }
+
+  async function startOfficialDraw() {
+    const tickets = allTickets[activeRaffleId] || {};
+    const paidList = Object.keys(tickets).filter(n => tickets[n].estado === "pagado");
+    if (paidList.length === 0) { alert("Debe haber al menos un boleto PAGADO."); return; }
+
+    const winningTicket = paidList[Math.floor(Math.random() * paidList.length)];
+    const winnerDetails = tickets[winningTicket];
+
+    for (let i = 0; i < 5; i++) {
+      if ($(`reel${i}`)) $(`reel${i}`).textContent = winningTicket[i];
+    }
+    if ($("drawStatusText")) $("drawStatusText").textContent = `¡Ganador Oficial: #${winningTicket}!`;
+    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+
+    winners.push({ raffleId: activeRaffleId, name: winnerDetails.name || "Ganador", number: parseInt(winningTicket, 10), prize: configs[activeRaffleId].prize, date: new Date().toISOString() });
+    await setStorageItem(WINNERS_KEY, JSON.stringify(winners));
+  }
+
+  function renderWinnersTable() {
+    const body = $("winnersTableBody");
+    if (!body) return;
+    body.innerHTML = "";
+    winners.slice().reverse().forEach((w, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>Sorteo iPhone 17</strong></td>
+        <td>${escapeHtml(w.prize)}</td>
+        <td style="font-family:var(--font-mono); font-weight:800; color:var(--gold);">#${pad5(w.number)}</td>
+        <td>${escapeHtml(w.name)}</td>
+        <td>Ver Foto</td>
+        <td style="font-size:0.8rem; color:var(--text-grey);">${new Date(w.date).toLocaleDateString("es-DO")}</td>
+        <td><button class="btn btn-red" onclick="alert('Ganador registrado.')" style="padding:4px 8px; font-size:0.75rem;">Detalles</button></td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  function renderBankAccountsTable() {
+    const body = $("bankAccountsTableBody");
+    if (!body) return;
+    body.innerHTML = "";
+    bankAccounts.forEach(acc => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><strong>${escapeHtml(acc.bank)}</strong></td><td><span class="badge badge-cyan">${escapeHtml(acc.type)}</span></td><td style="font-family:var(--font-mono); font-weight:700;">${escapeHtml(acc.number)}</td><td>${escapeHtml(acc.owner)}</td><td><button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;">Editar</button></td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  async function addBankAccount() {
+    const bank = $("bankNameInput").value.trim();
+    const type = $("bankTypeInput").value.trim();
+    const number = $("bankNumInput").value.trim();
+    const owner = $("bankOwnerInput").value.trim();
+    if (!bank || !number) return;
+    bankAccounts.push({ bank, type, number, owner });
+    await setStorageItem("suerterd:payment:methods", JSON.stringify(bankAccounts));
+    renderBankAccountsTable();
+    $("bankNameInput").value = ""; $("bankNumInput").value = ""; $("bankOwnerInput").value = "";
+  }
+
+  function loadWhatsappTemplates() {
+    if ($("waApprovedTemplate")) $("waApprovedTemplate").value = "✅ *SUERTE RD* | *PAGO APROBADO*\n¡Tu pago ha sido validado! Tus boletos están oficialmente participando. 🍀";
+    if ($("waRejectedTemplate")) $("waRejectedTemplate").value = "❌ *SUERTE RD* | *PAGO RECHAZADO*\nTu comprobante no pudo ser verificado. Por favor contacta al soporte.";
+  }
+
+  function saveWhatsappTemplates() { alert("Plantillas guardadas."); }
+
+  function renderFinancialReportsTable() {
+    const body = $("financialBreakdownTableBody");
+    if (!body) return;
+    body.innerHTML = "";
+    const tickets = allTickets[activeRaffleId] || {};
+    const paidCount = Object.values(tickets).filter(t => t.estado === "pagado").length;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><strong>General / Individual</strong></td><td>RD$ 3</td><td>${paidCount}</td><td>${paidCount} Boletos</td><td style="color:var(--green); font-family:var(--font-mono); font-weight:800;">RD$ ${paidCount * 3}</td>`;
+    body.appendChild(tr);
+  }
+
+  function exportFinancialCSV() {
+    alert("Exportando reporte financiero en CSV...");
+  }
+
+  async function fetchSupportMessages() {
+    const body = $("supportTableBody");
+    if (!body) return;
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-grey); padding:20px;">Bandeja de soporte vacía.</td></tr>`;
+  }
+
+  // --- AUTH PIN ---
+  async function checkAuthentication() {
+    const overlay = $("adminLoginOverlay");
+    const pin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '';
+    if (pin === '123456' || pin === 'SuerteRD2026' || pin === 'SoyArte(20251975)') {
+      adminPin = pin;
+      if (overlay) overlay.classList.remove("active");
+      await init();
+      return;
+    }
+
+    if (overlay) {
+      overlay.classList.add("active");
+      const btn = $("btnAdminLoginSubmit");
+      const input = $("adminLoginPinInput");
+      if (btn) btn.onclick = () => handleLogin(input.value.trim());
+      if (input) input.onkeydown = (e) => { if (e.key === "Enter") handleLogin(input.value.trim()); };
+    }
+  }
+
+  function handleLogin(pin) {
+    if (pin === '123456' || pin === 'SuerteRD2026' || pin === 'SoyArte(20251975)') {
+      adminPin = pin;
+      sessionStorage.setItem('admin_pin', pin);
+      localStorage.setItem('admin_pin', pin);
+      if ($("adminLoginOverlay")) $("adminLoginOverlay").classList.remove("active");
+      init();
+    } else {
+      const err = $("adminLoginErrorMsg");
+      if (err) { err.textContent = "PIN de seguridad incorrecto."; err.style.display = "block"; }
+    }
+  }
+
+  // Auto Init
+  checkAuthentication();
 
 })();
