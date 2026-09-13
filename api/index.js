@@ -16,7 +16,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, '..')));
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  express.static(path.join(__dirname, '..'))(req, res, next);
+});
 
 app.get('/assets/js/app.js', (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
@@ -273,7 +276,7 @@ app.get(['/api/tickets', '/tickets'], async (req, res) => {
 
 // RESERVE TICKETS API
 app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
-  const { raffleId = 'florida5', name, whatsapp, tickets, packageLabel, estado, comprobante } = req.body || {};
+  const { raffleId = 'florida5', name, whatsapp, tickets, packageLabel, estado, comprobante, groupKey } = req.body || {};
   if (!name || !whatsapp || !tickets || !tickets.length) {
     return res.status(400).json({ error: "Faltan datos requeridos" });
   }
@@ -286,6 +289,7 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
 
   const now = Date.now();
   const newStatus = estado || 'esperando_validacion';
+  const uniqueGroupKey = groupKey || `order_${now}_${Math.random().toString(36).substring(2, 7)}`;
 
   tickets.forEach(tNum => {
     ticketsObj[tNum] = {
@@ -296,7 +300,9 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
       comprobante: comprobante || '',
       fecha: new Date(now).toISOString(),
       timestamp_reserva: now,
-      timestamp_pago: newStatus === 'pagado' ? now : null
+      timestamp_pago: newStatus === 'pagado' ? now : null,
+      groupKey: uniqueGroupKey,
+      orderId: uniqueGroupKey
     };
   });
 
@@ -313,7 +319,7 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
 
   await writeDb(db);
 
-  res.json({ success: true, count: tickets.length });
+  res.json({ success: true, count: tickets.length, groupKey: uniqueGroupKey });
 });
 
 // UPDATE TICKET STATUS API

@@ -2145,11 +2145,22 @@
     // 1. Prepare ticket state in memory immediately
     let latestTickets = allTickets[activeRaffleId] || {};
     const timestamp = Date.now();
+    const uniqueGroupKey = `order_${timestamp}_${Math.random().toString(36).substring(2, 7)}`;
     
     // Copy cart before resetting
     const checkedOutCart = [...cart];
     cart = [];
     renderCart();
+
+    let detectedPkgLabel = lastSelectedPackageLabel || "";
+    if (!detectedPkgLabel) {
+      if (checkedOutCart.length === 50) detectedPkgLabel = "Paquete Bronce (50 Boletos)";
+      else if (checkedOutCart.length === 150) detectedPkgLabel = "Paquete Plata (150 Boletos)";
+      else if (checkedOutCart.length === 250) detectedPkgLabel = "Paquete Oro (250 Boletos)";
+      else if (checkedOutCart.length === 500) detectedPkgLabel = "Paquete Diamante (500 Boletos)";
+      else if (checkedOutCart.length > 1) detectedPkgLabel = `Grupo (${checkedOutCart.length} Boletos)`;
+      else detectedPkgLabel = "Boleto Individual";
+    }
 
     checkedOutCart.forEach(num => {
       latestTickets[num] = {
@@ -2157,9 +2168,11 @@
         nombre: name,
         whatsapp: phone,
         loteria: lottery,
-        paquete: lastSelectedPackageLabel || "",
-        estado: "reservado",
-        timestamp: timestamp
+        paquete: detectedPkgLabel,
+        packageLabel: detectedPkgLabel,
+        estado: "esperando_validacion",
+        timestamp: timestamp,
+        groupKey: uniqueGroupKey
       };
     });
 
@@ -2193,16 +2206,6 @@
     // Open receipt modal INSTANTLY (Zero delay)
     showReceipt(checkedOutCart.join(", "), name, phone, lottery, checkedOutCart.length);
 
-    let detectedPkgLabel = lastSelectedPackageLabel || "";
-    if (!detectedPkgLabel) {
-      if (checkedOutCart.length === 50) detectedPkgLabel = "Paquete Bronce (50 Boletos)";
-      else if (checkedOutCart.length === 150) detectedPkgLabel = "Paquete Plata (150 Boletos)";
-      else if (checkedOutCart.length === 250) detectedPkgLabel = "Paquete Oro (250 Boletos)";
-      else if (checkedOutCart.length === 500) detectedPkgLabel = "Paquete Diamante (500 Boletos)";
-      else if (checkedOutCart.length > 1) detectedPkgLabel = `Grupo (${checkedOutCart.length} Boletos)`;
-      else detectedPkgLabel = "Boleto Individual";
-    }
-
     // 3. Send network sync to server asynchronously in background
     fetch('/api/tickets/reserve', {
       method: 'POST',
@@ -2214,7 +2217,8 @@
         loteria: lottery,
         tickets: checkedOutCart,
         estado: 'esperando_validacion',
-        packageLabel: detectedPkgLabel
+        packageLabel: detectedPkgLabel,
+        groupKey: uniqueGroupKey
       })
     }).catch(e => {
       console.warn("Background ticket sync error:", e);
@@ -2314,6 +2318,7 @@
     }
 
     const activeReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64;
+    const uniqueGroupKey = `order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     // Save purchase order to shared localStorage backup for instant Admin sync
     try {
@@ -2331,7 +2336,8 @@
           estado: 'esperando_validacion',
           comprobante: activeReceiptImg || '',
           fecha: nowIso,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          groupKey: uniqueGroupKey
         };
       });
       localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentBackup));
@@ -2353,7 +2359,8 @@
           tickets: ticketNums,
           packageLabel: currentPkgTag,
           comprobante: activeReceiptImg || "",
-          estado: "esperando_validacion"
+          estado: "esperando_validacion",
+          groupKey: uniqueGroupKey
         })
       });
     } catch(e) {
