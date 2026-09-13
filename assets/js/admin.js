@@ -3,8 +3,7 @@
  * Secciones: Estadísticas | Validar Pagos | Compras Manuales | Alertas Sonora y Toast
  */
 
-const RAFFLE_ID = 'florida5';
-const TICKET_KEY = `suerterd:tickets:v2:${RAFFLE_ID}`;
+let currentRaffleId = 'florida5';
 const TICKET_PRICE = 20; // RD$20 por boleto
 const TOTAL_BOLETOS = 100000;
 
@@ -23,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initModal();
   initFiltersAndSearch();
   initNotificationToggle();
+  initAdminRaffleSelector();
   
   const btnCreateTest = document.getElementById('btnCreateTest');
   if (btnCreateTest) {
@@ -66,6 +66,31 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTicketsData();
   }, 2000);
 });
+
+function initAdminRaffleSelector() {
+  const selector = document.getElementById('adminRaffleSelector');
+  if (!selector) return;
+
+  fetch('/api/get?key=suerterd:raffle:ids')
+    .then(r => r.json())
+    .then(data => {
+      let rIds = ['florida5'];
+      try {
+        if (data.value) rIds = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      } catch(e) {}
+
+      selector.innerHTML = rIds.map(id => `<option value="${id}">🎟️ Sorteo ${id}</option>`).join('');
+      if (rIds.includes(currentRaffleId)) {
+        selector.value = currentRaffleId;
+      }
+    })
+    .catch(e => console.warn('Raffle selector load error:', e));
+
+  selector.addEventListener('change', () => {
+    currentRaffleId = selector.value;
+    loadTicketsData();
+  });
+}
 
 /* ==========================================
    AUTENTICACIÓN & SESIÓN
@@ -298,7 +323,7 @@ function initFiltersAndSearch() {
    ========================================== */
 async function loadTicketsData() {
   try {
-    const res = await fetch(`/api/tickets?raffleId=${RAFFLE_ID}`);
+    const res = await fetch(`/api/tickets?raffleId=${currentRaffleId}`);
     let serverTickets = {};
     if (res.ok) {
       const data = await res.json();
@@ -337,37 +362,22 @@ async function loadTicketsData() {
       }
     });
 
-    const missingOnServer = [];
-    Object.keys(mergedTickets).forEach(tNum => {
-      if (!serverTickets[tNum] || serverTickets[tNum].estado !== mergedTickets[tNum].estado) {
-        missingOnServer.push(tNum);
-      }
-    });
-
     currentTickets = mergedTickets;
     try {
       localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(mergedTickets));
     } catch(e) {}
 
-    if (missingOnServer.length > 0) {
-      fetch('/api/set', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          key: `suerterd:tickets:v2:${RAFFLE_ID}`,
-          value: JSON.stringify(mergedTickets)
-        })
-      }).catch(e => console.warn('Sync backup error:', e));
-    }
-
     updateStatsCards();
     detectNewPendingPurchases();
     renderOrdersList();
 
-    if (document.getElementById('viewEstadisticas').style.display !== 'none') {
+    if (document.getElementById('viewEstadisticas') && document.getElementById('viewEstadisticas').style.display !== 'none') {
       renderChart();
     }
   } catch (e) {
+    console.error('Error cargando datos de boletos:', e);
+  }
+}
     console.error('Error cargando datos de boletos:', e);
   }
 }
@@ -669,7 +679,7 @@ async function approveGroup(ticketsEncodedStr, name, whatsapp) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        key: `suerterd:tickets:v2:${RAFFLE_ID}`,
+        key: `suerterd:tickets:v2:${currentRaffleId}`,
         value: JSON.stringify(currentTickets)
       })
     }).catch(e => console.warn('Sync approve set error:', e));
@@ -678,7 +688,7 @@ async function approveGroup(ticketsEncodedStr, name, whatsapp) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        raffleId: RAFFLE_ID,
+        raffleId: currentRaffleId,
         tickets: ticketsArr,
         status: 'pagado'
       })
@@ -708,7 +718,7 @@ async function rejectGroup(ticketsEncodedStr) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        key: `suerterd:tickets:v2:${RAFFLE_ID}`,
+        key: `suerterd:tickets:v2:${currentRaffleId}`,
         value: JSON.stringify(currentTickets)
       })
     }).catch(e => console.warn('Sync reject set error:', e));
@@ -723,7 +733,7 @@ async function rejectGroup(ticketsEncodedStr) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        raffleId: RAFFLE_ID,
+        raffleId: currentRaffleId,
         tickets: ticketsArr,
         status: 'rechazado'
       })
@@ -756,7 +766,7 @@ async function deleteGroupRecord(ticketsEncodedStr) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        raffleId: RAFFLE_ID,
+        raffleId: currentRaffleId,
         tickets: ticketsArr,
         action: 'delete',
         status: 'deleted'
@@ -845,7 +855,7 @@ async function handleCreateManualOrder() {
   }
 
   const payload = {
-    raffleId: RAFFLE_ID,
+    raffleId: currentRaffleId,
     name: name,
     whatsapp: whatsapp,
     loteria: 'Pick 5 Florida',

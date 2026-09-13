@@ -113,7 +113,7 @@ async function readDb(forceFresh = false) {
   if (useKV) {
     try {
       const kvPromise = kv.get('suerterd_db');
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('KV Timeout')), 1200));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('KV Timeout')), 3500));
       const data = await Promise.race([kvPromise, timeoutPromise]);
       db = data || null;
     } catch (e) {
@@ -126,7 +126,7 @@ async function readDb(forceFresh = false) {
       const fetchPromise = fetch(`${UPSTASH_URL}/get/suerterd_db`, {
         headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
       }).then(r => r.ok ? r.json() : null);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Upstash Timeout')), 1200));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Upstash Timeout')), 3500));
       const data = await Promise.race([fetchPromise, timeoutPromise]);
       if (data && data.result) {
         db = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
