@@ -330,42 +330,7 @@ async function loadTicketsData() {
       serverTickets = data.value || {};
     }
 
-    let backupTickets = {};
-    try {
-      backupTickets = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
-    } catch(e) {}
-
-    const mergedTickets = { ...serverTickets };
-    Object.keys(backupTickets).forEach(tNum => {
-      if (!mergedTickets[tNum]) {
-        mergedTickets[tNum] = backupTickets[tNum];
-      } else {
-        const serverComp = mergedTickets[tNum].comprobante || '';
-        const backupComp = backupTickets[tNum].comprobante || '';
-        const bestComp = (backupComp && backupComp.length > 20 && !backupComp.includes('suerte_rd_iphone17_banner'))
-          ? backupComp
-          : ((serverComp && serverComp.length > 20 && !serverComp.includes('suerte_rd_iphone17_banner')) ? serverComp : (backupComp || serverComp));
-
-        let targetStatus = mergedTickets[tNum].estado;
-        if (backupTickets[tNum].estado === 'pagado') {
-          targetStatus = 'pagado';
-        } else if (backupTickets[tNum].estado === 'rechazado' && mergedTickets[tNum].estado !== 'pagado') {
-          targetStatus = 'rechazado';
-        }
-
-        mergedTickets[tNum] = {
-          ...mergedTickets[tNum],
-          ...backupTickets[tNum],
-          comprobante: bestComp,
-          estado: targetStatus
-        };
-      }
-    });
-
-    currentTickets = mergedTickets;
-    try {
-      localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(mergedTickets));
-    } catch(e) {}
+    currentTickets = serverTickets;
 
     updateStatsCards();
     detectNewPendingPurchases();

@@ -2311,24 +2311,29 @@
     // Open receipt modal INSTANTLY (Zero delay)
     showReceipt(checkedOutCart.join(", "), name, phone, lottery, checkedOutCart.length);
 
-    // 3. Send network sync to server asynchronously in background
-    fetch('/api/tickets/reserve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        raffleId: activeRaffleId,
-        name,
-        whatsapp: phone,
-        loteria: lottery,
-        tickets: checkedOutCart,
-        estado: 'esperando_validacion',
-        packageLabel: detectedPkgLabel,
-        comprobante: currentReceiptImg,
-        groupKey: uniqueGroupKey
-      })
-    }).catch(e => {
+    // 3. Send network sync to server
+    try {
+      await Promise.race([
+        fetch('/api/tickets/reserve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            raffleId: activeRaffleId,
+            name,
+            whatsapp: phone,
+            loteria: lottery,
+            tickets: checkedOutCart,
+            estado: 'esperando_validacion',
+            packageLabel: detectedPkgLabel,
+            comprobante: currentReceiptImg,
+            groupKey: uniqueGroupKey
+          })
+        }),
+        new Promise(resolve => setTimeout(resolve, 2500))
+      ]);
+    } catch (e) {
       console.warn("Background ticket sync error:", e);
-    });
+    }
   }
 
   function showReceipt(num, name, phone, lottery, count = 1) {
@@ -2454,23 +2459,30 @@
       console.warn("localStorage backup error:", e);
     }
 
-    // 1. Send reserve & receipt API call non-blockingly (without blocking user click gesture for WhatsApp window.open)
-    fetch('/api/tickets/reserve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      keepalive: true,
-      body: JSON.stringify({
-        raffleId: activeRaffleId,
-        name,
-        whatsapp: phone,
-        loteria: lottery,
-        tickets: ticketNums,
-        packageLabel: currentPkgTag,
-        comprobante: activeReceiptImg || "",
-        estado: "esperando_validacion",
-        groupKey: uniqueGroupKey
-      })
-    }).catch(e => console.warn("Background receipt upload notice:", e));
+    // 1. Send reserve & receipt API call synchronously
+    try {
+      await Promise.race([
+        fetch('/api/tickets/reserve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+          body: JSON.stringify({
+            raffleId: activeRaffleId,
+            name,
+            whatsapp: phone,
+            loteria: lottery,
+            tickets: ticketNums,
+            packageLabel: currentPkgTag,
+            comprobante: activeReceiptImg || "",
+            estado: "esperando_validacion",
+            groupKey: uniqueGroupKey
+          })
+        }),
+        new Promise(resolve => setTimeout(resolve, 2500))
+      ]);
+    } catch (e) {
+      console.warn("Background receipt upload notice:", e);
+    }
 
     // 2. Format WhatsApp text
     const prizeTitle = (conf && (conf.prize || conf.title)) ? (conf.prize || conf.title) : "Sorteo Especial iPhone 17 Pro Max 1TB";
