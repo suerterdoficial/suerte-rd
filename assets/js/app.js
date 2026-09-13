@@ -2162,6 +2162,8 @@
       else detectedPkgLabel = "Boleto Individual";
     }
 
+    const currentReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64 || "";
+
     checkedOutCart.forEach(num => {
       latestTickets[num] = {
         name,
@@ -2171,6 +2173,7 @@
         paquete: detectedPkgLabel,
         packageLabel: detectedPkgLabel,
         estado: "esperando_validacion",
+        comprobante: currentReceiptImg,
         timestamp: timestamp,
         groupKey: uniqueGroupKey
       };
@@ -2181,6 +2184,31 @@
       const key = `${TICKETS_KEY_PREFIX}:${activeRaffleId}`;
       localStorage.setItem(key, JSON.stringify(latestTickets));
     } catch(e) {}
+
+    // Save purchase order to shared localStorage backup for instant Admin sync
+    try {
+      let currentBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
+      const nowIso = new Date().toISOString();
+      checkedOutCart.forEach(tNum => {
+        currentBackup[tNum] = {
+          name: name,
+          nombre: name,
+          whatsapp: phone,
+          phone: phone,
+          loteria: lottery,
+          paquete: detectedPkgLabel,
+          packageLabel: detectedPkgLabel,
+          estado: 'esperando_validacion',
+          comprobante: currentReceiptImg,
+          fecha: nowIso,
+          timestamp: timestamp,
+          groupKey: uniqueGroupKey
+        };
+      });
+      localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentBackup));
+    } catch(e) {
+      console.warn("localStorage backup error:", e);
+    }
 
     // 2. Hide reservation modal and reset button state
     $("reserveConfirmOverlay").classList.remove("active");
@@ -2218,6 +2246,7 @@
         tickets: checkedOutCart,
         estado: 'esperando_validacion',
         packageLabel: detectedPkgLabel,
+        comprobante: currentReceiptImg,
         groupKey: uniqueGroupKey
       })
     }).catch(e => {
@@ -3442,23 +3471,39 @@ ${formattedNumsText}
     reader.readAsDataURL(file);
   }
 
-  // File Upload listener for Payment Receipt (Phase 6)
+  // File Upload listener for Checkout Modal Receipt (Phase 6)
   let selectedPaymentReceiptBase64 = null;
+  const checkoutReceiptInput = $("checkoutReceiptInput");
+  if (checkoutReceiptInput) {
+    checkoutReceiptInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      showToast("Optimizando imagen de comprobante...", "info");
+      compressImageFile(file, 1400, 0.90, (compressedBase64) => {
+        selectedPaymentReceiptBase64 = compressedBase64;
+        window.selectedPaymentReceiptBase64 = compressedBase64;
+        if ($("checkoutReceiptPreview")) $("checkoutReceiptPreview").src = selectedPaymentReceiptBase64;
+        if ($("checkoutReceiptPreviewContainer")) $("checkoutReceiptPreviewContainer").style.display = "block";
+        showToast("Comprobante de depósito listo para enviar.", "ok");
+      });
+    });
+  }
+
   const receiptInput = $("paymentReceiptInput");
   if (receiptInput) {
     receiptInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
       
-      $("paymentReceiptFileName").textContent = file.name;
+      if ($("paymentReceiptFileName")) $("paymentReceiptFileName").textContent = file.name;
       showToast("Optimizando imagen...", "info");
 
       compressImageFile(file, 1400, 0.90, (compressedBase64) => {
         selectedPaymentReceiptBase64 = compressedBase64;
         window.selectedPaymentReceiptBase64 = compressedBase64;
-        $("paymentReceiptPreview").src = selectedPaymentReceiptBase64;
-        $("paymentReceiptPreviewContainer").style.display = "block";
-        $("btnSendWhatsApp").disabled = false;
+        if ($("paymentReceiptPreview")) $("paymentReceiptPreview").src = selectedPaymentReceiptBase64;
+        if ($("paymentReceiptPreviewContainer")) $("paymentReceiptPreviewContainer").style.display = "block";
+        if ($("btnSendWhatsApp")) $("btnSendWhatsApp").disabled = false;
         showToast("Imagen HD optimizada y lista.", "ok");
       });
     });

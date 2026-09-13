@@ -559,12 +559,17 @@ function renderOrdersList() {
           <div style="font-weight:900; color:var(--green); font-size:0.95rem; font-family:var(--font-mono);">RD$ ${totalMonto.toLocaleString()}</div>
         </td>
         <td style="padding:14px 16px;">
-          ${g.comprobante ? `
-            <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="openReceiptFromCache('${keyId}')">
-              <i data-lucide="eye" style="width:13px;"></i> Ver Foto HD
-            </button>
+          ${(g.comprobante && g.comprobante.length > 20 && !g.comprobante.includes('suerte_rd_iphone17_banner')) ? `
+            <div style="display:flex; align-items:center; gap:8px;">
+              <img src="${g.comprobante}" onclick="openReceiptFromCache('${keyId}')" style="width:38px; height:38px; object-fit:cover; border-radius:8px; cursor:pointer; border:1px solid var(--cyan);" title="Ver Foto HD">
+              <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="openReceiptFromCache('${keyId}')">
+                <i data-lucide="eye" style="width:13px;"></i> Ver HD
+              </button>
+            </div>
           ` : `
-            <span style="color:var(--muted); font-size:0.75rem;">Sin Comprobante</span>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; color:var(--muted);" onclick="openReceiptFromCache('${keyId}')">
+              <i data-lucide="file" style="width:13px;"></i> Detalle
+            </button>
           `}
         </td>
         <td style="padding:14px 16px;">
@@ -945,21 +950,32 @@ function openReceiptModal(groupData) {
   const ticketsListEl = document.getElementById('modalTicketsList');
   const approveBtnEl = document.getElementById('modalApproveBtn');
 
+  const noImgPlaceholder = document.getElementById('modalNoImgPlaceholder');
+
   if (!modal) return;
 
   resetReceiptImage();
 
-  let imgUrl = './assets/suerte_rd_iphone17_banner.png';
+  let rawImg = '';
   if (groupData) {
     if (typeof groupData === 'string') {
-      imgUrl = groupData;
+      rawImg = groupData;
     } else if (groupData.comprobante && typeof groupData.comprobante === 'string') {
-      imgUrl = groupData.comprobante;
+      rawImg = groupData.comprobante;
     }
   }
 
-  if (img) img.src = imgUrl;
-  if (openExternalBtn) openExternalBtn.href = imgUrl;
+  const hasRealImage = rawImg && rawImg.length > 20 && !rawImg.includes('suerte_rd_iphone17_banner');
+
+  if (hasRealImage) {
+    if (img) { img.src = rawImg; img.style.display = 'block'; }
+    if (noImgPlaceholder) noImgPlaceholder.style.display = 'none';
+    if (openExternalBtn) { openExternalBtn.href = rawImg; openExternalBtn.style.display = 'inline-flex'; }
+  } else {
+    if (img) { img.src = ''; img.style.display = 'none'; }
+    if (noImgPlaceholder) noImgPlaceholder.style.display = 'block';
+    if (openExternalBtn) openExternalBtn.style.display = 'none';
+  }
 
   if (groupData && typeof groupData === 'object') {
     if (clientNameEl) clientNameEl.innerText = groupData.name || 'Cliente';
