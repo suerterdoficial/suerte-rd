@@ -293,14 +293,46 @@ function initFiltersAndSearch() {
 async function loadTicketsData() {
   try {
     const res = await fetch(`/api/tickets?raffleId=${RAFFLE_ID}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    currentTickets = data.value || {};
-    
+    let serverTickets = {};
+    if (res.ok) {
+      const data = await res.json();
+      serverTickets = data.value || {};
+    }
+
+    let backupTickets = {};
+    try {
+      backupTickets = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
+    } catch(e) {}
+
+    const mergedTickets = { ...backupTickets, ...serverTickets };
+
+    const missingOnServer = [];
+    Object.keys(backupTickets).forEach(tNum => {
+      if (!serverTickets[tNum]) {
+        missingOnServer.push(tNum);
+      }
+    });
+
+    currentTickets = mergedTickets;
+    try {
+      localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(mergedTickets));
+    } catch(e) {}
+
+    if (missingOnServer.length > 0) {
+      fetch('/api/set', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: `suerterd:tickets:v2:${RAFFLE_ID}`,
+          value: JSON.stringify(mergedTickets)
+        })
+      }).catch(e => console.warn('Sync backup error:', e));
+    }
+
     updateStatsCards();
     detectNewPendingPurchases();
     renderOrdersList();
-    
+
     if (document.getElementById('viewEstadisticas').style.display !== 'none') {
       renderChart();
     }
