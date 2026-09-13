@@ -363,9 +363,9 @@ function detectNewPendingPurchases() {
   currentGroups.forEach(group => {
     if (group.estado === 'esperando_validacion' || group.estado === 'reservado') {
       pendingCount++;
-      if (!knownGroupKeys.has(group.groupKey) && !isFirstLoad) {
+      if (!knownGroupKeys.has(group.groupKey)) {
         showToastNotification(
-          '🎟️ ¡NUEVA COMPRA DE PAQUETE!',
+          '🎟️ ¡NUEVA COMPRA POR VALIDAR!',
           `Cliente: ${group.name} | WhatsApp: ${group.whatsapp} | ${group.paquete} (${group.tickets.length} boletos)`,
           'shopping-bag'
         );
@@ -373,8 +373,8 @@ function detectNewPendingPurchases() {
           '🎟️ Nueva Compra de Paquete en Suerte RD',
           `Cliente: ${group.name} (${group.whatsapp}) compró el ${group.paquete}.`
         );
+        knownGroupKeys.add(group.groupKey);
       }
-      knownGroupKeys.add(group.groupKey);
     }
   });
 
