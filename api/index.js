@@ -83,54 +83,47 @@ async function readDb(forceFresh = false) {
 
   if (useKV) {
     try {
-      const data = await kv.get('suerterd_db');
+      const kvPromise = kv.get('suerterd_db');
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('KV Timeout')), 1200));
+      const data = await Promise.race([kvPromise, timeoutPromise]);
       db = data || null;
     } catch (e) {
-      console.error("Error reading from Vercel KV:", e);
+      console.error("Error reading from Vercel KV:", e.message || e);
     }
   }
 
   if (!db && UPSTASH_URL && UPSTASH_TOKEN) {
     try {
-      const res = await fetch(`${UPSTASH_URL}/get/suerterd_db`, {
+      const fetchPromise = fetch(`${UPSTASH_URL}/get/suerterd_db`, {
         headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.result) {
-          db = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
-        }
+      }).then(r => r.ok ? r.json() : null);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Upstash Timeout')), 1200));
+      const data = await Promise.race([fetchPromise, timeoutPromise]);
+      if (data && data.result) {
+        db = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
       }
     } catch (e) {
-      console.error("Error reading from Upstash Redis:", e);
+      console.error("Error reading from Upstash Redis:", e.message || e);
     }
   }
 
-  if (!db) {
-    if (process.env.VERCEL && !fs.existsSync(DATA_FILE) && fs.existsSync(ORIGINAL_DATA_FILE)) {
-      try {
-        fs.copyFileSync(ORIGINAL_DATA_FILE, DATA_FILE);
-      } catch (e) {
-        console.error("Error copying original data.json to /tmp:", e);
-      }
+  if (!db || typeof db !== 'object') {
+    db = {};
+  }
+
+  let diskDb = {};
+  if (fs.existsSync(ORIGINAL_DATA_FILE)) {
+    try {
+      const raw = fs.readFileSync(ORIGINAL_DATA_FILE, 'utf8');
+      diskDb = JSON.parse(raw) || {};
+    } catch (e) {
+      console.error("Error reading ORIGINAL_DATA_FILE:", e);
     }
-    if (fs.existsSync(DATA_FILE)) {
-      try {
-        const raw = fs.readFileSync(DATA_FILE, 'utf8');
-        db = JSON.parse(raw) || {};
-      } catch (e) {
-        console.error("Error reading DATA_FILE:", e);
-        db = {};
-      }
-    } else if (fs.existsSync(ORIGINAL_DATA_FILE)) {
-      try {
-        const raw = fs.readFileSync(ORIGINAL_DATA_FILE, 'utf8');
-        db = JSON.parse(raw) || {};
-      } catch (e) {
-        db = {};
-      }
-    } else {
-      db = {};
+  }
+
+  for (const k in diskDb) {
+    if (!db[k]) {
+      db[k] = diskDb[k];
     }
   }
 
@@ -145,28 +138,24 @@ async function readDb(forceFresh = false) {
     }
     const tKey = `suerterd:tickets:v2:${id}`;
     
-    if (fs.existsSync(ORIGINAL_DATA_FILE)) {
-      try {
-        const diskRaw = fs.readFileSync(ORIGINAL_DATA_FILE, 'utf8');
-        const diskDb = JSON.parse(diskRaw) || {};
-        if (diskDb[tKey] && diskDb[tKey] !== "{}") {
-          let currentObj = {};
-          try { currentObj = typeof db[tKey] === 'string' ? JSON.parse(db[tKey] || "{}") : (db[tKey] || {}); } catch(e){}
-          let diskObj = {};
-          try { diskObj = typeof diskDb[tKey] === 'string' ? JSON.parse(diskDb[tKey]) : (diskDb[tKey] || {}); } catch(e){}
+    const diskTicketsStr = diskDb[tKey];
+    if (diskTicketsStr && diskTicketsStr !== "{}") {
+      let currentObj = {};
+      try { currentObj = typeof db[tKey] === 'string' ? JSON.parse(db[tKey] || "{}") : (db[tKey] || {}); } catch(e){}
+      let diskObj = {};
+      try { diskObj = typeof diskTicketsStr === 'string' ? JSON.parse(diskTicketsStr) : (diskTicketsStr || {}); } catch(e){}
 
-          let hasChanges = false;
-          for (const numStr in diskObj) {
-            if (!currentObj[numStr]) {
-              currentObj[numStr] = diskObj[numStr];
-              hasChanges = true;
-            }
-          }
-          if (hasChanges || !db[tKey] || db[tKey] === "{}") {
-            db[tKey] = JSON.stringify(currentObj);
-          }
+      let hasChanges = false;
+      for (const numStr in diskObj) {
+        if (!currentObj[numStr]) {
+          currentObj[numStr] = diskObj[numStr];
+          hasChanges = true;
         }
-      } catch(e) {}
+      }
+      db[tKey] = JSON.stringify(currentObj);
+      if (hasChanges && useKV) {
+        writeDb(db).catch(err => console.error("Error persisting merged db:", err));
+      }
     }
 
     if (!db[tKey]) {
