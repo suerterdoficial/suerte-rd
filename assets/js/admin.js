@@ -22,12 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCreateTest.addEventListener('click', handleCreateTestOrder);
   }
 
-  // Polling rápido cada 3 segundos para recibir notificaciones al instante
+  // Polling rápido cada 2 segundos para sincronización instantánea
   setInterval(() => {
     if (isAuthenticated()) {
       loadTicketsData();
     }
-  }, 3000);
+  }, 2000);
 });
 
 /* ==========================================
@@ -150,7 +150,15 @@ async function loadTicketsData() {
     const data = await res.json();
 
     if (data && data.value) {
-      currentTickets = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      let val = data.value;
+      while (typeof val === 'string') {
+        try {
+          val = JSON.parse(val);
+        } catch (e) {
+          break;
+        }
+      }
+      currentTickets = (typeof val === 'object' && val !== null) ? val : {};
     } else {
       currentTickets = {};
     }
@@ -167,8 +175,8 @@ function playNotificationSound() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
     gain.gain.setValueAtTime(0.2, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
     osc.connect(gain);
@@ -185,21 +193,20 @@ function updateMetricsAndTables() {
   let totalIncome = 0;
 
   ticketEntries.forEach(([num, t]) => {
+    if (!t) return;
     if (t.estado === 'pagado') {
       totalPaidTickets++;
       totalIncome += TICKET_PRICE;
-    } else if (t.estado === 'esperando_validacion') {
+    } else if (t.estado === 'esperando_validacion' || t.estado === 'reservado') {
       totalPendingTickets++;
     }
   });
 
-  // Reproducir sonido si hay nuevos pagos pendientes
   if (lastPendingCount >= 0 && totalPendingTickets > lastPendingCount) {
     playNotificationSound();
   }
   lastPendingCount = totalPendingTickets;
 
-  // Actualizar Elementos DOM Métricas
   const metricIncome = document.getElementById('metricIncome');
   const metricSold = document.getElementById('metricSold');
   const metricPending = document.getElementById('metricPending');
@@ -208,7 +215,6 @@ function updateMetricsAndTables() {
   if (metricSold) metricSold.innerText = `${totalPaidTickets.toLocaleString('es-DO')} / ${TOTAL_BOLETOS.toLocaleString('es-DO')}`;
   if (metricPending) metricPending.innerText = `${totalPendingTickets.toLocaleString('es-DO')}`;
 
-  // Actualizar Badge en Botón de la Pestaña "Validar Pagos"
   const btnValidarTab = document.querySelector('.tab-btn[data-tab="tabValidarPagos"]');
   if (btnValidarTab) {
     if (totalPendingTickets > 0) {
@@ -218,10 +224,7 @@ function updateMetricsAndTables() {
     }
   }
 
-  // Actualizar Tabla Validar Pagos
   renderValidarPagosTable();
-
-  // Actualizar Gráfico
   renderChart();
 
   if (window.lucide) {
@@ -238,34 +241,42 @@ function renderValidarPagosTable() {
 
   tbody.innerHTML = '';
 
-  // Agrupar boletos por cliente y comprobante
   const groups = {};
 
   Object.entries(currentTickets).forEach(([tNum, t]) => {
-    const groupKey = `${t.whatsapp || 'unknown'}_${t.timestamp_comprobante || t.timestamp || '0'}`;
+    if (!t) return;
+
+    // Agrupar por teléfono o nombre + ventana de tiempo aproximada
+    const timeWindow = Math.floor((t.timestamp_comprobante || t.timestamp || 0) / 15000);
+    const groupKey = `${t.whatsapp || t.name || 'cliente'}_${timeWindow}`;
+
     if (!groups[groupKey]) {
       groups[groupKey] = {
         name: t.name || t.nombre || 'Cliente',
         whatsapp: t.whatsapp || '',
-        paquete: t.paquete || `${t.estado === 'esperando_validacion' ? 'Pago Pendiente' : 'Boleto'}`,
+        paquete: t.paquete || (t.estado === 'pagado' ? 'Paquete Activo' : 'Paquete de Boletos'),
         tickets: [],
         comprobante: t.comprobante || null,
-        estado: t.estado || 'reservado',
+        estado: t.estado || 'esperando_validacion',
         timestamp: t.timestamp_comprobante || t.timestamp || Date.now()
       };
     }
+
     groups[groupKey].tickets.push(tNum);
-    
+
     if (t.estado === 'esperando_validacion') {
       groups[groupKey].estado = 'esperando_validacion';
+    } else if (t.estado === 'reservado' && groups[groupKey].estado !== 'esperando_validacion') {
+      groups[groupKey].estado = 'esperando_validacion';
     }
+
     if (t.comprobante && !groups[groupKey].comprobante) {
       groups[groupKey].comprobante = t.comprobante;
     }
   });
 
   const groupList = Object.values(groups);
-  
+
   groupList.sort((a, b) => {
     if (a.estado === 'esperando_validacion' && b.estado !== 'esperando_validacion') return -1;
     if (a.estado !== 'esperando_validacion' && b.estado === 'esperando_validacion') return 1;
@@ -277,7 +288,7 @@ function renderValidarPagosTable() {
       <tr>
         <td colspan="7" style="text-align:center; color:var(--muted); padding:30px;">
           <i data-lucide="check-circle" style="width:32px; height:32px; color:var(--green); display:block; margin:0 auto 10px;"></i>
-          No hay compras o reservas pendientes de validación en este momento.
+          No hay compras pendientes de validación en este momento.
         </td>
       </tr>
     `;
@@ -455,7 +466,9 @@ async function handleCreateTestOrder() {
     const res = await fetch('/api/tickets/reserve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(testPayload)
+      body: JSON.stringify({
+        ...testPayload
+      })
     });
     const data = await res.json();
 
@@ -507,8 +520,9 @@ function renderChart() {
   let pendingCount = 0;
 
   Object.values(currentTickets).forEach(t => {
+    if (!t) return;
     if (t.estado === 'pagado') paidCount++;
-    else if (t.estado === 'esperando_validacion') pendingCount++;
+    else if (t.estado === 'esperando_validacion' || t.estado === 'reservado') pendingCount++;
   });
 
   const availableCount = Math.max(0, TOTAL_BOLETOS - (paidCount + pendingCount));
