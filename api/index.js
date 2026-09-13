@@ -222,7 +222,7 @@ async function detectAndLogNotifications(key, oldValueStr, newValueStr) {
 }
 
 // ADMIN VERIFY PIN
-app.post('/api/admin/verify', async (req, res) => {
+app.post(['/api/admin/verify', '/admin/verify'], async (req, res) => {
   const { pin } = req.body || {};
   const validPins = ['123456', 'SuerteRD2026', 'SoyArte(20251975)', 'suerte2026'];
   if (pin && validPins.includes(String(pin).trim())) {
@@ -247,7 +247,7 @@ app.get(['/api/tickets', '/tickets'], async (req, res) => {
 });
 
 // RESERVE TICKETS API
-app.post('/api/tickets/reserve', async (req, res) => {
+app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
   const { raffleId = 'florida5', name, whatsapp, tickets, packageLabel, estado, comprobante } = req.body || {};
   if (!name || !whatsapp || !tickets || !tickets.length) {
     return res.status(400).json({ error: "Faltan datos requeridos" });
@@ -292,7 +292,7 @@ app.post('/api/tickets/reserve', async (req, res) => {
 });
 
 // UPDATE TICKET STATUS API
-app.post('/api/tickets/update-status', async (req, res) => {
+app.post(['/api/tickets/update-status', '/tickets/update-status'], async (req, res) => {
   const { raffleId = 'florida5', tickets, status, action } = req.body || {};
   if (!tickets || !tickets.length) {
     return res.status(400).json({ error: "Faltan boletos para actualizar" });
