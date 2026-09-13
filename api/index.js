@@ -256,6 +256,29 @@ async function detectAndLogNotifications(key, oldValueStr, newValueStr) {
   }
 }
 
+// Auto-trigger countdown at 80% sold
+function checkAutoCountdown(db, raffleId, ticketsObj) {
+  try {
+    const raffleConfigKey = `suerterd:config:v2:${raffleId}`;
+    let currentConf = db[raffleConfigKey]
+      ? (typeof db[raffleConfigKey] === 'string' ? JSON.parse(db[raffleConfigKey]) : db[raffleConfigKey])
+      : (DEFAULT_CONFIGS[raffleId] || DEFAULT_CONFIGS['florida5']);
+
+    if (currentConf && !currentConf.countdownStartedAt) {
+      const soldCount = Object.keys(ticketsObj || {}).length;
+      const totalCount = Number(currentConf.total) || 100000;
+      const triggerPct = Number(currentConf.countdownTriggerPct) || 80;
+      const currentPct = (soldCount / totalCount) * 100;
+      if (currentPct >= triggerPct) {
+        currentConf.countdownStartedAt = Date.now();
+        db[raffleConfigKey] = typeof db[raffleConfigKey] === 'string' ? JSON.stringify(currentConf) : currentConf;
+      }
+    }
+  } catch (e) {
+    console.error("Error in checkAutoCountdown:", e);
+  }
+}
+
 // ADMIN VERIFY PIN
 app.post(['/api/admin/verify', '/admin/verify'], async (req, res) => {
   const { pin } = req.body || {};
@@ -333,6 +356,9 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
     };
   });
 
+  // Auto-trigger countdown if 80% sold
+  checkAutoCountdown(db, raffleId, ticketsObj);
+
   const newValueStr = JSON.stringify(ticketsObj);
   db[key] = newValueStr;
 
@@ -386,6 +412,7 @@ app.post(['/api/tickets/update-status', '/tickets/update-status'], async (req, r
 
   const newValueStr = JSON.stringify(ticketsObj);
   db[key] = newValueStr;
+  checkAutoCountdown(db, raffleId, ticketsObj);
   await writeDb(db);
 
   res.json({ success: true, updatedCount: tickets.length });

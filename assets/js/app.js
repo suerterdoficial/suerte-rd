@@ -1493,6 +1493,24 @@
     const conf = configs[activeRaffleId];
     if (!conf) return;
 
+    // Check automatic 80% countdown trigger
+    const ticketsObj = (allTickets && allTickets[activeRaffleId]) || {};
+    const sold = Object.keys(ticketsObj).length;
+    const total = Math.max(1, Number(conf.total) || 100000);
+    const pct = (sold / total) * 100;
+    const triggerPct = conf.countdownTriggerPct !== undefined ? Number(conf.countdownTriggerPct) : 80;
+
+    if (pct >= triggerPct && !conf.countdownStartedAt) {
+      conf.countdownStartedAt = Date.now();
+      try {
+        fetch('/api/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: `suerterd:config:v2:${activeRaffleId}`, value: conf })
+        }).catch(e => {});
+      } catch(e) {}
+    }
+
     const heroContainer = $("heroCountdownContainer");
     const purchaseContainer = $("purchaseCountdownContainer");
 
@@ -1549,6 +1567,22 @@
     const sold = Object.keys(ticketsObj).length;
     const total = Math.max(1, Number(conf.total) || 100000);
     const pct = Math.min(100, (sold / total) * 100);
+    const triggerPct = conf.countdownTriggerPct !== undefined ? Number(conf.countdownTriggerPct) : 80;
+
+    // Check automatic 80% activation
+    if (pct >= triggerPct && !conf.countdownStartedAt) {
+      conf.countdownStartedAt = Date.now();
+      if (configs && configs[activeRaffleId]) {
+        configs[activeRaffleId].countdownStartedAt = conf.countdownStartedAt;
+      }
+      try {
+        fetch('/api/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: `suerterd:config:v2:${activeRaffleId}`, value: conf })
+        }).catch(e => {});
+      } catch(e) {}
+    }
 
     let pctDisplay = "0.0%";
     if (sold > 0) {
@@ -1570,6 +1604,7 @@
     }
     try { renderBlessedNumbers(); } catch(e) {}
     try { updateCountdown(); } catch(e) {}
+    try { updateStatsCountdown(); } catch(e) {}
   }
 
   function renderDrawResults() {
@@ -1674,6 +1709,24 @@
     const placeholderMsg = $("countdownPlaceholderMessage");
 
     if (!conf || !timerRow) return;
+
+    // Auto-check 80% trigger threshold
+    const ticketsObj = (allTickets && allTickets[activeRaffleId]) || {};
+    const sold = Object.keys(ticketsObj).length;
+    const total = Math.max(1, Number(conf.total) || 100000);
+    const pct = (sold / total) * 100;
+    const triggerPct = conf.countdownTriggerPct !== undefined ? Number(conf.countdownTriggerPct) : 80;
+
+    if (pct >= triggerPct && !conf.countdownStartedAt) {
+      conf.countdownStartedAt = Date.now();
+      try {
+        fetch('/api/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: `suerterd:config:v2:${activeRaffleId}`, value: conf })
+        }).catch(e => {});
+      } catch(e) {}
+    }
 
     if (conf.countdownStartedAt) {
       timerRow.style.display = "flex";
