@@ -99,384 +99,291 @@
       border: 1px solid rgba(0, 230, 118, 0.3);
       padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono);
     }
-    .pulse-dot {
+    .live-dot {
       width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-      box-shadow: 0 0 10px var(--green); animation: pulseDot 1.5s infinite;
+      box-shadow: 0 0 10px var(--green); animation: pulse 1.5s infinite;
     }
-    @keyframes pulseDot {
-      0% { transform: scale(0.9); opacity: 0.7; }
-      50% { transform: scale(1.3); opacity: 1; }
-      100% { transform: scale(0.9); opacity: 0.7; }
-    }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
 
-    .header-actions { display: flex; align-items: center; gap: 10px; }
-
-    /* METRICS ROW */
-    .metrics {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px; margin-bottom: 28px;
-    }
-    .metric-card {
-      background: linear-gradient(135deg, var(--card-bg-solid), rgba(9, 23, 31, 0.9));
-      border: 1px solid var(--border-light);
-      border-radius: 20px; padding: 20px;
-      position: relative; overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .metric-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(255,255,255,0.2);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-    }
-    .metric-card::before {
-      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-      background: var(--card-accent, var(--green));
-    }
-    .metric-card.green { --card-accent: var(--green); }
-    .metric-card.cyan { --card-accent: var(--cyan); }
-    .metric-card.gold { --card-accent: var(--gold); }
-    .metric-card.purple { --card-accent: var(--purple); }
-
-    .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .metric-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--muted); letter-spacing: 0.8px; }
-    .metric-icon-avatar {
-      width: 38px; height: 38px; border-radius: 12px;
-      background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;
-      color: var(--card-accent, var(--green)); border: 1px solid rgba(255,255,255,0.08);
-    }
-    .metric-num { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: #FFF; line-height: 1.1; }
-    .metric-subtext { font-size: 0.75rem; color: var(--muted); margin-top: 6px; font-weight: 600; }
-
-    /* TABS */
-    .tabs-navigation {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
-      margin-bottom: 24px; border-bottom: 1px solid var(--border-light); padding-bottom: 14px;
-    }
-    .tabs-group { display: flex; gap: 10px; }
-    .tab-btn {
-      background: rgba(255,255,255,0.03); border: 1px solid var(--border-light);
-      color: var(--muted); font-family: var(--font-main); font-size: 0.95rem; font-weight: 800;
-      padding: 12px 24px; border-radius: 14px; cursor: pointer; transition: all 0.25s ease;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .tab-btn:hover { background: rgba(255,255,255,0.08); color: #FFF; }
-    .tab-btn.active {
-      background: linear-gradient(135deg, rgba(0, 230, 118, 0.2), rgba(0, 229, 255, 0.1));
-      border-color: var(--green); color: var(--green);
-      box-shadow: 0 4px 20px var(--green-glow);
-    }
-
-    /* PANES */
-    .pane { display: none; }
-    .pane.active { display: block; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* CARD PANEL */
-    .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border-light);
-      border-radius: 24px; padding: 28px; margin-bottom: 24px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-    }
-    .card-title {
-      font-size: 1.15rem; font-weight: 800; color: #FFF; margin-bottom: 20px;
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-    }
-
-    /* SEARCH & FILTERS BAR */
-    .filters-bar {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
-      margin-bottom: 20px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-light);
-      border-radius: 16px; padding: 12px 16px;
-    }
-    .search-box {
-      flex: 1; min-width: 260px; position: relative;
-    }
-    .search-box input {
-      width: 100%; background: #061219; border: 1px solid var(--border-light);
-      color: #FFF; font-family: var(--font-main); font-size: 0.9rem; font-weight: 600;
-      padding: 10px 14px 10px 38px; border-radius: 12px; outline: none; margin-bottom: 0;
-      transition: all 0.2s ease;
-    }
-    .search-box input:focus { border-color: var(--green); box-shadow: 0 0 12px var(--green-glow); }
-    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 16px; height: 16px; }
-
-    .filter-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-    .filter-pill {
-      background: rgba(255,255,255,0.05); border: 1px solid transparent;
-      color: var(--muted); font-size: 0.8rem; font-weight: 700;
-      padding: 8px 14px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
-    }
-    .filter-pill:hover { background: rgba(255,255,255,0.1); color: #FFF; }
-    .filter-pill.active { background: rgba(0, 230, 118, 0.15); border-color: var(--green); color: var(--green); }
-
-    /* TABLES */
-    .table-wrap { width: 100%; overflow-x: auto; border-radius: 16px; border: 1px solid var(--border-light); }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
-    th { background: #0a1b24; color: var(--muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 16px 18px; border-bottom: 1px solid var(--border-light); letter-spacing: 0.5px; }
-    td { padding: 16px 18px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #FFF; vertical-align: middle; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
-
-    /* AVATAR BADGE */
-    .client-avatar-cell { display: flex; align-items: center; gap: 10px; }
-    .avatar-circle {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: linear-gradient(135deg, #00E676, #00E5FF);
-      color: #020d0f; font-weight: 900; font-size: 0.85rem;
-      display: flex; align-items: center; justify-content: center; text-transform: uppercase;
-      box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3); flex-shrink: 0;
-    }
+    .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
     /* BUTTONS */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      font-family: var(--font-main); font-size: 0.85rem; font-weight: 800;
-      padding: 10px 18px; border-radius: 12px; cursor: pointer; border: none; transition: all 0.25s ease; text-decoration: none;
+      padding: 10px 18px; border-radius: 12px; font-size: 0.88rem; font-weight: 800;
+      cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: none; text-decoration: none;
     }
-    .btn-green { background: linear-gradient(135deg, #00E676, #00c853); color: #021209; box-shadow: 0 4px 16px var(--green-glow); }
-    .btn-green:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,230,118,0.4); }
-    .btn-red { background: rgba(255, 77, 94, 0.12); color: var(--red); border: 1px solid rgba(255, 77, 94, 0.3); }
-    .btn-red:hover { background: var(--red); color: #FFF; box-shadow: 0 4px 16px var(--red-glow); }
-    .btn-cyan { background: rgba(0, 229, 255, 0.12); color: var(--cyan); border: 1px solid rgba(0, 229, 255, 0.4); }
-    .btn-cyan:hover { background: var(--cyan); color: #021209; box-shadow: 0 4px 16px var(--cyan-glow); }
-    .btn-secondary { background: rgba(255,255,255,0.06); color: #FFF; border: 1px solid var(--border-light); }
-    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+    .btn-green {
+      background: linear-gradient(135deg, #00E676, #00C853); color: #000;
+      box-shadow: 0 4px 16px var(--green-glow);
+    }
+    .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0, 230, 118, 0.4); }
+    .btn-cyan {
+      background: linear-gradient(135deg, #00E5FF, #00B0FF); color: #000;
+      box-shadow: 0 4px 16px var(--cyan-glow);
+    }
+    .btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0, 229, 255, 0.4); }
+    .btn-gold {
+      background: linear-gradient(135deg, #FFD700, #FFC107); color: #000;
+      box-shadow: 0 4px 16px var(--gold-glow);
+    }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255, 215, 0, 0.4); }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06); color: #FFF; border: 1px solid var(--border-light);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.12); color: var(--green); border-color: rgba(0,230,118,0.4); }
+    .btn-danger {
+      background: rgba(255, 77, 94, 0.15); color: var(--red); border: 1px solid rgba(255, 77, 94, 0.3);
+    }
+    .btn-danger:hover { background: var(--red); color: #FFF; box-shadow: 0 4px 16px var(--red-glow); }
 
     /* INPUTS & SELECTS */
-    input, select {
-      width: 100%; background: #061118; border: 1px solid var(--border-light);
-      color: #FFF; font-family: var(--font-main); font-size: 0.95rem; font-weight: 600;
-      padding: 14px 16px; border-radius: 14px; outline: none; margin-bottom: 14px;
+    input[type="text"], input[type="password"], input[type="tel"], select {
+      width: 100%; padding: 12px 16px; border-radius: 12px;
+      background: rgba(4, 12, 18, 0.9); border: 1px solid var(--border-light);
+      color: #FFF; font-family: var(--font-main); font-size: 0.92rem; outline: none;
       transition: all 0.2s ease;
     }
-    input:focus, select:focus { border-color: var(--green); box-shadow: 0 0 16px var(--green-glow); }
-
-    /* STATS GRID CARDS */
-    .stats-breakdown-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px; margin-top: 24px;
-    }
-    .pkg-stat-box {
-      background: rgba(255,255,255,0.02); border: 1px solid var(--border-light);
-      border-radius: 16px; padding: 16px; text-align: center;
-    }
-    .pkg-stat-box .title { font-size: 0.75rem; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
-    .pkg-stat-box .val { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 800; color: #FFF; }
-
-    /* MODAL OVERLAY */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 9999;
-      background: rgba(2, 7, 10, 0.92); backdrop-filter: blur(12px);
-      display: flex; align-items: center; justify-content: center; padding: 20px;
-      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
-    }
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-box {
-      background: linear-gradient(145deg, #0d2330, #07151e); border: 1px solid var(--border);
-      border-radius: 24px; padding: 28px; width: 100%; max-width: 550px; text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px var(--cyan-glow);
+    input:focus, select:focus {
+      border-color: var(--green); box-shadow: 0 0 16px var(--green-glow);
     }
 
-    /* TOAST NOTIFICATION CONTAINER */
+    /* GRID STATS */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border-light); border-radius: 18px; padding: 20px;
+      position: relative; overflow: hidden; transition: transform 0.2s ease;
+    }
+    .stat-card:hover { transform: translateY(-3px); border-color: rgba(0,230,118,0.3); }
+    .stat-card .label { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 900; color: #FFF; margin: 8px 0 4px 0; font-family: var(--font-mono); }
+    .stat-card .subtext { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+    .stat-card .icon-bg {
+      position: absolute; right: 16px; bottom: 16px; opacity: 0.12; font-size: 3rem; color: var(--green);
+    }
+
+    /* TABS */
+    .nav-tabs {
+      display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;
+    }
+    .tab-btn {
+      background: transparent; border: none; color: var(--muted); font-size: 0.95rem; font-weight: 800;
+      padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tab-btn.active {
+      background: rgba(0, 230, 118, 0.12); color: var(--green); border: 1px solid rgba(0, 230, 118, 0.3);
+    }
+
+    /* TOOLBAR & SEARCH */
+    .toolbar {
+      background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 18px; padding: 16px 20px;
+      margin-bottom: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px;
+    }
+    .search-box { position: relative; flex: 1; min-width: 260px; }
+    .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    .search-box input { padding-left: 42px; }
+
+    .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-chip {
+      padding: 8px 14px; border-radius: 10px; font-size: 0.82rem; font-weight: 700;
+      background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border-light);
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .filter-chip.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 900; }
+
+    /* ORDERS TABLE / CARDS LIST */
+    .orders-grid { display: flex; flex-direction: column; gap: 14px; }
+    .order-card {
+      background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 18px; padding: 20px;
+      display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center;
+      transition: all 0.2s ease;
+    }
+    .order-card:hover { border-color: rgba(0, 229, 255, 0.3); transform: translateX(4px); }
+    .order-card.pending { border-left: 4px solid var(--gold); }
+    .order-card.paid { border-left: 4px solid var(--green); }
+    .order-card.rejected { border-left: 4px solid var(--red); opacity: 0.7; }
+
+    .order-client-info h3 { font-size: 1.1rem; font-weight: 800; color: #FFF; display: flex; align-items: center; gap: 8px; }
+    .order-client-info p { font-size: 0.85rem; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+
+    .tickets-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; max-height: 80px; overflow-y: auto; }
+    .ticket-badge {
+      background: rgba(0, 229, 255, 0.1); color: var(--cyan); border: 1px solid rgba(0, 229, 255, 0.25);
+      padding: 3px 8px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700;
+    }
+
+    /* TOAST NOTIFICATIONS */
     .toast-container {
-      position: fixed; top: 20px; right: 20px; z-index: 10000;
-      display: flex; flex-direction: column; gap: 10px; max-width: 380px; width: 100%;
-      pointer-events: none;
+      position: fixed; bottom: 24px; right: 24px; z-index: 10000;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
     }
-    .toast-card {
-      pointer-events: auto;
-      background: linear-gradient(135deg, rgba(13, 30, 40, 0.95), rgba(7, 21, 30, 0.98));
-      border: 1px solid var(--green);
-      border-left: 5px solid var(--green);
-      border-radius: 16px; padding: 16px 20px;
-      box-shadow: 0 10px 30px rgba(0, 230, 118, 0.25), 0 4px 12px rgba(0,0,0,0.5);
-      backdrop-filter: blur(12px);
-      display: flex; align-items: flex-start; gap: 12px;
-      animation: toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      transition: all 0.3s ease;
+    .toast {
+      pointer-events: auto; background: #0c202d; border: 1px solid var(--green);
+      border-radius: 14px; padding: 14px 20px; color: #FFF; font-size: 0.88rem; font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0,230,118,0.25); display: flex; align-items: center; gap: 12px;
+      animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .toast-card.outgoing {
-      animation: toastOut 0.3s ease forwards;
+    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* MODAL GENERAL */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 9998; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
     }
-    .toast-icon {
-      width: 36px; height: 36px; border-radius: 10px;
-      background: rgba(0, 230, 118, 0.15); color: var(--green);
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--card-bg-solid); border: 1px solid var(--border); border-radius: 20px;
+      padding: 28px; width: 100%; max-width: 600px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
-    .toast-content { flex: 1; }
-    .toast-title { font-weight: 800; font-size: 0.9rem; color: #FFF; margin-bottom: 2px; }
-    .toast-msg { font-size: 0.8rem; color: var(--muted); line-height: 1.3; }
-    .toast-close { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px; }
-    .toast-close:hover { color: #FFF; }
-    @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
-    @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+
+    @media (max-width: 768px) {
+      .order-card { grid-template-columns: 1fr; gap: 12px; }
+      .header { flex-direction: column; align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastContainer" class="toast-container"></div>
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
 
-  <!-- LOGIN MODAL -->
+  <!-- LOGIN OVERLAY -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
-      <h2><i data-lucide="shield-check"></i> Acceso Admin</h2>
-      <p>Ingresa la contraseña maestra para controlar ventas en tiempo real.</p>
+      <h2><i data-lucide="shield-check"></i> Centro Admin</h2>
+      <p>Ingresa la contraseña de administrador para ingresar al centro de control.</p>
       
-      <input type="password" id="pinInput" placeholder="••••••" style="text-align:center; font-size:1.5rem; letter-spacing:6px;">
-      <button class="btn btn-green" id="btnLoginSubmit" style="width:100%; padding:14px; font-size:1rem;">Entrar al Centro de Control</button>
+      <input type="password" id="pinInput" placeholder="Contraseña de Admin (Master PIN)" style="text-align:center; font-size:1.1rem; letter-spacing:2px; margin-bottom:16px;" autofocus>
       
-      <p id="loginErr" style="color:var(--red); font-size:0.85rem; font-weight:700; margin-top:14px; display:none;"></p>
+      <div id="loginErr" style="color:var(--red); font-size:0.85rem; font-weight:700; display:none; margin-bottom:14px;">Contraseña Incorrecta</div>
+
+      <button class="btn btn-green" id="btnLoginSubmit" style="width:100%; padding:14px; font-size:1rem;">
+        Entrar al Centro de Control
+      </button>
     </div>
   </div>
 
+  <!-- MAIN CONTAINER -->
   <div class="container">
+
     <!-- HEADER TOPBAR -->
     <header class="header">
       <div class="header-info">
-        <h1><i data-lucide="shield-check" style="color:var(--green);"></i> Centro de Control Admin <span class="live-status-pill"><span class="pulse-dot"></span> VERCEL KV EN VIVO</span></h1>
-        <p><i data-lucide="calendar" style="width:14px;"></i> Sorteo Especial iPhone 17 Pro Max 1TB • Actualización Automática cada 2s</p>
+        <h1>
+          <i data-lucide="layout-dashboard" style="color:var(--green);"></i> 
+          Panel de Administración <span style="color:var(--cyan); font-size:0.9rem; font-weight:600;">| Suerte RD</span>
+        </h1>
+        <p>
+          <span class="live-status-pill"><span class="live-dot"></span> EN VIVO - ALERTA AUDITIVA</span>
+          <span>Sorteo Activo: iPhone 17 Pro Max 1TB (RD$3/boleto)</span>
+        </p>
       </div>
+
       <div class="header-actions">
-        <button class="btn btn-cyan" id="btnToggleNotifications" title="Activar Alertas de Escritorio"><i data-lucide="bell" style="width:16px;"></i> Alertas</button>
-        <button class="btn btn-secondary" id="btnRefreshData" title="Recargar datos"><i data-lucide="rotate-cw" style="width:16px;"></i> Refrescar</button>
-        <button class="btn btn-red" id="btnLogout"><i data-lucide="log-out" style="width:16px;"></i> Salir</button>
+        <button class="btn btn-secondary" id="btnToggleNotifications" title="Activar/Desactivar Alertas Sonoras y Push">
+          <i data-lucide="bell"></i> <span id="notifStatusText">Sonido: ON</span>
+        </button>
+        <button class="btn btn-secondary" id="btnRefreshData" title="Refrescar Datos Instantáneamente">
+          <i data-lucide="refresh-cw"></i> Refrescar
+        </button>
+        <button class="btn btn-green" id="btnOpenManualModal">
+          <i data-lucide="user-plus"></i> Compra Manual
+        </button>
+        <button class="btn btn-cyan" id="btnExportCSV">
+          <i data-lucide="download"></i> Exportar CSV
+        </button>
+        <button class="btn btn-gold" id="btnCreateTest" title="Probar Alerta en Tiempo Real">
+          <i data-lucide="sparkles"></i> Prueba
+        </button>
+        <button class="btn btn-danger" id="btnLogout">
+          <i data-lucide="log-out"></i> Salir
+        </button>
       </div>
     </header>
 
-    <!-- METRICS SUMMARY -->
-    <div class="metrics">
-      <div class="metric-card green">
-        <div class="metric-header">
-          <span class="metric-title">Ingresos Validados</span>
-          <div class="metric-icon-avatar"><i data-lucide="dollar-sign"></i></div>
-        </div>
-        <div class="metric-num" id="metricIncome" style="color:var(--green);">RD$ 0</div>
-        <div class="metric-subtext">Total cobrado en banco</div>
+    <!-- STATS GRID -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Total Recaudado</div>
+        <div class="value" id="statRecaudado" style="color:var(--green);">RD$0</div>
+        <div class="subtext"><i data-lucide="trending-up" style="width:14px;"></i> Total de Boletos Pagados</div>
+        <i data-lucide="dollar-sign" class="icon-bg"></i>
       </div>
 
-      <div class="metric-card cyan">
-        <div class="metric-header">
-          <span class="metric-title">Boletos Activos / Vendidos</span>
-          <div class="metric-icon-avatar"><i data-lucide="ticket"></i></div>
-        </div>
-        <div class="metric-num" id="metricSold" style="color:var(--cyan);">0 / 100,000</div>
-        <div class="metric-subtext" id="metricSoldPct">0% de la rifa completado</div>
+      <div class="stat-card">
+        <div class="label">Boletos Vendidos / Reservados</div>
+        <div class="value" id="statVendidos" style="color:var(--cyan);">0</div>
+        <div class="subtext"><i data-lucide="ticket" style="width:14px;"></i> Boletos Activos en Sistema</div>
+        <i data-lucide="ticket" class="icon-bg"></i>
       </div>
 
-      <div class="metric-card gold">
-        <div class="metric-header">
-          <span class="metric-title">Compras por Validar</span>
-          <div class="metric-icon-avatar"><i data-lucide="clock"></i></div>
-        </div>
-        <div class="metric-num" id="metricPending" style="color:var(--gold);">0</div>
-        <div class="metric-subtext">Pendientes de confirmación HD</div>
+      <div class="stat-card">
+        <div class="label">Pendientes de Validación</div>
+        <div class="value" id="statPendientes" style="color:var(--gold);">0</div>
+        <div class="subtext"><i data-lucide="clock" style="width:14px;"></i> Comprobantes por Aprobar</div>
+        <i data-lucide="clock" class="icon-bg"></i>
       </div>
 
-      <div class="metric-card purple">
-        <div class="metric-header">
-          <span class="metric-title">Paquetes Registrados</span>
-          <div class="metric-icon-avatar"><i data-lucide="package"></i></div>
-        </div>
-        <div class="metric-num" id="metricPackagesCount" style="color:var(--purple);">0</div>
-        <div class="metric-subtext">Órdenes totales recibidas</div>
+      <div class="stat-card">
+        <div class="label">Boletos Disponibles Libres</div>
+        <div class="value" id="statDisponibles" style="color:#FFF;">100,000</div>
+        <div class="subtext"><i data-lucide="pie-chart" style="width:14px;"></i> Meta Total: 100,000</div>
+        <i data-lucide="pie-chart" class="icon-bg"></i>
       </div>
     </div>
 
-    <!-- TABS MENU (ESTADÍSTICAS Y VALIDAR PAGOS) -->
-    <div class="tabs-navigation">
-      <div class="tabs-group">
-        <button class="tab-btn active" data-tab="tabEstadisticas"><i data-lucide="bar-chart-3"></i> 📊 Estadísticas</button>
-        <button class="tab-btn" data-tab="tabValidarPagos"><i data-lucide="wallet"></i> 🏦 Validar Pagos</button>
+    <!-- TABS NAVIGATION -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="tabValidacion" onclick="switchTab('validacion')">
+        <i data-lucide="file-text"></i> Validación de Pagos y Compras
+      </button>
+      <button class="tab-btn" id="tabEstadisticas" onclick="switchTab('estadisticas')">
+        <i data-lucide="pie-chart"></i> Gráfico y Distribución
+      </button>
+    </div>
+
+    <!-- SEARCH & FILTERS TOOLBAR -->
+    <div class="toolbar" id="toolbarContainer">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <input type="text" id="searchInput" placeholder="Buscar por Nombre, WhatsApp o # Boleto...">
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-chip active" data-filter="all">Todos</div>
+        <div class="filter-chip" data-filter="pending">⏳ Pendientes (Por Validar)</div>
+        <div class="filter-chip" data-filter="paid">✅ Pagados (Activos)</div>
+        <div class="filter-chip" data-filter="rejected">❌ Rechazados</div>
       </div>
     </div>
 
-    <!-- PANE 1: ESTADÍSTICAS -->
-    <div class="pane active" id="tabEstadisticas">
-      <div class="card">
-        <div class="card-title">
-          <span>📊 Resumen General de Ventas y Distribución</span>
-          <span style="font-size:0.8rem; color:var(--muted); font-weight:600;">Pick 5 Florida Official Sync</span>
-        </div>
+    <!-- TAB CONTENT: VALIDACIÓN -->
+    <div id="viewValidacion">
+      <div class="orders-grid" id="ordersList">
+        <!-- Renderizado dinámico desde admin.js -->
+      </div>
+    </div>
 
-        <div style="height: 280px; position: relative;">
+    <!-- TAB CONTENT: ESTADÍSTICAS CHART -->
+    <div id="viewEstadisticas" style="display:none;">
+      <div style="background:var(--card-bg); border:1px solid var(--border-light); border-radius:20px; padding:24px; text-align:center;">
+        <h3 style="color:#FFF; font-weight:800; margin-bottom:16px;">Distribución de Boletos (Doughnut Chart)</h3>
+        <div style="height:340px; position:relative;">
           <canvas id="statsChart"></canvas>
         </div>
-
-        <!-- PACKAGE BREAKDOWN CARDS -->
-        <div class="stats-breakdown-grid">
-          <div class="pkg-stat-box" style="border-top:3px solid #cd7f32;">
-            <div class="title">🥉 Paquete Bronce (50)</div>
-            <div class="val" id="statPkgBronce">0 órdenes</div>
-          </div>
-          <div class="pkg-stat-box" style="border-top:3px solid #c0c0c0;">
-            <div class="title">🥈 Paquete Plata (150)</div>
-            <div class="val" id="statPkgPlata">0 órdenes</div>
-          </div>
-          <div class="pkg-stat-box" style="border-top:3px solid #ffd700;">
-            <div class="title">🥇 Paquete Oro (250)</div>
-            <div class="val" id="statPkgOro">0 órdenes</div>
-          </div>
-          <div class="pkg-stat-box" style="border-top:3px solid #00e676;">
-            <div class="title">💎 Paquete Diamante (500)</div>
-            <div class="val" id="statPkgDiamante">0 órdenes</div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- PANE 2: VALIDAR PAGOS -->
-    <div class="pane" id="tabValidarPagos">
-      <div class="card">
-        <div class="card-title">
-          <span>🏦 Validar y Activar Compras de Paquetes</span>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn btn-green" id="btnOpenManualModal"><i data-lucide="user-plus"></i> + Nueva Compra Manual</button>
-            <button class="btn btn-cyan" id="btnCreateTest"><i data-lucide="plus-circle"></i> Crear Compra de Prueba</button>
-          </div>
-        </div>
-
-        <!-- SEARCH & FILTER BAR -->
-        <div class="filters-bar">
-          <div class="search-box">
-            <i data-lucide="search" class="search-icon"></i>
-            <input type="text" id="adminSearchInput" placeholder="Buscar por cliente, WhatsApp o # boleto...">
-          </div>
-
-          <div class="filter-pills">
-            <button class="filter-pill active" data-filter="all">Todos</button>
-            <button class="filter-pill" data-filter="pending">⏳ Pendientes</button>
-            <button class="filter-pill" data-filter="paid">✅ Validados</button>
-          </div>
-        </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>WhatsApp</th>
-                <th>Boletos / Paquete</th>
-                <th>Monto RD$</th>
-                <th>Comprobante</th>
-                <th>Estado</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody id="validarTableBody">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- MODAL COMPRA MANUAL -->
+  <!-- MODAL ORDEN MANUAL -->
   <div class="modal-overlay" id="modalManualOrder">
     <div class="modal-box" style="max-width: 500px; text-align: left;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid var(--border-light); padding-bottom:12px;">
+      <div style="display:flex; justify-space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid var(--border-light); padding-bottom:12px;">
         <h3 style="color:var(--green); font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
           <i data-lucide="user-plus"></i> Registrar Compra Manual
         </h3>
