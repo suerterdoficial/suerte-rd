@@ -29,11 +29,9 @@ app.get('/assets/js/admin.js', (req, res) => {
 });
 
 const ORIGINAL_DATA_FILE = path.join(__dirname, '..', 'data.json');
-const DATA_FILE = process.env.VERCEL ? path.join('/tmp', 'suerterd_data.json') : ORIGINAL_DATA_FILE;
-const UPSTASH_URL = process.env.KV_REST_API_URL || 'https://brief-buffalo-176284.upstash.io';
-const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || 'gQAAAAAAArCcAQIgcDJiZDkxOTY3MDQ2OWU0YzkwYmM1OTYyMGZmYzA4OTE2ZA';
-const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || null;
+const UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || null;
+const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || null;
+const useKV = !!(UPSTASH_URL && UPSTASH_TOKEN);
 
 let cachedDb = null;
 let lastDbFetchTime = 0;
@@ -127,12 +125,9 @@ async function readDb(forceFresh = false) {
     }
   }
 
-  let changed = false;
-
   // Auto-initialize raffle IDs list if missing
   if (!db['suerterd:raffle:ids']) {
     db['suerterd:raffle:ids'] = JSON.stringify(["florida5"]);
-    changed = true;
   }
 
   // Auto-initialize default configurations if they don't exist
@@ -140,17 +135,11 @@ async function readDb(forceFresh = false) {
     const key = `suerterd:config:v2:${id}`;
     if (!db[key]) {
       db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
-      changed = true;
     }
     const tKey = `suerterd:tickets:v2:${id}`;
-    if (!db[tKey]) {
+    if (db[tKey] === undefined) {
       db[tKey] = "{}";
-      changed = true;
     }
-  }
-
-  if (changed) {
-    await writeDb(db);
   }
 
   cachedDb = db;
