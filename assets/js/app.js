@@ -2144,15 +2144,6 @@
 
     // 1. Prepare ticket state in memory immediately
     let latestTickets = allTickets[activeRaffleId] || {};
-    const timestamp = Date.now();
-    const uniqueGroupKey = window.activeCheckoutGroupKey || `order_${timestamp}_${Math.random().toString(36).substring(2, 7)}`;
-    window.activeCheckoutGroupKey = uniqueGroupKey;
-    window.lastCheckedOutTickets = [...checkedOutCart];
-    window.lastCheckedOutName = name;
-    window.lastCheckedOutPhone = phone;
-    window.lastCheckedOutLottery = lottery;
-    window.lastCheckedOutPkg = detectedPkgLabel;
-    
     // Copy cart before resetting
     const checkedOutCart = [...cart];
     cart = [];
@@ -2167,6 +2158,15 @@
       else if (checkedOutCart.length > 1) detectedPkgLabel = `Grupo (${checkedOutCart.length} Boletos)`;
       else detectedPkgLabel = "Boleto Individual";
     }
+
+    const timestamp = Date.now();
+    const uniqueGroupKey = window.activeCheckoutGroupKey || `order_${timestamp}_${Math.random().toString(36).substring(2, 7)}`;
+    window.activeCheckoutGroupKey = uniqueGroupKey;
+    window.lastCheckedOutTickets = [...checkedOutCart];
+    window.lastCheckedOutName = name;
+    window.lastCheckedOutPhone = phone;
+    window.lastCheckedOutLottery = lottery;
+    window.lastCheckedOutPkg = detectedPkgLabel;
 
     const currentReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64 || "";
 

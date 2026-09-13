@@ -752,21 +752,6 @@
       </select>
     </div>
 
-    <div class="field" style="margin-top: 12px;">
-      <label for="checkoutReceiptInput" style="color:var(--cyan); font-weight:700; display:flex; align-items:center; gap:6px;">
-        <i data-lucide="upload-cloud" style="width:16px; height:16px;"></i> Foto del Comprobante de Banco / Depósito (Opcional)
-      </label>
-      <div style="background: rgba(0, 229, 255, 0.04); border: 1.5px dashed var(--border-cyan); border-radius: 14px; padding: 12px; text-align: center; margin-top:4px;">
-        <label for="checkoutReceiptInput" class="btn btn-secondary" style="border-color: var(--cyan); color: var(--cyan); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size:0.8rem; padding:6px 14px;">
-          <i data-lucide="image" style="width: 14px; height: 14px;"></i> Adjuntar Captura de Depósito
-        </label>
-        <input type="file" id="checkoutReceiptInput" accept="image/*" style="display:none;">
-        <div id="checkoutReceiptPreviewContainer" style="display:none; margin-top: 8px; max-height: 120px; overflow: hidden; text-align:center;">
-          <img id="checkoutReceiptPreview" style="max-height: 120px; max-width: 100%; object-fit: contain; border-radius: 8px; border: 1px solid var(--cyan);">
-        </div>
-      </div>
-    </div>
-
     <button class="btn btn-primary" style="width:100%; margin-top: 10px;" id="btnConfirmReserveFinal"><i data-lucide="check"></i> Confirmar y Generar Recibo</button>
     <div class="status-lbl bad" style="margin-top: 15px;" id="reserveConfirmErrorMsg"></div>
   </div>
