@@ -509,20 +509,20 @@ function renderOrdersList() {
     window.receiptsCache[keyId] = g;
 
     let statusBadgeHTML = `
-      <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,193,7,0.14); color:#FFC107; border:1px solid rgba(255,193,7,0.4); padding:5px 12px; border-radius:20px; font-weight:800; font-size:0.78rem; white-space:nowrap; line-height:1.2;">
+      <span style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,193,7,0.15); color:#FFC107; border:1px solid rgba(255,193,7,0.4); padding:6px 14px; border-radius:20px; font-weight:800; font-size:0.8rem; white-space:nowrap;">
         ⏳ Pendiente
       </span>
     `;
 
     if (g.estado === 'pagado') {
       statusBadgeHTML = `
-        <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(0,230,118,0.14); color:#00E676; border:1px solid rgba(0,230,118,0.4); padding:5px 12px; border-radius:20px; font-weight:800; font-size:0.78rem; white-space:nowrap; line-height:1.2;">
+        <span style="display:inline-flex; align-items:center; gap:6px; background:rgba(0,230,118,0.15); color:#00E676; border:1px solid rgba(0,230,118,0.4); padding:6px 14px; border-radius:20px; font-weight:800; font-size:0.8rem; white-space:nowrap;">
           ✅ Validado
         </span>
       `;
     } else if (g.estado === 'rechazado') {
       statusBadgeHTML = `
-        <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,77,94,0.14); color:#FF4D5E; border:1px solid rgba(255,77,94,0.4); padding:5px 12px; border-radius:20px; font-weight:800; font-size:0.78rem; white-space:nowrap; line-height:1.2;">
+        <span style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,77,94,0.15); color:#FF4D5E; border:1px solid rgba(255,77,94,0.4); padding:6px 14px; border-radius:20px; font-weight:800; font-size:0.8rem; white-space:nowrap;">
           ❌ Rechazado
         </span>
       `;
@@ -605,7 +605,7 @@ async function approveGroup(ticketsEncodedStr, name, whatsapp) {
   const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr)) || [];
   if (!ticketsArr.length) return;
 
-  // 1. Actualización instantánea en memoria a 0ms
+  // 1. Actualización instantánea en memoria y localStorage a 0ms
   ticketsArr.forEach(tNum => {
     if (currentTickets[tNum]) {
       currentTickets[tNum].estado = 'pagado';
@@ -613,7 +613,10 @@ async function approveGroup(ticketsEncodedStr, name, whatsapp) {
     }
   });
 
-  // Re-renderizado instantáneo del UI
+  try {
+    localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentTickets));
+  } catch(e) {}
+
   updateStatsCards();
   renderOrdersList();
 
@@ -623,10 +626,8 @@ async function approveGroup(ticketsEncodedStr, name, whatsapp) {
     'check-circle'
   );
 
-  // 2. Desplegar modal personalizable de WhatsApp
   sendWhatsAppConfirmation(name, whatsapp, ticketsEncodedStr);
 
-  // 3. Sincronización en segundo plano sin congelar la pantalla
   try {
     await fetch('/api/tickets/update-status', {
       method: 'POST',
@@ -653,6 +654,10 @@ async function rejectGroup(ticketsEncodedStr) {
     }
   });
 
+  try {
+    localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentTickets));
+  } catch(e) {}
+
   updateStatsCards();
   renderOrdersList();
   showToastNotification('❌ Compra Rechazada', 'La orden fue marcada como rechazada.', 'x-circle');
@@ -672,6 +677,7 @@ async function rejectGroup(ticketsEncodedStr) {
   }
 }
 
+
 async function deleteGroupRecord(ticketsEncodedStr) {
   if (!confirm('¿Eliminar permanentemente estos registros de la base de datos?')) return;
   const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr)) || [];
@@ -680,6 +686,10 @@ async function deleteGroupRecord(ticketsEncodedStr) {
   ticketsArr.forEach(tNum => {
     delete currentTickets[tNum];
   });
+
+  try {
+    localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentTickets));
+  } catch(e) {}
 
   updateStatsCards();
   renderOrdersList();
