@@ -2328,7 +2328,7 @@
           loteria: lottery,
           tickets: ticketNums,
           packageLabel: currentPkgTag,
-          comprobante: activeReceiptImg || true,
+          comprobante: activeReceiptImg || "",
           estado: "esperando_validacion"
         })
       });
@@ -3430,6 +3430,67 @@ ${formattedNumsText}
         $("btnSendWhatsApp").disabled = false;
         showToast("Imagen optimizada y lista.", "ok");
       });
+    });
+  }
+
+  const directReceiptInput = $("directReceiptInput");
+  let selectedDirectReceiptBase64 = null;
+  if (directReceiptInput) {
+    directReceiptInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      showToast("Optimizando comprobante...", "info");
+      compressImageFile(file, 700, 0.65, (compressedBase64) => {
+        selectedDirectReceiptBase64 = compressedBase64;
+        $("directReceiptPreview").src = selectedDirectReceiptBase64;
+        $("directReceiptPreviewContainer").style.display = "block";
+        const btnSubmit = $("btnSubmitDirectReceipt");
+        if (btnSubmit) btnSubmit.disabled = false;
+        showToast("Comprobante optimizado.", "ok");
+      });
+    });
+  }
+
+  const btnSubmitDirect = $("btnSubmitDirectReceipt");
+  if (btnSubmitDirect) {
+    btnSubmitDirect.addEventListener("click", async () => {
+      const name = $("uploadReceiptClientName") ? $("uploadReceiptClientName").value : "Cliente";
+      const whatsapp = $("uploadReceiptClientPhone") ? $("uploadReceiptClientPhone").value : "";
+      const rawTickets = $("uploadReceiptTicketNums") ? $("uploadReceiptTicketNums").value : "";
+      const ticketsArr = rawTickets.split(",").map(t => t.trim().replace(/^#/, "")).filter(Boolean);
+
+      if (!ticketsArr.length) {
+        showToast("No se encontraron boletos a actualizar", "bad");
+        return;
+      }
+
+      btnSubmitDirect.disabled = true;
+      btnSubmitDirect.innerText = "Enviando al Admin...";
+
+      try {
+        await fetch('/api/tickets/reserve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            raffleId: activeRaffleId,
+            name: name,
+            whatsapp: whatsapp,
+            loteria: 'Pick 5 Florida',
+            tickets: ticketsArr,
+            comprobante: selectedDirectReceiptBase64 || "",
+            estado: "esperando_validacion"
+          })
+        });
+
+        showToast("¡Comprobante enviado al administrador con éxito!", "ok");
+        if ($("uploadReceiptModal")) $("uploadReceiptModal").classList.remove("active");
+      } catch(e) {
+        showToast("Error enviando comprobante", "bad");
+      } finally {
+        btnSubmitDirect.disabled = false;
+        btnSubmitDirect.innerText = "Enviar Comprobante al Administrador";
+      }
     });
   }
 
