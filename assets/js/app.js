@@ -2389,27 +2389,23 @@
       console.warn("localStorage backup error:", e);
     }
 
-    // 1. Send reserve & receipt API call synchronously with keepalive
-    try {
-      await fetch('/api/tickets/reserve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        keepalive: true,
-        body: JSON.stringify({
-          raffleId: activeRaffleId,
-          name,
-          whatsapp: phone,
-          loteria: lottery,
-          tickets: ticketNums,
-          packageLabel: currentPkgTag,
-          comprobante: activeReceiptImg || "",
-          estado: "esperando_validacion",
-          groupKey: uniqueGroupKey
-        })
-      });
-    } catch(e) {
-      console.warn("Background receipt upload notice:", e);
-    }
+    // 1. Send reserve & receipt API call non-blockingly (without blocking user click gesture for WhatsApp window.open)
+    fetch('/api/tickets/reserve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        raffleId: activeRaffleId,
+        name,
+        whatsapp: phone,
+        loteria: lottery,
+        tickets: ticketNums,
+        packageLabel: currentPkgTag,
+        comprobante: activeReceiptImg || "",
+        estado: "esperando_validacion",
+        groupKey: uniqueGroupKey
+      })
+    }).catch(e => console.warn("Background receipt upload notice:", e));
 
     // 2. Format WhatsApp text
     const prizeTitle = (conf && (conf.prize || conf.title)) ? (conf.prize || conf.title) : "Sorteo Especial iPhone 17 Pro Max 1TB";
