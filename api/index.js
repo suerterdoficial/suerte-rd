@@ -46,7 +46,7 @@ const DEFAULT_CONFIGS = {
     id: "florida5",
     title: "Sorteo Gran Especial: 5 iPhone 17 Pro Max 1TB",
     prize: "5 iPhone 17 Pro Max 1TB",
-    price: "RD$20",
+    price: "5",
     total: 100000,
     ticketDigits: 5,
     image: "./assets/suerte_rd_5_iphone17_banner.png",
@@ -54,7 +54,7 @@ const DEFAULT_CONFIGS = {
     brand: "Apple",
     model: "5 iPhone 17 Pro Max 1TB",
     year: "2026",
-    details: "¡Súper Sorteo Especial! Participa por 5 iPhone 17 Pro Max de 1TB por solo RD$20 pesos por ticket. Además: 10 Números Premiados de RD$5,000 pesos cada uno y RD$10,000 pesos extra al que más tickets compre.",
+    details: "¡Súper Sorteo Especial! Participa por 5 iPhone 17 Pro Max de 1TB. Además: 10 Números Premiados de RD$5,000 pesos cada uno y RD$10,000 pesos extra al que más tickets compre.",
     blessedPct: 0.1,
     blessedPrize: "RD$5,000",
     saleStatus: "active",
@@ -156,6 +156,14 @@ async function readDb(forceFresh = false) {
     const key = `suerterd:config:v2:${id}`;
     if (!db[key]) {
       db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
+    } else {
+      try {
+        let conf = typeof db[key] === 'string' ? JSON.parse(db[key]) : db[key];
+        if (conf.price === "RD$20" || conf.price === "RD$ 20" || conf.price === "20") {
+          conf.price = "5";
+          db[key] = JSON.stringify(conf);
+        }
+      } catch(e) {}
     }
     const tKey = `suerterd:tickets:v2:${id}`;
     
