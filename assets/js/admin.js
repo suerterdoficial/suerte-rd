@@ -51,6 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Escuchador instantáneo de eventos de almacenamiento compartido (0ms latency entre cliente y admin)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'suerterd_admin_tickets_backup' && isAuthenticated()) {
+      loadTicketsData();
+    }
+  });
+
   // Polling rápido cada 2 segundos para sincronización instantánea
   setInterval(() => {
     if (isAuthenticated()) {

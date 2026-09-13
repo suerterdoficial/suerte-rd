@@ -2315,6 +2315,30 @@
 
     const activeReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64;
 
+    // Save purchase order to shared localStorage backup for instant Admin sync
+    try {
+      let currentBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
+      const nowIso = new Date().toISOString();
+      ticketNums.forEach(tNum => {
+        currentBackup[tNum] = {
+          name: name,
+          nombre: name,
+          whatsapp: phone,
+          phone: phone,
+          loteria: lottery,
+          paquete: currentPkgTag,
+          packageLabel: currentPkgTag,
+          estado: 'esperando_validacion',
+          comprobante: activeReceiptImg || '',
+          fecha: nowIso,
+          timestamp: Date.now()
+        };
+      });
+      localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentBackup));
+    } catch(e) {
+      console.warn("localStorage backup error:", e);
+    }
+
     // 1. Send reserve & receipt API call synchronously with keepalive
     try {
       await fetch('/api/tickets/reserve', {
