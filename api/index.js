@@ -73,28 +73,11 @@ async function readDb(forceFresh = false) {
 
   let db = null;
 
-  if (BLOB_TOKEN) {
-    try {
-      const { blobs } = await list({ prefix: 'suerterd_db.json', token: BLOB_TOKEN });
-      if (blobs && blobs.length > 0) {
-        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
-        const res = await fetch(sorted[0].url, {
-          headers: { 'Authorization': `Bearer ${BLOB_TOKEN}` }
-        });
-        if (res.ok) {
-          const text = await res.text();
-          db = JSON.parse(text);
-        }
-      }
-    } catch (e) {
-      console.error("Error reading from Vercel Blob:", e);
-    }
-  }
-
-  if (!db && useKV) {
+  // 1. Check Upstash Redis / Vercel KV first (Primary source of truth)
+  if (useKV) {
     try {
       const data = await kv.get('suerterd_db');
-      db = data || {};
+      db = data || null;
     } catch (e) {
       console.error("Error reading from Vercel KV:", e);
     }
@@ -113,6 +96,25 @@ async function readDb(forceFresh = false) {
       }
     } catch (e) {
       console.error("Error reading from Upstash Redis:", e);
+    }
+  }
+
+  // 2. Fallback to Vercel Blob if KV is empty
+  if (!db && BLOB_TOKEN) {
+    try {
+      const { blobs } = await list({ prefix: 'suerterd_db.json', token: BLOB_TOKEN });
+      if (blobs && blobs.length > 0) {
+        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+        const res = await fetch(sorted[0].url, {
+          headers: { 'Authorization': `Bearer ${BLOB_TOKEN}` }
+        });
+        if (res.ok) {
+          const text = await res.text();
+          db = JSON.parse(text);
+        }
+      }
+    } catch (e) {
+      console.error("Error reading from Vercel Blob:", e);
     }
   }
 
