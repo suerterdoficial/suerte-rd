@@ -247,6 +247,7 @@ app.post(['/api/admin/verify', '/admin/verify'], async (req, res) => {
 
 // GET TICKETS API
 app.get(['/api/tickets', '/tickets'], async (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   const raffleId = req.query.raffleId || 'florida5';
   const key = `suerterd:tickets:v2:${raffleId}`;
   const db = await readDb();
