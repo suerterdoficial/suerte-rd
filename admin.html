@@ -140,6 +140,12 @@
       cursor: pointer; transition: all 0.2s ease;
     }
     .chip.active { background: var(--green); color: #000; border-color: var(--green); }
+    .chip-count-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #ff4d5e; color: #FFF; font-weight: 900; font-size: 0.75rem;
+      padding: 2px 8px; border-radius: 12px; margin-left: 6px;
+      box-shadow: 0 0 10px rgba(255, 77, 94, 0.5); transition: all 0.3s ease;
+    }
 
     /* TABLE LAYOUT */
     .table-container {
@@ -291,7 +297,7 @@
 
       <div class="filter-chips">
         <div class="chip active" data-filter="all">Todos</div>
-        <div class="chip" data-filter="pending">⏳ Pendientes</div>
+        <div class="chip" data-filter="pending" id="chipPendingFilter">🔔 Pendientes <span class="chip-count-badge" id="pendingChipCount">0</span></div>
         <div class="chip" data-filter="paid">✅ Validados</div>
         <div class="chip" data-filter="rejected">❌ Rechazados</div>
       </div>

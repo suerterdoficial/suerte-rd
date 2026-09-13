@@ -380,6 +380,21 @@ function updateStatsCards() {
   const elPendientes = document.getElementById('statPendientes');
   if (elPendientes) elPendientes.innerText = pendientesCount.toLocaleString();
 
+  const pendingOrdersCount = groups.filter(g => g.estado === 'esperando_validacion' || g.estado === 'reservado').length;
+  const elChipCount = document.getElementById('pendingChipCount');
+  if (elChipCount) {
+    elChipCount.innerText = pendingOrdersCount.toString();
+    if (pendingOrdersCount > 0) {
+      elChipCount.style.background = '#ff4d5e';
+      elChipCount.style.color = '#fff';
+      elChipCount.style.boxShadow = '0 0 10px rgba(255, 77, 94, 0.7)';
+    } else {
+      elChipCount.style.background = 'rgba(255, 255, 255, 0.2)';
+      elChipCount.style.color = '#fff';
+      elChipCount.style.boxShadow = 'none';
+    }
+  }
+
   const elPaquetes = document.getElementById('statPaquetes');
   if (elPaquetes) elPaquetes.innerText = groups.length.toLocaleString();
 }
