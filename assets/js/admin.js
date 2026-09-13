@@ -308,11 +308,15 @@ function getGroupKeyForTicket(t) {
   if (!t) return 'cliente_desconocido';
   if (t.orderId) return `order_${t.orderId}`;
   if (t.reservaId) return `reserva_${t.reservaId}`;
-  const phone = (t.whatsapp || t.name || t.nombre || 'cliente').replace(/\D/g, '') || (t.name || 'cliente');
-  const ts = t.timestamp_comprobante || t.timestamp || 0;
-  // Agrupar en ventanas de 2 minutos (120000ms) para una agrupación precisa
-  const timeWindow = Math.floor(ts / 120000);
-  return `${phone}_${timeWindow}`;
+
+  const rawPhone = String(t.whatsapp || t.name || t.nombre || 'cliente').replace(/\D/g, '');
+  const phone = rawPhone.length >= 10 ? rawPhone.slice(-10) : String(t.name || t.nombre || 'cliente').toLowerCase().trim();
+  
+  const ts = t.timestamp_comprobante || t.timestamp || t.timestamp_pago || 0;
+  const timeWindow = ts > 0 ? Math.floor(ts / 600000) : 0;
+  const statusGroup = t.estado === 'pagado' ? 'pagado' : 'pendiente';
+
+  return `${phone}_${statusGroup}_${timeWindow}`;
 }
 
 function updateMetricsAndTables() {

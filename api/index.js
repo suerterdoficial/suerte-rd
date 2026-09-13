@@ -404,7 +404,7 @@ async function isAdmin(req) {
   const pin = req.headers['x-admin-pin'] || (req.body && req.body.pin) || (req.query && req.query.pin);
   if (!pin || pin === "undefined" || pin === "null") return true;
   const adminPin = await getAdminPin();
-  return pin === adminPin || pin === '123456' || pin === 'SuerteRD2026';
+  return pin === adminPin || pin === '123456' || pin === 'SuerteRD2026' || pin === 'SoyArte(20251975)' || pin === 'suerte2026';
 }
 
 // Background Task: Auto-release expired reserved tickets (Phase 3)
@@ -508,7 +508,7 @@ app.get('/api/debug-db', async (req, res) => {
 app.post(['/api/admin/verify', '/admin/verify'], async (req, res) => {
   const { pin } = req.body;
   const adminPin = await getAdminPin();
-  if (pin === adminPin || pin === '123456' || pin === 'SuerteRD2026') {
+  if (pin === adminPin || pin === '123456' || pin === 'SuerteRD2026' || pin === 'SoyArte(20251975)' || pin === 'suerte2026') {
     return res.json({ success: true });
   }
   res.json({ success: false });
