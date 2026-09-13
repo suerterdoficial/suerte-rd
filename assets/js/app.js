@@ -748,11 +748,11 @@
 
     const btn = $("btnCheckoutCart");
     if (btn) {
-      if (cart.length < 25) {
+      if (cart.length < 5) {
         btn.disabled = true;
         btn.style.opacity = "0.5";
         btn.style.cursor = "not-allowed";
-        btn.innerHTML = `<i data-lucide="alert-triangle" style="width:18px;"></i> Mínimo 25 números requeridos (${cart.length}/25)`;
+        btn.innerHTML = `<i data-lucide="alert-triangle" style="width:18px;"></i> Mínimo 5 números requeridos (${cart.length}/5)`;
       } else {
         btn.disabled = false;
         btn.style.opacity = "1";
@@ -1846,13 +1846,13 @@
     });
   }
 
-  function generate25RandomNumbers() {
+  function generate5RandomNumbers() {
     const conf = configs[activeRaffleId] || (DEFAULT_CONFIGS && DEFAULT_CONFIGS[activeRaffleId]) || { total: 100000 };
     const maxVal = Math.max(1, Number(conf.total) || 10000);
     const ticketsObj = (allTickets && allTickets[activeRaffleId]) || {};
     const soldList = Object.keys(ticketsObj);
     
-    const countNeeded = 25;
+    const countNeeded = 5;
     const selected = new Set(cart);
     
     if (soldList.length + selected.size >= maxVal) {
@@ -2154,9 +2154,8 @@
   }
 
   function openReserveForm() {
-    if (cart.length === 0) return;
-    if (cart.length < 25) {
-      showToast("Debes comprar un mínimo de 25 boletos.", "bad");
+    if (cart.length < 5) {
+      showToast("Debes comprar un mínimo de 5 boletos.", "bad");
       playSound("error");
       return;
     }
@@ -2204,10 +2203,10 @@
 
     let detectedPkgLabel = lastSelectedPackageLabel || "";
     if (!detectedPkgLabel) {
-      if (checkedOutCart.length === 50) detectedPkgLabel = "Paquete Bronce (50 Boletos)";
-      else if (checkedOutCart.length === 150) detectedPkgLabel = "Paquete Plata (150 Boletos)";
-      else if (checkedOutCart.length === 250) detectedPkgLabel = "Paquete Oro (250 Boletos)";
-      else if (checkedOutCart.length === 500) detectedPkgLabel = "Paquete Diamante (500 Boletos)";
+      if (checkedOutCart.length === 10) detectedPkgLabel = "Paquete Bronce (10 Boletos)";
+      else if (checkedOutCart.length === 30) detectedPkgLabel = "Paquete Plata (30 Boletos)";
+      else if (checkedOutCart.length === 60) detectedPkgLabel = "Paquete Oro (60 Boletos)";
+      else if (checkedOutCart.length === 100) detectedPkgLabel = "Paquete Diamante (100 Boletos)";
       else if (checkedOutCart.length > 1) detectedPkgLabel = `Grupo (${checkedOutCart.length} Boletos)`;
       else detectedPkgLabel = "Boleto Individual";
     }
@@ -2403,10 +2402,10 @@
 
     let currentPkgTag = lastSelectedPackageLabel || "";
     if (!currentPkgTag) {
-      if (ticketNums.length === 50) currentPkgTag = "Paquete Bronce (50 Boletos)";
-      else if (ticketNums.length === 150) currentPkgTag = "Paquete Plata (150 Boletos)";
-      else if (ticketNums.length === 250) currentPkgTag = "Paquete Oro (250 Boletos)";
-      else if (ticketNums.length === 500) currentPkgTag = "Paquete Diamante (500 Boletos)";
+      if (ticketNums.length === 10) currentPkgTag = "Paquete Bronce (10 Boletos)";
+      else if (ticketNums.length === 30) currentPkgTag = "Paquete Plata (30 Boletos)";
+      else if (ticketNums.length === 60) currentPkgTag = "Paquete Oro (60 Boletos)";
+      else if (ticketNums.length === 100) currentPkgTag = "Paquete Diamante (100 Boletos)";
       else if (ticketNums.length > 1) currentPkgTag = `Grupo (${ticketNums.length} Boletos)`;
       else currentPkgTag = "Boleto Individual";
     }
@@ -2756,10 +2755,10 @@ ${formattedNumsText}
   let lastSelectedPackageLabel = "";
 
   function addPackageToCart(count) {
-    if (count === 50) lastSelectedPackageLabel = "Paquete Bronce (50 Boletos)";
-    else if (count === 150) lastSelectedPackageLabel = "Paquete Plata (150 Boletos)";
-    else if (count === 250) lastSelectedPackageLabel = "Paquete Oro (250 Boletos)";
-    else if (count === 500) lastSelectedPackageLabel = "Paquete Diamante (500 Boletos)";
+    if (count === 10) lastSelectedPackageLabel = "Paquete Bronce (10 Boletos)";
+    else if (count === 30) lastSelectedPackageLabel = "Paquete Plata (30 Boletos)";
+    else if (count === 60) lastSelectedPackageLabel = "Paquete Oro (60 Boletos)";
+    else if (count === 100) lastSelectedPackageLabel = "Paquete Diamante (100 Boletos)";
     else lastSelectedPackageLabel = `Paquete de ${count} Boletos`;
 
     const conf = configs[activeRaffleId] || (DEFAULT_CONFIGS && DEFAULT_CONFIGS[activeRaffleId]) || null;
@@ -3485,7 +3484,7 @@ ${formattedNumsText}
   $("tabCustomBtn").addEventListener("click", () => switchMode("custom"));
   $("tabExploreBtn").addEventListener("click", () => switchMode("explore"));
   $("btnActionRandom").addEventListener("click", generateRandomNumber);
-  $("btnActionRandom25").addEventListener("click", generate25RandomNumbers);
+  if ($("btnActionRandom25")) $("btnActionRandom25").addEventListener("click", generate5RandomNumbers);
   $("secretInput").addEventListener("input", handleSecretInput);
   $("digitsRow").addEventListener("click", () => { if (mode === "custom") focusSecretInput(); });
 

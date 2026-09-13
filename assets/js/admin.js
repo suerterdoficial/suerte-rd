@@ -834,11 +834,11 @@ async function handleCreateManualOrder() {
     return;
   }
 
-  let count = 50;
-  let pkgLabel = '🥉 Paquete Bronce (50)';
-  if (pkgVal === 'plata') { count = 150; pkgLabel = '🥈 Paquete Plata (150)'; }
-  else if (pkgVal === 'oro') { count = 250; pkgLabel = '🥇 Paquete Oro (250)'; }
-  else if (pkgVal === 'diamante') { count = 500; pkgLabel = '💎 Paquete Diamante (500)'; }
+  let count = 10;
+  let pkgLabel = '🥉 Paquete Bronce (10)';
+  if (pkgVal === 'plata') { count = 30; pkgLabel = '🥈 Paquete Plata (30)'; }
+  else if (pkgVal === 'oro') { count = 60; pkgLabel = '🥇 Paquete Oro (60)'; }
+  else if (pkgVal === 'diamante') { count = 100; pkgLabel = '💎 Paquete Diamante (100)'; }
 
   if (btn) {
     btn.innerText = 'Generando Boletos...';
@@ -934,17 +934,17 @@ function handleExportCSV() {
 
 function getPackageBadgeHTML(pkgName, count) {
   const nameStr = String(pkgName || '').toLowerCase();
-  if (nameStr.includes('500') || nameStr.includes('diamante') || count >= 500) {
-    return `<span style="background:rgba(0,230,118,0.18); color:#00E676; border:1px solid #00E676; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">💎 Paquete Diamante (500)</span>`;
+  if (nameStr.includes('100') || nameStr.includes('diamante') || count >= 100) {
+    return `<span style="background:rgba(0,230,118,0.18); color:#00E676; border:1px solid #00E676; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">💎 Paquete Diamante (100)</span>`;
   }
-  if (nameStr.includes('250') || nameStr.includes('oro') || count >= 250) {
-    return `<span style="background:rgba(255,215,0,0.18); color:#FFD700; border:1px solid #FFD700; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥇 Paquete Oro (250)</span>`;
+  if (nameStr.includes('60') || nameStr.includes('oro') || count >= 60) {
+    return `<span style="background:rgba(255,215,0,0.18); color:#FFD700; border:1px solid #FFD700; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥇 Paquete Oro (60)</span>`;
   }
-  if (nameStr.includes('150') || nameStr.includes('plata') || count >= 150) {
-    return `<span style="background:rgba(192,192,192,0.18); color:#E0E0E0; border:1px solid #C0C0C0; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥈 Paquete Plata (150)</span>`;
+  if (nameStr.includes('30') || nameStr.includes('plata') || count >= 30) {
+    return `<span style="background:rgba(192,192,192,0.18); color:#E0E0E0; border:1px solid #C0C0C0; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥈 Paquete Plata (30)</span>`;
   }
-  if (nameStr.includes('50') || nameStr.includes('bronce') || count >= 50) {
-    return `<span style="background:rgba(205,127,50,0.18); color:#E69C55; border:1px solid #CD7F32; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥉 Paquete Bronce (50)</span>`;
+  if (nameStr.includes('10') || nameStr.includes('bronce') || count >= 10) {
+    return `<span style="background:rgba(205,127,50,0.18); color:#E69C55; border:1px solid #CD7F32; padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🥉 Paquete Bronce (10)</span>`;
   }
   return `<span style="background:rgba(0,229,255,0.15); color:var(--cyan); border:1px solid var(--cyan); padding:4px 10px; border-radius:10px; font-weight:800; font-size:0.8rem; display:inline-block;">🎟️ ${escapeHtml(pkgName || 'Paquete de Boletos')}</span>`;
 }
