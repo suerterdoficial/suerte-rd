@@ -268,7 +268,7 @@ function switchTab(tabName) {
    ========================================== */
 function initFiltersAndSearch() {
   const searchInput = document.getElementById('searchInput');
-  const chips = document.querySelectorAll('.filter-chip');
+  const chips = document.querySelectorAll('.chip, .filter-chip');
 
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -332,15 +332,14 @@ function detectNewPendingPurchases() {
     if (group.estado === 'esperando_validacion' || group.estado === 'reservado') {
       pendingCount++;
       if (!knownGroupKeys.has(group.groupKey) && !isFirstLoad) {
-        // Alerta de compra nueva en tiempo real
         showToastNotification(
-          '🎉 ¡NUEVA COMPRA RECIBIDA!',
-          `${group.name} compró ${group.tickets.length} boletos (${group.paquete}).`,
+          '🎟️ ¡NUEVA COMPRA DE PAQUETE!',
+          `Cliente: ${group.name} | WhatsApp: ${group.whatsapp} | ${group.paquete} (${group.tickets.length} boletos)`,
           'shopping-bag'
         );
         sendDesktopNotification(
-          '🎟️ Nueva Compra en Suerte RD',
-          `${group.name} acaba de realizar un pedido de ${group.tickets.length} boletos.`
+          '🎟️ Nueva Compra de Paquete en Suerte RD',
+          `Cliente: ${group.name} (${group.whatsapp}) compró el ${group.paquete}.`
         );
       }
       knownGroupKeys.add(group.groupKey);
@@ -643,16 +642,44 @@ async function deleteGroupRecord(ticketsEncodedStr) {
   }
 }
 
+let currentWaTargetPhone = '';
+
 function sendWhatsAppConfirmation(name, whatsapp, ticketsEncodedStr) {
-  const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr));
+  const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr)) || [];
   const cleanPhone = (whatsapp || '').replace(/\D/g, '');
-  if (!cleanPhone) return;
+  if (!cleanPhone) {
+    alert('No hay un número de WhatsApp válido.');
+    return;
+  }
 
+  currentWaTargetPhone = cleanPhone;
+
+  const totalMonto = ticketsArr.length * TICKET_PRICE;
   const ticketsFormatted = ticketsArr.map(t => `#${t}`).join(', ');
-  const message = `¡Hola ${name}! 🍀\n\nTu compra en *Suerte RD* ha sido *APROBADA Y ACTIVADA* con éxito. 🎉\n\n🎟️ *Tus Boletos Oficiales:* ${ticketsFormatted}\n📱 *Sorteo:* iPhone 17 Pro Max 1TB (Pick 5 Florida)\n\n¡Muchísima suerte y gracias por participar! 🚀\nVerifica tus números en: https://www.suerterd.com.do`;
 
-  const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-  window.open(waUrl, '_blank');
+  const defaultTemplate = `¡Hola ${name}! 👋\n\nSu pago de RD$ ${totalMonto.toLocaleString()} ha sido verificado con éxito. Sus números ya están activados para la rifa del *Sorteo Especial iPhone 17 Pro Max 1TB*.\n\n🎟️ *Tus Números Asignados (${ticketsArr.length}):*\n${ticketsFormatted}\n\n🍀 Sus números ya están participando en la rifa. ¡Muchísima suerte y gracias por confiar en Suerte RD!\n\n🔗 Verifica tus números en: https://www.suerterd.com.do`;
+
+  const elName = document.getElementById('waModalClientName');
+  if (elName) elName.innerText = name || 'Cliente';
+
+  const elPhone = document.getElementById('waModalClientPhone');
+  if (elPhone) elPhone.innerText = whatsapp || cleanPhone;
+
+  const elArea = document.getElementById('waMessageTextarea');
+  if (elArea) elArea.value = defaultTemplate;
+
+  const modal = document.getElementById('modalWhatsAppMessage');
+  if (modal) modal.classList.add('active');
+
+  const btnSubmit = document.getElementById('btnSendWaModalSubmit');
+  if (btnSubmit) {
+    btnSubmit.onclick = () => {
+      const finalMsg = elArea ? elArea.value : defaultTemplate;
+      const waUrl = `https://wa.me/${currentWaTargetPhone}?text=${encodeURIComponent(finalMsg)}`;
+      window.open(waUrl, '_blank');
+      if (modal) modal.classList.remove('active');
+    };
+  }
 }
 
 /* ==========================================

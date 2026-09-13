@@ -427,8 +427,27 @@
             <a id="modalOpenExternalBtn" href="#" target="_blank" class="btn btn-cyan" style="width:100%; text-align:center;">
               <i data-lucide="external-link"></i> Abrir Foto HD Externa
             </a>
-          </div>
-        </div>
+  <!-- MODAL MENSAJE DE WHATSAPP PERSONALIZABLE -->
+  <div class="modal-overlay" id="modalWhatsAppMessage">
+    <div class="modal-box" style="max-width: 600px; width: 95%; text-align: left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-light); padding-bottom:12px;">
+        <h3 style="color:var(--green); font-weight:900; font-size:1.25rem; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="message-square"></i> Confirmación por WhatsApp
+        </h3>
+        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="document.getElementById('modalWhatsAppMessage').classList.remove('active')"><i data-lucide="x"></i></button>
+      </div>
+
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:12px;">
+        Puedes editar o personalizar el mensaje antes de enviarlo al WhatsApp del cliente (<strong style="color:#FFF;" id="waModalClientName">Cliente</strong> - <span style="color:var(--green); font-family:var(--font-mono);" id="waModalClientPhone">809...</span>):
+      </p>
+
+      <textarea id="waMessageTextarea" rows="10" style="width:100%; background:#040c12; border:1px solid var(--border-light); border-radius:14px; color:#FFF; padding:14px; font-family:var(--font-sans); font-size:0.9rem; line-height:1.55; resize:vertical; margin-bottom:18px;"></textarea>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalWhatsAppMessage').classList.remove('active')">Cancelar</button>
+        <button type="button" class="btn btn-green" id="btnSendWaModalSubmit">
+          <i data-lucide="send"></i> Abrir en WhatsApp
+        </button>
       </div>
     </div>
   </div>
