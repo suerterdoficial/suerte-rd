@@ -600,6 +600,48 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
   }
 });
 
+// Admin Endpoint: Update Ticket Status Atomically (Approve / Reject)
+app.post(['/api/tickets/update-status', '/tickets/update-status'], async (req, res) => {
+  if (!await isAdmin(req)) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const { raffleId, tickets, newStatus, action } = req.body;
+    if (!tickets || !Array.isArray(tickets) || tickets.length === 0) {
+      return res.status(400).json({ error: "Lista de boletos inválida." });
+    }
+
+    const rId = raffleId || "florida5";
+    const db = await readDb(true);
+    const key = `suerterd:tickets:v2:${rId}`;
+    const oldValueStr = db[key] || "{}";
+    let ticketsObj = oldValueStr ? JSON.parse(oldValueStr) : {};
+
+    const now = Date.now();
+    tickets.forEach(tNum => {
+      if (action === 'delete' || newStatus === 'deleted') {
+        delete ticketsObj[tNum];
+      } else if (ticketsObj[tNum]) {
+        ticketsObj[tNum].estado = newStatus;
+        if (newStatus === 'pagado') {
+          ticketsObj[tNum].timestamp_pago = now;
+        }
+      }
+    });
+
+    const newValueStr = JSON.stringify(ticketsObj);
+    db[key] = newValueStr;
+    await writeDb(db);
+
+    await detectAndLogNotifications(key, oldValueStr, newValueStr);
+
+    res.json({ success: true, updatedCount: tickets.length });
+  } catch (e) {
+    console.error("Error in /api/tickets/update-status:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Cron Endpoint for Vercel Cron
 app.get('/api/cron/release-tickets', async (req, res) => {
   try {

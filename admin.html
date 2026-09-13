@@ -277,9 +277,46 @@
       border-radius: 24px; padding: 28px; width: 100%; max-width: 550px; text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px var(--cyan-glow);
     }
+
+    /* TOAST NOTIFICATION CONTAINER */
+    .toast-container {
+      position: fixed; top: 20px; right: 20px; z-index: 10000;
+      display: flex; flex-direction: column; gap: 10px; max-width: 380px; width: 100%;
+      pointer-events: none;
+    }
+    .toast-card {
+      pointer-events: auto;
+      background: linear-gradient(135deg, rgba(13, 30, 40, 0.95), rgba(7, 21, 30, 0.98));
+      border: 1px solid var(--green);
+      border-left: 5px solid var(--green);
+      border-radius: 16px; padding: 16px 20px;
+      box-shadow: 0 10px 30px rgba(0, 230, 118, 0.25), 0 4px 12px rgba(0,0,0,0.5);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: flex-start; gap: 12px;
+      animation: toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      transition: all 0.3s ease;
+    }
+    .toast-card.outgoing {
+      animation: toastOut 0.3s ease forwards;
+    }
+    .toast-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(0, 230, 118, 0.15); color: var(--green);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .toast-content { flex: 1; }
+    .toast-title { font-weight: 800; font-size: 0.9rem; color: #FFF; margin-bottom: 2px; }
+    .toast-msg { font-size: 0.8rem; color: var(--muted); line-height: 1.3; }
+    .toast-close { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px; }
+    .toast-close:hover { color: #FFF; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
   </style>
 </head>
 <body>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
 
   <!-- LOGIN MODAL -->
   <div class="login-overlay" id="loginOverlay">
@@ -302,6 +339,7 @@
         <p><i data-lucide="calendar" style="width:14px;"></i> Sorteo Especial iPhone 17 Pro Max 1TB • Actualización Automática cada 2s</p>
       </div>
       <div class="header-actions">
+        <button class="btn btn-cyan" id="btnToggleNotifications" title="Activar Alertas de Escritorio"><i data-lucide="bell" style="width:16px;"></i> Alertas</button>
         <button class="btn btn-secondary" id="btnRefreshData" title="Recargar datos"><i data-lucide="rotate-cw" style="width:16px;"></i> Refrescar</button>
         <button class="btn btn-red" id="btnLogout"><i data-lucide="log-out" style="width:16px;"></i> Salir</button>
       </div>

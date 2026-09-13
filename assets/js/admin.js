@@ -13,12 +13,15 @@ let statsChartInstance = null;
 let lastPendingCount = -1;
 let currentFilter = 'all';
 let searchQuery = '';
+let knownGroupKeys = new Set();
+let isFirstLoad = true;
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initTabs();
   initModal();
   initFiltersAndSearch();
+  initNotificationToggle();
   
   const btnCreateTest = document.getElementById('btnCreateTest');
   if (btnCreateTest) {
@@ -202,6 +205,78 @@ async function loadTicketsData() {
   } catch (e) {
     console.error('Error al cargar datos de boletos:', e);
   }
+function showToastNotification(title, message, iconType = 'package') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const card = document.createElement('div');
+  card.className = 'toast-card';
+
+  const iconName = iconType === 'package' ? 'package' : (iconType === 'check' ? 'check-circle' : 'ticket');
+
+  card.innerHTML = `
+    <div class="toast-icon">
+      <i data-lucide="${iconName}"></i>
+    </div>
+    <div class="toast-content">
+      <div class="toast-title">${escapeHtml(title)}</div>
+      <div class="toast-msg">${escapeHtml(message)}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+  `;
+
+  container.appendChild(card);
+  if (window.lucide) window.lucide.createIcons();
+
+  playNotificationSound();
+
+  setTimeout(() => {
+    card.classList.add('outgoing');
+    setTimeout(() => card.remove(), 300);
+  }, 6000);
+}
+
+function sendDesktopNotification(title, message) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification(title, {
+        body: message,
+        icon: '/assets/suerte_rd_logo.png'
+      });
+    } catch (e) {}
+  }
+}
+
+function initNotificationToggle() {
+  const btn = document.getElementById('btnToggleNotifications');
+  if (!btn) return;
+
+  if ('Notification' in window) {
+    if (Notification.permission === 'granted') {
+      btn.innerHTML = `<i data-lucide="bell-check" style="width:16px; color:var(--green);"></i> Alertas On`;
+    } else {
+      btn.innerHTML = `<i data-lucide="bell" style="width:16px;"></i> Alertas`;
+    }
+  }
+
+  btn.addEventListener('click', async () => {
+    if (!('Notification' in window)) {
+      showToastNotification('Navegador no compatible', 'Notificaciones de escritorio no disponibles.');
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      showToastNotification('🔔 Alertas Activas', 'Notificaciones de escritorio ya están habilitadas.');
+    } else {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        btn.innerHTML = `<i data-lucide="bell-check" style="width:16px; color:var(--green);"></i> Alertas On`;
+        showToastNotification('🔔 Alertas Activadas', 'Recibirás avisos nativos cada vez que se compre un paquete de boletos.');
+        if (window.lucide) window.lucide.createIcons();
+      } else {
+        showToastNotification('Alertas Desactivadas', 'Permiso para notificaciones denegado.');
+      }
+    }
+  });
 }
 
 function playNotificationSound() {
@@ -219,6 +294,17 @@ function playNotificationSound() {
     osc.start();
     osc.stop(ctx.currentTime + 0.4);
   } catch (e) {}
+}
+
+function getGroupKeyForTicket(t) {
+  if (!t) return 'cliente_desconocido';
+  if (t.orderId) return `order_${t.orderId}`;
+  if (t.reservaId) return `reserva_${t.reservaId}`;
+  const phone = (t.whatsapp || t.name || t.nombre || 'cliente').replace(/\D/g, '') || (t.name || 'cliente');
+  const ts = t.timestamp_comprobante || t.timestamp || 0;
+  // Agrupar en ventanas de 2 minutos (120000ms) para una agrupación precisa
+  const timeWindow = Math.floor(ts / 120000);
+  return `${phone}_${timeWindow}`;
 }
 
 function updateMetricsAndTables() {
@@ -239,8 +325,7 @@ function updateMetricsAndTables() {
       totalPendingTickets++;
     }
 
-    const timeWindow = Math.floor((t.timestamp_comprobante || t.timestamp || 0) / 15000);
-    const key = `${t.whatsapp || t.name || 'cliente'}_${timeWindow}`;
+    const key = getGroupKeyForTicket(t);
     uniqueGroupKeys.add(key);
 
     const pkgStr = String(t.paquete || '').toLowerCase();
@@ -318,9 +403,7 @@ function renderValidarPagosTable() {
   Object.entries(currentTickets).forEach(([tNum, t]) => {
     if (!t) return;
 
-    // Agrupar por teléfono o nombre + ventana de tiempo aproximada
-    const timeWindow = Math.floor((t.timestamp_comprobante || t.timestamp || 0) / 15000);
-    const groupKey = `${t.whatsapp || t.name || 'cliente'}_${timeWindow}`;
+    const groupKey = getGroupKeyForTicket(t);
 
     if (!groups[groupKey]) {
       groups[groupKey] = {
@@ -346,6 +429,22 @@ function renderValidarPagosTable() {
       groups[groupKey].comprobante = t.comprobante;
     }
   });
+
+  // Detección de avisos de compras en tiempo real
+  const currentGroupKeys = new Set(Object.keys(groups));
+  if (!isFirstLoad) {
+    Object.keys(groups).forEach(gKey => {
+      if (!knownGroupKeys.has(gKey)) {
+        const orderGroup = groups[gKey];
+        const title = `🎟️ ¡Nueva compra de paquete!`;
+        const msg = `${orderGroup.name} compró/apartó ${orderGroup.paquete} (${orderGroup.tickets.length} boletos).`;
+        showToastNotification(title, msg, 'package');
+        sendDesktopNotification(title, msg);
+      }
+    });
+  }
+  knownGroupKeys = currentGroupKeys;
+  isFirstLoad = false;
 
   let groupList = Object.values(groups);
 
@@ -470,38 +569,43 @@ async function approveGroup(encodedTickets, name, whatsapp) {
   const tickets = JSON.parse(decodeURIComponent(encodedTickets));
   const pin = sessionStorage.getItem('suerte_admin_pin') || '';
 
-  tickets.forEach(num => {
-    if (currentTickets[num]) {
-      currentTickets[num].estado = 'pagado';
-      currentTickets[num].timestamp_pago = Date.now();
-    }
-  });
+  const cleanPhone = whatsapp.replace(/\D/g, '');
+  const formattedList = tickets.length > 5 
+    ? `#${tickets[0]} al #${tickets[tickets.length - 1]} (${tickets.length} boletos)`
+    : tickets.map(n => `#${n}`).join(', ');
+  const msg = `🎉 ¡Felicidades ${name}! Tus boletos (${formattedList}) ya están participando para la rifa. Tu compra ha sido VALIDADA Y ACTIVADA con éxito en Suerte RD! 🍀`;
+  const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}` : null;
+
+  // Abrir pestaña de WhatsApp INMEDIATAMENTE para evitar bloqueador de pop-ups del navegador
+  let waWindow = null;
+  if (waUrl) {
+    waWindow = window.open(waUrl, '_blank');
+  }
 
   try {
-    const res = await fetch('/api/set', {
+    const res = await fetch('/api/tickets/update-status', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-admin-pin': pin
       },
       body: JSON.stringify({
-        key: TICKET_KEY,
-        value: JSON.stringify(currentTickets)
+        raffleId: RAFFLE_ID,
+        tickets: tickets,
+        newStatus: 'pagado'
       })
     });
 
     const data = await res.json();
     if (data.success) {
-      updateMetricsAndTables();
-      const cleanPhone = whatsapp.replace(/\D/g, '');
-      const formattedList = tickets.map(n => `#${n}`).join(', ');
-      const msg = `🎉 ¡Felicidades ${name}! Tus boletos (${formattedList}) ya están participando para la rifa. Tu compra ha sido VALIDADA Y ACTIVADA con éxito en Suerte RD! 🍀`;
-      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
-      window.open(waUrl, '_blank');
+      showToastNotification('✅ Compra Aprobada', `Se han activado ${tickets.length} boletos para ${name}.`, 'check');
+      await loadTicketsData();
     } else {
+      if (waWindow) waWindow.close();
       alert('Error al aprobar: ' + (data.error || 'Respuesta no válida del servidor'));
     }
   } catch (e) {
+    if (waWindow) waWindow.close();
     alert('Error al conectar con la base de datos');
   }
 }
@@ -512,26 +616,24 @@ async function rejectGroup(encodedTickets) {
   const tickets = JSON.parse(decodeURIComponent(encodedTickets));
   const pin = sessionStorage.getItem('suerte_admin_pin') || '';
 
-  tickets.forEach(num => {
-    delete currentTickets[num];
-  });
-
   try {
-    const res = await fetch('/api/set', {
+    const res = await fetch('/api/tickets/update-status', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-admin-pin': pin
       },
       body: JSON.stringify({
-        key: TICKET_KEY,
-        value: JSON.stringify(currentTickets)
+        raffleId: RAFFLE_ID,
+        tickets: tickets,
+        action: 'delete'
       })
     });
 
     const data = await res.json();
     if (data.success) {
-      updateMetricsAndTables();
+      showToastNotification('🗑️ Boletos Liberados', `Se han liberado ${tickets.length} boletos.`);
+      await loadTicketsData();
     } else {
       alert('Error al rechazar boletos');
     }
