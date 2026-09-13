@@ -144,7 +144,32 @@ async function readDb(forceFresh = false) {
       db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
     }
     const tKey = `suerterd:tickets:v2:${id}`;
-    if (db[tKey] === undefined) {
+    
+    if (fs.existsSync(ORIGINAL_DATA_FILE)) {
+      try {
+        const diskRaw = fs.readFileSync(ORIGINAL_DATA_FILE, 'utf8');
+        const diskDb = JSON.parse(diskRaw) || {};
+        if (diskDb[tKey] && diskDb[tKey] !== "{}") {
+          let currentObj = {};
+          try { currentObj = typeof db[tKey] === 'string' ? JSON.parse(db[tKey] || "{}") : (db[tKey] || {}); } catch(e){}
+          let diskObj = {};
+          try { diskObj = typeof diskDb[tKey] === 'string' ? JSON.parse(diskDb[tKey]) : (diskDb[tKey] || {}); } catch(e){}
+
+          let hasChanges = false;
+          for (const numStr in diskObj) {
+            if (!currentObj[numStr]) {
+              currentObj[numStr] = diskObj[numStr];
+              hasChanges = true;
+            }
+          }
+          if (hasChanges || !db[tKey] || db[tKey] === "{}") {
+            db[tKey] = JSON.stringify(currentObj);
+          }
+        }
+      } catch(e) {}
+    }
+
+    if (!db[tKey]) {
       db[tKey] = "{}";
     }
   }
