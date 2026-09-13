@@ -2498,10 +2498,19 @@ footer {
   color: var(--cyan) !important;
   box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
 }
-.nav-buy-highlight:hover {
-  background: rgba(0, 229, 255, 0.25) !important;
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+.nav-buy-highlight:hover,
+.nav-buy-highlight.active {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.35), rgba(0, 229, 255, 0.18)) !important;
+  border: 1px solid var(--cyan) !important;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
   color: #FFF !important;
+}
+
+.nav-link-btn.active {
+  color: #FFFFFF !important;
+  background: rgba(0, 229, 255, 0.18) !important;
+  border: 1px solid var(--border-cyan) !important;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.3) !important;
 }
 
 /* Manejo de Vistas (Pantalla Principal vs Pantalla de Compra) */
@@ -2522,6 +2531,7 @@ body.purchase-mode-active #buyingFlowSection {
 }
 
 body.purchase-mode-active .hero,
+body.purchase-mode-active .packages-section-container,
 body.purchase-mode-active .raffle-selector-title,
 body.purchase-mode-active #raffleGrid,
 body.purchase-mode-active .stats-grid,
@@ -2529,7 +2539,8 @@ body.purchase-mode-active .content-grid,
 body.purchase-mode-active #winnersSection,
 body.purchase-mode-active #storiesSection,
 body.purchase-mode-active #searchSection,
-body.purchase-mode-active .faq-section {
+body.purchase-mode-active .faq-section,
+body.purchase-mode-active #supportSection {
   display: none !important;
 }
 

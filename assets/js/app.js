@@ -388,17 +388,25 @@
   }
 
   // Control de Pantallas / Vistas
-  function showScreen(screenName) {
+  function showScreen(screenName, targetNavId) {
+    const navButtons = document.querySelectorAll(".nav-link-btn");
+    navButtons.forEach(btn => btn.classList.remove("active"));
+
     if (screenName === 'purchase') {
       document.body.classList.add("purchase-mode-active");
+      const buyBtn = $("navBuyTickets");
+      if (buyBtn) buyBtn.classList.add("active");
       window.scrollTo({top: 0, behavior: "smooth"});
       setTimeout(() => {
-        if ($("buyerNameInput").value === "") {
+        if ($("buyerNameInput") && $("buyerNameInput").value === "") {
           $("buyerNameInput").focus();
         }
       }, 300);
     } else {
       document.body.classList.remove("purchase-mode-active");
+      const activeNavId = targetNavId || 'navHome';
+      const navBtn = $(activeNavId);
+      if (navBtn) navBtn.classList.add("active");
       window.scrollTo({top: 0, behavior: "smooth"});
     }
   }
@@ -3759,21 +3767,21 @@ ${formattedNumsText}
 
   $("heroBuyTicketsBtn").addEventListener("click", () => {
     playSound("click");
-    showScreen('purchase');
+    showScreen('purchase', 'navBuyTickets');
   });
   $("btnBackToHome").addEventListener("click", () => {
     playSound("click");
-    showScreen('home');
+    showScreen('home', 'navHome');
   });
   $("navHome").addEventListener("click", (e) => {
     e.preventDefault();
     playSound("click");
-    showScreen('home');
+    showScreen('home', 'navHome');
   });
   $("navRaffles").addEventListener("click", (e) => {
     e.preventDefault();
     playSound("click");
-    showScreen('home');
+    showScreen('home', 'navRaffles');
     setTimeout(() => {
       $("raffleSection").scrollIntoView({behavior: "smooth"});
     }, 100);
@@ -3781,12 +3789,12 @@ ${formattedNumsText}
   $("navBuyTickets").addEventListener("click", (e) => {
     e.preventDefault();
     playSound("click");
-    showScreen('purchase');
+    showScreen('purchase', 'navBuyTickets');
   });
   $("navStories").addEventListener("click", (e) => {
     e.preventDefault();
     playSound("click");
-    showScreen('home');
+    showScreen('home', 'navStories');
     setTimeout(() => {
       $("storiesSection").scrollIntoView({behavior: "smooth"});
     }, 100);
@@ -3794,7 +3802,7 @@ ${formattedNumsText}
   $("footerSearchLink").addEventListener("click", (e) => {
     e.preventDefault();
     playSound("click");
-    showScreen('home');
+    showScreen('home', 'navHome');
     setTimeout(() => {
       $("searchSection").scrollIntoView({behavior: "smooth"});
     }, 100);
@@ -3802,7 +3810,7 @@ ${formattedNumsText}
   $("footerWinnersLink").addEventListener("click", (e) => {
     e.preventDefault();
     playSound("click");
-    showScreen('home');
+    showScreen('home', 'navHome');
     setTimeout(() => {
       $("winnersSection").scrollIntoView({behavior: "smooth"});
     }, 100);
