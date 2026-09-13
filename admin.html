@@ -16,9 +16,9 @@
 
   <style>
     :root {
-      --bg: #050c12;
-      --card-bg: rgba(13, 30, 40, 0.85);
-      --card-bg-solid: #0d1e28;
+      --bg: #030a0f;
+      --card-bg: rgba(10, 25, 35, 0.85);
+      --card-bg-solid: #0a1923;
       --border: rgba(0, 230, 118, 0.3);
       --border-light: rgba(255, 255, 255, 0.08);
       --green: #00E676;
@@ -41,9 +41,8 @@
     body {
       background: var(--bg);
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(0, 230, 118, 0.06) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(0, 229, 255, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.03) 0%, transparent 60%);
+        radial-gradient(circle at 10% 20%, rgba(0, 230, 118, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 229, 255, 0.04) 0%, transparent 40%);
       background-attachment: fixed;
       color: var(--text);
       font-family: var(--font-main);
@@ -51,198 +50,134 @@
       padding: 24px 16px;
     }
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+    .container { max-width: 1240px; margin: 0 auto; }
 
-    /* LOGIN MODAL */
+    /* LOGIN MODAL OVERLAY */
     .login-overlay {
       position: fixed; inset: 0; z-index: 9999;
-      background: rgba(3, 8, 12, 0.96);
-      backdrop-filter: blur(16px);
+      background: rgba(2, 6, 10, 0.96); backdrop-filter: blur(16px);
       display: flex; align-items: center; justify-content: center; padding: 20px;
     }
     .login-box {
       background: linear-gradient(145deg, #0d222e, #07151e);
-      border: 1px solid var(--border);
-      border-radius: 24px; padding: 40px 30px;
+      border: 1px solid var(--border); border-radius: 24px; padding: 40px 30px;
       width: 100%; max-width: 420px; text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 230, 118, 0.15), 0 0 40px rgba(0, 229, 255, 0.1);
+      box-shadow: 0 20px 60px rgba(0, 230, 118, 0.15);
     }
-    .login-box h2 {
-      font-size: 1.7rem; font-weight: 900; color: var(--green);
-      display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px;
-    }
-    .login-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
 
-    /* HEADER TOPBAR */
+    /* TOP HEADER BAR */
     .header {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border-light);
-      border-left: 4px solid var(--green);
-      border-radius: 20px; padding: 20px 28px;
-      margin-bottom: 24px;
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border-light); border-left: 4px solid var(--green);
+      border-radius: 20px; padding: 20px 28px; margin-bottom: 24px;
       display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
-    .header-info h1 {
-      font-size: 1.4rem; font-weight: 900; color: #FFF;
-      display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;
-    }
-    .header-info p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; display: flex; align-items: center; gap: 8px; }
-
-    .live-status-pill {
+    .header-title h1 { font-size: 1.5rem; font-weight: 900; color: #FFF; display: flex; align-items: center; gap: 10px; }
+    .status-pill {
       display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(0, 230, 118, 0.12); color: var(--green);
-      border: 1px solid rgba(0, 230, 118, 0.3);
-      padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono);
+      background: rgba(0, 230, 118, 0.15); color: var(--green);
+      border: 1px solid rgba(0, 230, 118, 0.4); padding: 4px 10px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 800; font-family: var(--font-mono);
     }
-    .live-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-      box-shadow: 0 0 10px var(--green); animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
 
-    .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-    /* BUTTONS */
+    /* BUTTON SYSTEM */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       padding: 10px 18px; border-radius: 12px; font-size: 0.88rem; font-weight: 800;
-      cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: none; text-decoration: none;
+      cursor: pointer; transition: all 0.2s ease; border: none; text-decoration: none;
     }
-    .btn-green {
-      background: linear-gradient(135deg, #00E676, #00C853); color: #000;
-      box-shadow: 0 4px 16px var(--green-glow);
-    }
+    .btn-green { background: linear-gradient(135deg, #00E676, #00C853); color: #000; box-shadow: 0 4px 16px var(--green-glow); }
     .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0, 230, 118, 0.4); }
-    .btn-cyan {
-      background: linear-gradient(135deg, #00E5FF, #00B0FF); color: #000;
-      box-shadow: 0 4px 16px var(--cyan-glow);
-    }
+    .btn-cyan { background: linear-gradient(135deg, #00E5FF, #00B0FF); color: #000; box-shadow: 0 4px 16px var(--cyan-glow); }
     .btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0, 229, 255, 0.4); }
-    .btn-gold {
-      background: linear-gradient(135deg, #FFD700, #FFC107); color: #000;
-      box-shadow: 0 4px 16px var(--gold-glow);
-    }
-    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255, 215, 0, 0.4); }
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.06); color: #FFF; border: 1px solid var(--border-light);
-    }
+    .btn-gold { background: linear-gradient(135deg, #FFD700, #FFC107); color: #000; box-shadow: 0 4px 16px var(--gold-glow); }
+    .btn-gold:hover { transform: translateY(-2px); }
+    .btn-secondary { background: rgba(255, 255, 255, 0.06); color: #FFF; border: 1px solid var(--border-light); }
     .btn-secondary:hover { background: rgba(255, 255, 255, 0.12); color: var(--green); border-color: rgba(0,230,118,0.4); }
-    .btn-danger {
-      background: rgba(255, 77, 94, 0.15); color: var(--red); border: 1px solid rgba(255, 77, 94, 0.3);
-    }
-    .btn-danger:hover { background: var(--red); color: #FFF; box-shadow: 0 4px 16px var(--red-glow); }
+    .btn-danger { background: rgba(255, 77, 94, 0.15); color: var(--red); border: 1px solid rgba(255, 77, 94, 0.3); }
+    .btn-danger:hover { background: var(--red); color: #FFF; }
 
-    /* INPUTS & SELECTS */
-    input[type="text"], input[type="password"], input[type="tel"], select {
-      width: 100%; padding: 12px 16px; border-radius: 12px;
-      background: rgba(4, 12, 18, 0.9); border: 1px solid var(--border-light);
-      color: #FFF; font-family: var(--font-main); font-size: 0.92rem; outline: none;
-      transition: all 0.2s ease;
-    }
-    input:focus, select:focus {
-      border-color: var(--green); box-shadow: 0 0 16px var(--green-glow);
-    }
-
-    /* GRID STATS */
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;
-    }
+    /* STATS GRID */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-card {
-      background: var(--card-bg); backdrop-filter: blur(12px);
-      border: 1px solid var(--border-light); border-radius: 18px; padding: 20px;
-      position: relative; overflow: hidden; transition: transform 0.2s ease;
+      background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 18px; padding: 22px;
+      position: relative; overflow: hidden;
     }
-    .stat-card:hover { transform: translateY(-3px); border-color: rgba(0,230,118,0.3); }
-    .stat-card .label { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-card .value { font-size: 1.8rem; font-weight: 900; color: #FFF; margin: 8px 0 4px 0; font-family: var(--font-mono); }
-    .stat-card .subtext { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
-    .stat-card .icon-bg {
-      position: absolute; right: 16px; bottom: 16px; opacity: 0.12; font-size: 3rem; color: var(--green);
+    .stat-card .label { font-size: 0.8rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.85rem; font-weight: 900; color: #FFF; margin: 8px 0 4px 0; font-family: var(--font-mono); }
+    .stat-card .icon-badge {
+      position: absolute; right: 18px; top: 18px; width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
     }
 
     /* TABS */
-    .nav-tabs {
-      display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;
-    }
+    .nav-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
     .tab-btn {
       background: transparent; border: none; color: var(--muted); font-size: 0.95rem; font-weight: 800;
-      padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
+      padding: 10px 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;
       display: flex; align-items: center; gap: 8px;
     }
-    .tab-btn.active {
-      background: rgba(0, 230, 118, 0.12); color: var(--green); border: 1px solid rgba(0, 230, 118, 0.3);
-    }
+    .tab-btn.active { background: rgba(0, 230, 118, 0.15); color: var(--green); border: 1px solid rgba(0, 230, 118, 0.4); }
 
     /* TOOLBAR & SEARCH */
     .toolbar {
       background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 18px; padding: 16px 20px;
       margin-bottom: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px;
     }
-    .search-box { position: relative; flex: 1; min-width: 260px; }
+    .search-box { position: relative; flex: 1; min-width: 280px; }
     .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
-    .search-box input { padding-left: 42px; }
+    .search-box input {
+      width: 100%; padding: 12px 16px 12px 42px; border-radius: 12px;
+      background: rgba(2, 8, 14, 0.9); border: 1px solid var(--border-light);
+      color: #FFF; outline: none; font-family: var(--font-main);
+    }
+    .search-box input:focus { border-color: var(--green); box-shadow: 0 0 16px var(--green-glow); }
 
-    .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
-    .filter-chip {
-      padding: 8px 14px; border-radius: 10px; font-size: 0.82rem; font-weight: 700;
+    .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      padding: 8px 16px; border-radius: 10px; font-size: 0.85rem; font-weight: 800;
       background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border-light);
       cursor: pointer; transition: all 0.2s ease;
     }
-    .filter-chip.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 900; }
+    .chip.active { background: var(--green); color: #000; border-color: var(--green); }
 
-    /* ORDERS TABLE / CARDS LIST */
-    .orders-grid { display: flex; flex-direction: column; gap: 14px; }
-    .order-card {
-      background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 18px; padding: 20px;
-      display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center;
-      transition: all 0.2s ease;
+    /* TABLE LAYOUT */
+    .table-container {
+      background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 20px;
+      overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
-    .order-card:hover { border-color: rgba(0, 229, 255, 0.3); transform: translateX(4px); }
-    .order-card.pending { border-left: 4px solid var(--gold); }
-    .order-card.paid { border-left: 4px solid var(--green); }
-    .order-card.rejected { border-left: 4px solid var(--red); opacity: 0.7; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      background: rgba(0,0,0,0.4); color: var(--muted); font-size: 0.78rem; font-weight: 800;
+      text-transform: uppercase; padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+    }
+    td { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+    tr:hover td { background: rgba(0,230,118,0.02); }
 
-    .order-client-info h3 { font-size: 1.1rem; font-weight: 800; color: #FFF; display: flex; align-items: center; gap: 8px; }
-    .order-client-info p { font-size: 0.85rem; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
-
-    .tickets-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; max-height: 80px; overflow-y: auto; }
     .ticket-badge {
-      background: rgba(0, 229, 255, 0.1); color: var(--cyan); border: 1px solid rgba(0, 229, 255, 0.25);
-      padding: 3px 8px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700;
+      display: inline-block; background: rgba(0, 229, 255, 0.12); color: var(--cyan);
+      border: 1px solid rgba(0, 229, 255, 0.3); padding: 3px 8px; border-radius: 6px;
+      font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; margin: 2px;
     }
 
-    /* TOAST NOTIFICATIONS */
-    .toast-container {
-      position: fixed; bottom: 24px; right: 24px; z-index: 10000;
-      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
-    }
+    /* TOAST CONTAINER */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
     .toast {
-      pointer-events: auto; background: #0c202d; border: 1px solid var(--green);
-      border-radius: 14px; padding: 14px 20px; color: #FFF; font-size: 0.88rem; font-weight: 700;
-      box-shadow: 0 10px 30px rgba(0,230,118,0.25); display: flex; align-items: center; gap: 12px;
-      animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #0c202d; border: 1px solid var(--green); border-radius: 14px; padding: 14px 20px;
+      color: #FFF; font-size: 0.88rem; font-weight: 700; box-shadow: 0 10px 30px rgba(0,230,118,0.3);
+      display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s ease;
     }
-    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-    /* MODAL GENERAL */
+    /* MODAL OVERLAY */
     .modal-overlay {
-      position: fixed; inset: 0; z-index: 9998; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+      position: fixed; inset: 0; z-index: 9998; background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(12px);
       display: none; align-items: center; justify-content: center; padding: 20px;
     }
     .modal-overlay.active { display: flex; }
     .modal-box {
-      background: var(--card-bg-solid); border: 1px solid var(--border); border-radius: 20px;
-      padding: 28px; width: 100%; max-width: 600px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
-
-    @media (max-width: 768px) {
-      .order-card { grid-template-columns: 1fr; gap: 12px; }
-      .header { flex-direction: column; align-items: flex-start; }
+      background: var(--card-bg-solid); border: 1px solid var(--border); border-radius: 24px;
+      padding: 28px; width: 100%; max-width: 600px; box-shadow: 0 25px 60px rgba(0,0,0,0.6);
     }
   </style>
 </head>
@@ -254,10 +189,12 @@
   <!-- LOGIN OVERLAY -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
-      <h2><i data-lucide="shield-check"></i> Centro Admin</h2>
-      <p>Ingresa la contraseña de administrador para ingresar al centro de control.</p>
+      <h2 style="color:var(--green); font-weight:900; font-size:1.6rem; display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:8px;">
+        <i data-lucide="shield-check"></i> Centro de Control
+      </h2>
+      <p style="color:var(--muted); font-size:0.9rem; margin-bottom:24px;">Ingresa la contraseña de administrador para acceder.</p>
       
-      <input type="password" id="pinInput" placeholder="Contraseña de Admin (Master PIN)" style="text-align:center; font-size:1.1rem; letter-spacing:2px; margin-bottom:16px;" autofocus>
+      <input type="password" id="pinInput" placeholder="Contraseña Admin (Master PIN)" style="width:100%; padding:14px; border-radius:14px; background:#040c12; border:1px solid var(--border-light); color:#FFF; text-align:center; font-size:1.1rem; letter-spacing:2px; margin-bottom:16px;" autofocus>
       
       <div id="loginErr" style="color:var(--red); font-size:0.85rem; font-weight:700; display:none; margin-bottom:14px;">Contraseña Incorrecta</div>
 
@@ -272,22 +209,21 @@
 
     <!-- HEADER TOPBAR -->
     <header class="header">
-      <div class="header-info">
+      <div class="header-title">
         <h1>
           <i data-lucide="layout-dashboard" style="color:var(--green);"></i> 
-          Panel de Administración <span style="color:var(--cyan); font-size:0.9rem; font-weight:600;">| Suerte RD</span>
+          Centro de Control Admin <span class="status-pill">VERCEL KV EN VIVO</span>
         </h1>
-        <p>
-          <span class="live-status-pill"><span class="live-dot"></span> EN VIVO - ALERTA AUDITIVA</span>
-          <span>Sorteo Activo: iPhone 17 Pro Max 1TB (RD$3/boleto)</span>
+        <p style="color:var(--muted); font-size:0.85rem; margin-top:4px;">
+          Sorteo Especial iPhone 17 Pro Max 1TB · Actualización Automática en Tiempo Real
         </p>
       </div>
 
-      <div class="header-actions">
-        <button class="btn btn-secondary" id="btnToggleNotifications" title="Activar/Desactivar Alertas Sonoras y Push">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn btn-secondary" id="btnToggleNotifications" title="Activar/Silenciar Alertas Sonoras">
           <i data-lucide="bell"></i> <span id="notifStatusText">Sonido: ON</span>
         </button>
-        <button class="btn btn-secondary" id="btnRefreshData" title="Refrescar Datos Instantáneamente">
+        <button class="btn btn-secondary" id="btnRefreshData">
           <i data-lucide="refresh-cw"></i> Refrescar
         </button>
         <button class="btn btn-green" id="btnOpenManualModal">
@@ -296,8 +232,8 @@
         <button class="btn btn-cyan" id="btnExportCSV">
           <i data-lucide="download"></i> Exportar CSV
         </button>
-        <button class="btn btn-gold" id="btnCreateTest" title="Probar Alerta en Tiempo Real">
-          <i data-lucide="sparkles"></i> Prueba
+        <button class="btn btn-gold" id="btnCreateTest">
+          <i data-lucide="sparkles"></i> Crear Compra de Prueba
         </button>
         <button class="btn btn-danger" id="btnLogout">
           <i data-lucide="log-out"></i> Salir
@@ -305,74 +241,89 @@
       </div>
     </header>
 
-    <!-- STATS GRID -->
+    <!-- STATS CARDS -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="label">Total Recaudado</div>
-        <div class="value" id="statRecaudado" style="color:var(--green);">RD$0</div>
-        <div class="subtext"><i data-lucide="trending-up" style="width:14px;"></i> Total de Boletos Pagados</div>
-        <i data-lucide="dollar-sign" class="icon-bg"></i>
+        <div class="label">Ingresos Validados</div>
+        <div class="value" id="statRecaudado" style="color:var(--green);">RD$ 0</div>
+        <div style="font-size:0.78rem; color:var(--muted);">Total cobrado en banco</div>
+        <div class="icon-badge" style="background:rgba(0,230,118,0.15); color:var(--green);"><i data-lucide="dollar-sign"></i></div>
       </div>
 
       <div class="stat-card">
-        <div class="label">Boletos Vendidos / Reservados</div>
-        <div class="value" id="statVendidos" style="color:var(--cyan);">0</div>
-        <div class="subtext"><i data-lucide="ticket" style="width:14px;"></i> Boletos Activos en Sistema</div>
-        <i data-lucide="ticket" class="icon-bg"></i>
+        <div class="label">Boletos Activos / Vendidos</div>
+        <div class="value" id="statVendidos" style="color:var(--cyan);">0 / 100,000</div>
+        <div style="font-size:0.78rem; color:var(--muted);" id="statPct">0% de la rifa completado</div>
+        <div class="icon-badge" style="background:rgba(0,229,255,0.15); color:var(--cyan);"><i data-lucide="ticket"></i></div>
       </div>
 
       <div class="stat-card">
-        <div class="label">Pendientes de Validación</div>
+        <div class="label">Compras Por Validar</div>
         <div class="value" id="statPendientes" style="color:var(--gold);">0</div>
-        <div class="subtext"><i data-lucide="clock" style="width:14px;"></i> Comprobantes por Aprobar</div>
-        <i data-lucide="clock" class="icon-bg"></i>
+        <div style="font-size:0.78rem; color:var(--muted);">Pendientes de confirmación HD</div>
+        <div class="icon-badge" style="background:rgba(255,215,0,0.15); color:var(--gold);"><i data-lucide="clock"></i></div>
       </div>
 
       <div class="stat-card">
-        <div class="label">Boletos Disponibles Libres</div>
-        <div class="value" id="statDisponibles" style="color:#FFF;">100,000</div>
-        <div class="subtext"><i data-lucide="pie-chart" style="width:14px;"></i> Meta Total: 100,000</div>
-        <i data-lucide="pie-chart" class="icon-bg"></i>
+        <div class="label">Paquetes Registrados</div>
+        <div class="value" id="statPaquetes" style="color:var(--purple);">0</div>
+        <div style="font-size:0.78rem; color:var(--muted);">Órdenes totales recibidas</div>
+        <div class="icon-badge" style="background:rgba(157,78,221,0.15); color:var(--purple);"><i data-lucide="package"></i></div>
       </div>
     </div>
 
-    <!-- TABS NAVIGATION -->
+    <!-- TABS -->
     <div class="nav-tabs">
       <button class="tab-btn active" id="tabValidacion" onclick="switchTab('validacion')">
-        <i data-lucide="file-text"></i> Validación de Pagos y Compras
+        <i data-lucide="inbox"></i> Validar Pagos y Compras
       </button>
       <button class="tab-btn" id="tabEstadisticas" onclick="switchTab('estadisticas')">
-        <i data-lucide="pie-chart"></i> Gráfico y Distribución
+        <i data-lucide="pie-chart"></i> Estadísticas y Gráfico
       </button>
     </div>
 
-    <!-- SEARCH & FILTERS TOOLBAR -->
+    <!-- TOOLBAR & FILTERS -->
     <div class="toolbar" id="toolbarContainer">
       <div class="search-box">
         <i data-lucide="search"></i>
-        <input type="text" id="searchInput" placeholder="Buscar por Nombre, WhatsApp o # Boleto...">
+        <input type="text" id="searchInput" placeholder="Buscar por cliente, WhatsApp o # boleto...">
       </div>
 
-      <div class="filter-group">
-        <div class="filter-chip active" data-filter="all">Todos</div>
-        <div class="filter-chip" data-filter="pending">⏳ Pendientes (Por Validar)</div>
-        <div class="filter-chip" data-filter="paid">✅ Pagados (Activos)</div>
-        <div class="filter-chip" data-filter="rejected">❌ Rechazados</div>
+      <div class="filter-chips">
+        <div class="chip active" data-filter="all">Todos</div>
+        <div class="chip" data-filter="pending">⏳ Pendientes</div>
+        <div class="chip" data-filter="paid">✅ Validados</div>
+        <div class="chip" data-filter="rejected">❌ Rechazados</div>
       </div>
     </div>
 
-    <!-- TAB CONTENT: VALIDACIÓN -->
+    <!-- TAB 1: VALIDACIÓN TABLA -->
     <div id="viewValidacion">
-      <div class="orders-grid" id="ordersList">
-        <!-- Renderizado dinámico desde admin.js -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>WhatsApp</th>
+              <th>Boletos / Paquete</th>
+              <th>Monto RD$</th>
+              <th>Comprobante</th>
+              <th>Estado</th>
+              <th style="text-align:right;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <!-- Renderizado dinámico desde admin.js -->
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- TAB CONTENT: ESTADÍSTICAS CHART -->
+    <!-- TAB 2: ESTADÍSTICAS CHART -->
     <div id="viewEstadisticas" style="display:none;">
-      <div style="background:var(--card-bg); border:1px solid var(--border-light); border-radius:20px; padding:24px; text-align:center;">
-        <h3 style="color:#FFF; font-weight:800; margin-bottom:16px;">Distribución de Boletos (Doughnut Chart)</h3>
-        <div style="height:340px; position:relative;">
+      <div style="background:var(--card-bg); border:1px solid var(--border-light); border-radius:20px; padding:28px; text-align:center;">
+        <h3 style="color:#FFF; font-weight:900; margin-bottom:16px;">Distribución del Sorteo (100,000 Boletos)</h3>
+        <div style="height:360px; position:relative;">
           <canvas id="statsChart"></canvas>
         </div>
       </div>
@@ -382,9 +333,9 @@
 
   <!-- MODAL ORDEN MANUAL -->
   <div class="modal-overlay" id="modalManualOrder">
-    <div class="modal-box" style="max-width: 500px; text-align: left;">
-      <div style="display:flex; justify-space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid var(--border-light); padding-bottom:12px;">
-        <h3 style="color:var(--green); font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid var(--border-light); padding-bottom:12px;">
+        <h3 style="color:var(--green); font-weight:900; font-size:1.25rem; display:flex; align-items:center; gap:8px;">
           <i data-lucide="user-plus"></i> Registrar Compra Manual
         </h3>
         <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="document.getElementById('modalManualOrder').classList.remove('active')"><i data-lucide="x"></i></button>
@@ -392,10 +343,10 @@
 
       <form id="formManualOrder" onsubmit="event.preventDefault(); handleCreateManualOrder();">
         <label style="font-size:0.8rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">Nombre del Cliente / Usuario</label>
-        <input type="text" id="manualName" placeholder="Ej: Juan Pérez" required>
+        <input type="text" id="manualName" placeholder="Ej: Juan Pérez" required style="margin-bottom:12px;">
 
         <label style="font-size:0.8rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">Número de WhatsApp</label>
-        <input type="tel" id="manualWhatsapp" placeholder="Ej: 8099838626" required>
+        <input type="tel" id="manualWhatsapp" placeholder="Ej: 8099838626" required style="margin-bottom:12px;">
 
         <label style="font-size:0.8rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">Tipo de Paquete</label>
         <select id="manualPackage" style="background:#061118; color:#FFF; margin-bottom:16px;">
@@ -406,7 +357,7 @@
         </select>
 
         <label style="font-size:0.8rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">Estado de la Compra</label>
-        <select id="manualStatus" style="background:#061118; color:#FFF; margin-bottom:20px;">
+        <select id="manualStatus" style="background:#061118; color:#FFF; margin-bottom:24px;">
           <option value="pagado" selected>✅ Activar de Una Vez (Pagado)</option>
           <option value="esperando_validacion">⏳ Pendiente de Validar (Con Comprobante)</option>
         </select>
@@ -419,9 +370,9 @@
     </div>
   </div>
 
-  <!-- MODAL COMPROBANTE HD EXPANDIDO CON CONTROLES -->
+  <!-- MODAL COMPROBANTE HD EXPANDIDO CON CONTROLES DE ZOOM Y ROTACIÓN -->
   <div class="modal-overlay" id="receiptModal">
-    <div class="modal-box" style="max-width: 920px; width: 95%; text-align: left; padding: 24px;">
+    <div class="modal-box" style="max-width: 940px; width: 95%; text-align: left; padding: 24px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border-light); padding-bottom:10px;">
         <h3 style="color:var(--cyan); font-weight:900; font-size:1.25rem; display:flex; align-items:center; gap:8px;">
           <i data-lucide="file-check"></i> Comprobante de Depósito HD
@@ -429,10 +380,10 @@
         <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="document.getElementById('receiptModal').classList.remove('active')"><i data-lucide="x"></i></button>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 310px; gap: 20px; align-items: start;">
-        <!-- VISOR DE IMAGEN EN GRANDE DE ALTA RESOLUCIÓN -->
+      <div style="display:grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start;">
+        <!-- VISOR DE IMAGEN CON CONTROLES HD -->
         <div style="background:#02080d; border-radius:18px; padding:16px; border:1px solid var(--border-light); position:relative; min-height:480px; max-height:650px; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden;">
-          <div style="position:absolute; top:12px; right:12px; z-index:10; display:flex; gap:6px; background:rgba(0,0,0,0.7); padding:6px 10px; border-radius:12px; backdrop-filter:blur(8px); border:1px solid var(--border-light);">
+          <div style="position:absolute; top:12px; right:12px; z-index:10; display:flex; gap:6px; background:rgba(0,0,0,0.75); padding:6px 10px; border-radius:12px; backdrop-filter:blur(8px); border:1px solid var(--border-light);">
             <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="rotateReceiptImage(-90)" title="Girar Antihorario"><i data-lucide="rotate-ccw" style="width:14px;"></i></button>
             <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="rotateReceiptImage(90)" title="Girar Horario"><i data-lucide="rotate-cw" style="width:14px;"></i></button>
             <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="zoomReceiptImage(0.25)" title="Acercar Zoom"><i data-lucide="zoom-in" style="width:14px;"></i></button>
@@ -445,7 +396,7 @@
           </div>
         </div>
 
-        <!-- DETALLES Y ACCIONES DIRECTAS EN EL VISOR -->
+        <!-- RESUMEN LATERAL -->
         <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-light); border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:14px;">
           <h4 style="color:#FFF; font-weight:800; font-size:1.05rem; margin-bottom:4px; border-bottom:1px solid var(--border-light); padding-bottom:8px;">Resumen de la Orden</h4>
           
@@ -474,7 +425,7 @@
               <i data-lucide="check-circle"></i> Aprobar y Activar
             </button>
             <a id="modalOpenExternalBtn" href="#" target="_blank" class="btn btn-cyan" style="width:100%; text-align:center;">
-              <i data-lucide="external-link"></i> Abrir en Pestaña HD
+              <i data-lucide="external-link"></i> Abrir Foto HD Externa
             </a>
           </div>
         </div>
