@@ -56,13 +56,13 @@
 
     /* Sidebar Navigation */
     .admin-sidebar {
-      width: 260px;
+      width: 270px;
       background: var(--bg-sidebar);
       border-right: 1px solid var(--border-light);
       padding: 24px 16px;
       display: flex;
       flex-direction: column;
-      gap: 30px;
+      gap: 24px;
       position: sticky;
       top: 0;
       height: 100vh;
@@ -138,6 +138,19 @@
       height: 18px;
     }
 
+    .nav-badge {
+      background: var(--red);
+      color: #FFF;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-left: auto;
+      animation: pulseBadge 2s infinite ease-in-out;
+    }
+    @keyframes pulseBadge { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
     /* Main Container */
     .admin-main {
       flex: 1;
@@ -151,7 +164,7 @@
       border: 1px solid var(--border-cyan);
       border-radius: 20px;
       padding: 20px 28px;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -186,43 +199,193 @@
       margin-top: 4px;
     }
 
-    /* Placeholder Welcome Workspace */
-    .workspace-placeholder {
-      background: var(--bg-card);
-      border: 1px dashed var(--border-cyan);
-      border-radius: 24px;
-      padding: 60px 40px;
-      text-align: center;
-    }
-
-    .workspace-icon {
-      width: 70px;
-      height: 70px;
-      background: rgba(0, 229, 255, 0.1);
-      border: 2px solid var(--cyan);
-      border-radius: 22px;
+    /* REALTIME NOTIFICATION ALERT BANNER */
+    .notif-alert-banner {
+      background: linear-gradient(135deg, rgba(255, 77, 94, 0.15), rgba(255, 215, 0, 0.15));
+      border: 1px solid rgba(255, 77, 94, 0.4);
+      border-radius: 18px;
+      padding: 16px 24px;
+      margin-bottom: 24px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      color: var(--cyan);
+      justify-content: space-between;
+      gap: 16px;
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* CARDS & METRICS */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
     }
 
-    .workspace-title {
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 22px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .metric-card:hover { transform: translateY(-3px); }
+    .metric-card.gold { border-left: 4px solid var(--gold); border-color: rgba(255, 215, 0, 0.3); }
+    .metric-card.green { border-left: 4px solid var(--green); border-color: rgba(0, 230, 118, 0.3); }
+    .metric-card.cyan { border-left: 4px solid var(--cyan); border-color: rgba(0, 229, 255, 0.3); }
+
+    .metric-label {
       font-family: var(--font-heading);
-      font-size: 1.6rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      margin-bottom: 10px;
-      color: var(--text-white);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
     }
 
-    .workspace-desc {
-      color: var(--text-muted);
-      max-width: 520px;
-      margin: 0 auto 28px;
-      font-size: 0.95rem;
-      line-height: 1.6;
+    .metric-val {
+      font-family: var(--font-mono);
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 4px;
     }
+
+    .metric-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    /* CARD CONTAINER */
+    .card-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 24px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    .panel-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .panel-title {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* TABLES */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border-light);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    td {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-white);
+      vertical-align: middle;
+    }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-green { background: var(--green); color: #03140b; border-color: var(--green); }
+    .btn-green:hover { background: #34d399; box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); }
+    .btn-red { background: rgba(255, 77, 94, 0.15); color: var(--red); border-color: rgba(255, 77, 94, 0.3); }
+    .btn-red:hover { background: rgba(255, 77, 94, 0.3); color: #FFF; }
+    .btn-cyan { background: rgba(0, 229, 255, 0.12); color: var(--cyan); border-color: var(--border-cyan); }
+    .btn-cyan:hover { background: rgba(0, 229, 255, 0.25); }
+
+    /* BADGES */
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-heading);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .badge-gold { background: rgba(255, 215, 0, 0.15); color: var(--gold); border: 1px solid var(--gold); }
+    .badge-cyan { background: rgba(0, 229, 255, 0.15); color: var(--cyan); border: 1px solid var(--cyan); }
+    .badge-green { background: rgba(0, 230, 118, 0.15); color: var(--green); border: 1px solid var(--green); }
+
+    /* MODAL */
+    .overlay-modal {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(3, 10, 16, 0.9); backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    }
+    .overlay-modal.active { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-cyan);
+      border-radius: 24px;
+      padding: 32px;
+      width: 100%;
+      max-width: 580px;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-close-btn {
+      position: absolute; top: 20px; right: 20px;
+      background: var(--surface2); border: 1px solid var(--border-light);
+      color: var(--text-muted); width: 32px; height: 32px; border-radius: 10px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close-btn:hover { color: #FFF; border-color: var(--cyan); }
   </style>
 </head>
 <body>
@@ -237,9 +400,10 @@
         <span class="brand-name">Suerte RD</span>
       </div>
 
-      <nav class="nav-list" id="sidebarNavList">
-        <button class="nav-item active" data-tab="dashboard">
-          <i data-lucide="layout-dashboard"></i> Panel Principal
+      <nav class="nav-list">
+        <button class="nav-item active" data-target="paneValidarCompras">
+          <i data-lucide="bell" style="color: var(--gold);"></i> Validar & Activar Compras
+          <span class="nav-badge" id="sidebarNotifBadge" style="display:none;">0</span>
         </button>
       </nav>
 
@@ -256,30 +420,130 @@
       <header class="top-header">
         <div>
           <div class="header-title">
-            <span>Panel de Administración</span>
-            <span class="status-badge">● Sistema Listo</span>
+            <span>Validación de Compras en Tiempo Real</span>
+            <span class="status-badge">● Notificaciones Activas</span>
           </div>
-          <div class="header-sub">Suerte RD • Control General en Tiempo Real</div>
+          <div class="header-sub">Suerte RD • Revisa comprobantes y activa los números para la rifa</div>
         </div>
 
-        <div id="headerActions">
-          <!-- Dynamic header tools -->
+        <div style="display:flex; align-items:center; gap:12px;">
+          <select id="globalRaffleSelect" style="background:#091924; color:#FFF; border:1px solid var(--border-cyan); border-radius:12px; padding:10px 14px; font-family:var(--font-heading); font-weight:700;">
+            <option value="florida5">Sorteo Especial iPhone 17 Pro Max 1TB</option>
+          </select>
         </div>
       </header>
 
-      <!-- Workspace Container -->
-      <div id="adminWorkspace">
-        <div class="workspace-placeholder">
-          <div class="workspace-icon">
-            <i data-lucide="sparkles" style="width:36px; height:36px;"></i>
+      <!-- REAL-TIME NOTIFICATION BANNER -->
+      <div class="notif-alert-banner" id="realtimeAlertBanner" style="display:none;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; background:rgba(255, 77, 94, 0.2); border:1px solid var(--red); border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--red);">
+            <i data-lucide="bell-ring"></i>
           </div>
-          <h2 class="workspace-title">Página Admin Lista para Diseñar</h2>
-          <p class="workspace-desc">
-            Hemos preparado una estructura desde cero totalmente limpia, rápida y elegante. Dime cuál detalle o sección quieres que agreguemos primero.
-          </p>
+          <div>
+            <div style="font-family:var(--font-heading); font-weight:700; font-size:1rem; color:#FFF;" id="bannerAlertTitle">¡Nuevas Compras Recibidas!</div>
+            <div style="font-size:0.85rem; color:var(--text-muted);" id="bannerAlertSub">Hay compras de paquetes esperando validación y activación.</div>
+          </div>
+        </div>
+        <button class="btn btn-green" onclick="document.getElementById('paneValidarCompras').scrollIntoView({behavior:'smooth'});">
+          <i data-lucide="eye"></i> Revisar Ahora
+        </button>
+      </div>
+
+      <!-- WORKSPACE PANES -->
+      <div id="adminWorkspace">
+        <!-- PANE: VALIDAR & ACTIVAR COMPRAS -->
+        <div class="pane active" id="paneValidarCompras">
+          <!-- METRIC STATS -->
+          <div class="metrics-row">
+            <div class="metric-card gold">
+              <div class="metric-label">Compras por Validar</div>
+              <div class="metric-val" id="statPendingCount" style="color:var(--gold);">0</div>
+              <div class="metric-sub">Esperando aprobación admin</div>
+            </div>
+
+            <div class="metric-card green">
+              <div class="metric-label">Monto por Validar (RD$)</div>
+              <div class="metric-val" id="statPendingAmount" style="color:var(--green);">RD$ 0</div>
+              <div class="metric-sub">Sincronizado con Vercel KV</div>
+            </div>
+
+            <div class="metric-card cyan">
+              <div class="metric-label">Activas Hoy</div>
+              <div class="metric-val" id="statActivatedCount" style="color:var(--cyan);">0</div>
+              <div class="metric-sub">Números participando en rifa</div>
+            </div>
+          </div>
+
+          <!-- PANEL TABLE OF PENDING PURCHASES -->
+          <div class="card-panel">
+            <div class="panel-title-bar">
+              <div class="panel-title">
+                <i data-lucide="shield-check" style="color:var(--cyan);"></i> Compras de Paquetes Pendientes de Validación
+              </div>
+
+              <div style="display:flex; gap:10px;">
+                <button class="btn btn-cyan" id="btnTestCreatePurchase">
+                  <i data-lucide="plus-circle"></i> Generar Compra de Prueba
+                </button>
+                <button class="btn btn-green" id="btnBulkApprove">
+                  <i data-lucide="check-check"></i> Aprobar Selección Masiva
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:40px; text-align:center;"><input type="checkbox" id="headerCheckbox"></th>
+                    <th>Sorteo</th>
+                    <th>Paquete / Boletos</th>
+                    <th>Monto RD$</th>
+                    <th>Cliente</th>
+                    <th>WhatsApp</th>
+                    <th>Recibo HD</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="pendingPurchasesTableBody">
+                  <!-- Dynamically loaded -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- MODAL: HD RECEIPT VIEWER -->
+  <div class="overlay-modal" id="viewReceiptModal">
+    <div class="modal-box" style="text-align:center;">
+      <button class="modal-close-btn" id="closeReceiptModalBtn"><i data-lucide="x"></i></button>
+      <h3 style="font-family:var(--font-heading); font-size:1.3rem; font-weight:700; color:var(--cyan); margin-bottom:6px;">Auditoría de Comprobante Bancario HD</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:16px;">Verifica la transferencia antes de activar los números para el cliente.</p>
+
+      <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-cyan); border-radius:14px; padding:14px; margin-bottom:16px; text-align:left; font-size:0.88rem; display:flex; flex-direction:column; gap:6px;">
+        <div><strong style="color:var(--text-muted);">Cliente:</strong> <span id="modalMetaName" style="color:#FFF; font-weight:700;">-</span></div>
+        <div><strong style="color:var(--text-muted);">WhatsApp:</strong> <span id="modalMetaPhone" style="color:var(--cyan); font-weight:700;">-</span></div>
+        <div><strong style="color:var(--text-muted);">Boletos:</strong> <span id="modalMetaTickets" style="color:var(--gold); font-family:var(--font-mono); font-weight:700;">-</span></div>
+      </div>
+
+      <div style="background:#000; border-radius:16px; overflow:hidden; min-height:220px; max-height:360px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1);">
+        <img id="modalReceiptImg" style="max-width:100%; max-height:360px; object-fit:contain;">
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button class="btn btn-green" id="btnModalApprove" style="flex:1.2; justify-content:center; padding:12px;">
+          <i data-lucide="check-circle"></i> Aprobar y Activar Boletos
+        </button>
+        <button class="btn btn-red" id="btnModalReject" style="flex:0.8; justify-content:center; padding:12px;">
+          <i data-lucide="x-circle"></i> Rechazar
+        </button>
+      </div>
+    </div>
   </div>
 
   <script src="assets/js/admin.js"></script>
