@@ -2313,23 +2313,28 @@
       else currentPkgTag = "Boleto Individual";
     }
 
-    // 1. Send reserve & receipt API call in background (non-blocking)
-    fetch('/api/tickets/reserve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        raffleId: activeRaffleId,
-        name,
-        whatsapp: phone,
-        loteria: lottery,
-        tickets: ticketNums,
-        packageLabel: currentPkgTag,
-        comprobante: selectedPaymentReceiptBase64 || true,
-        estado: "esperando_validacion"
-      })
-    }).catch(e => {
+    const activeReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64;
+
+    // 1. Send reserve & receipt API call synchronously with keepalive
+    try {
+      await fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          raffleId: activeRaffleId,
+          name,
+          whatsapp: phone,
+          loteria: lottery,
+          tickets: ticketNums,
+          packageLabel: currentPkgTag,
+          comprobante: activeReceiptImg || true,
+          estado: "esperando_validacion"
+        })
+      });
+    } catch(e) {
       console.warn("Background receipt upload notice:", e);
-    });
+    }
 
     // 2. Format WhatsApp text
     const prizeTitle = (conf && (conf.prize || conf.title)) ? (conf.prize || conf.title) : "Sorteo Especial iPhone 17 Pro Max 1TB";
@@ -3419,6 +3424,7 @@ ${formattedNumsText}
 
       compressImageFile(file, 700, 0.65, (compressedBase64) => {
         selectedPaymentReceiptBase64 = compressedBase64;
+        window.selectedPaymentReceiptBase64 = compressedBase64;
         $("paymentReceiptPreview").src = selectedPaymentReceiptBase64;
         $("paymentReceiptPreviewContainer").style.display = "block";
         $("btnSendWhatsApp").disabled = false;

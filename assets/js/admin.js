@@ -11,15 +11,27 @@ const TOTAL_BOLETOS = 100000;
 let currentTickets = {};
 let statsChartInstance = null;
 let lastPendingCount = -1;
+let currentFilter = 'all';
+let searchQuery = '';
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initTabs();
   initModal();
+  initFiltersAndSearch();
   
   const btnCreateTest = document.getElementById('btnCreateTest');
   if (btnCreateTest) {
     btnCreateTest.addEventListener('click', handleCreateTestOrder);
+  }
+
+  const btnRefresh = document.getElementById('btnRefreshData');
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', () => {
+      btnRefresh.style.transform = 'rotate(360deg)';
+      setTimeout(() => btnRefresh.style.transform = 'none', 500);
+      loadTicketsData();
+    });
   }
 
   // Polling rápido cada 2 segundos para sincronización instantánea
@@ -90,7 +102,7 @@ function initAuth() {
         showLoginError('Error al conectar con el servidor');
       }
     } finally {
-      btnSubmit.innerText = 'Entrar al Admin';
+      btnSubmit.innerText = 'Entrar al Centro de Control';
       btnSubmit.disabled = false;
     }
   });
@@ -134,6 +146,29 @@ function initTabs() {
       if (targetId === 'tabEstadisticas') {
         renderChart();
       }
+    });
+  });
+}
+
+/* ==========================================
+   BÚSQUEDA Y FILTROS
+   ========================================== */
+function initFiltersAndSearch() {
+  const searchInput = document.getElementById('adminSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.toLowerCase().trim();
+      renderValidarPagosTable();
+    });
+  }
+
+  const filterPills = document.querySelectorAll('.filter-pill');
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentFilter = pill.getAttribute('data-filter') || 'all';
+      renderValidarPagosTable();
     });
   });
 }
@@ -192,6 +227,9 @@ function updateMetricsAndTables() {
   let totalPendingTickets = 0;
   let totalIncome = 0;
 
+  const pkgCounts = { bronce: 0, plata: 0, oro: 0, diamante: 0 };
+  const uniqueGroupKeys = new Set();
+
   ticketEntries.forEach(([num, t]) => {
     if (!t) return;
     if (t.estado === 'pagado') {
@@ -200,6 +238,16 @@ function updateMetricsAndTables() {
     } else if (t.estado === 'esperando_validacion' || t.estado === 'reservado') {
       totalPendingTickets++;
     }
+
+    const timeWindow = Math.floor((t.timestamp_comprobante || t.timestamp || 0) / 15000);
+    const key = `${t.whatsapp || t.name || 'cliente'}_${timeWindow}`;
+    uniqueGroupKeys.add(key);
+
+    const pkgStr = String(t.paquete || '').toLowerCase();
+    if (pkgStr.includes('500') || pkgStr.includes('diamante')) pkgCounts.diamante++;
+    else if (pkgStr.includes('250') || pkgStr.includes('oro')) pkgCounts.oro++;
+    else if (pkgStr.includes('150') || pkgStr.includes('plata')) pkgCounts.plata++;
+    else if (pkgStr.includes('50') || pkgStr.includes('bronce')) pkgCounts.bronce++;
   });
 
   if (lastPendingCount >= 0 && totalPendingTickets > lastPendingCount) {
@@ -209,11 +257,28 @@ function updateMetricsAndTables() {
 
   const metricIncome = document.getElementById('metricIncome');
   const metricSold = document.getElementById('metricSold');
+  const metricSoldPct = document.getElementById('metricSoldPct');
   const metricPending = document.getElementById('metricPending');
+  const metricPackagesCount = document.getElementById('metricPackagesCount');
+
+  const pct = ((totalPaidTickets / TOTAL_BOLETOS) * 100).toFixed(2);
 
   if (metricIncome) metricIncome.innerText = `RD$ ${totalIncome.toLocaleString('es-DO')}`;
   if (metricSold) metricSold.innerText = `${totalPaidTickets.toLocaleString('es-DO')} / ${TOTAL_BOLETOS.toLocaleString('es-DO')}`;
+  if (metricSoldPct) metricSoldPct.innerText = `${pct}% de la rifa completado`;
   if (metricPending) metricPending.innerText = `${totalPendingTickets.toLocaleString('es-DO')}`;
+  if (metricPackagesCount) metricPackagesCount.innerText = `${uniqueGroupKeys.size} órdenes`;
+
+  // Update Package Stat Boxes
+  const statBronce = document.getElementById('statPkgBronce');
+  const statPlata = document.getElementById('statPkgPlata');
+  const statOro = document.getElementById('statPkgOro');
+  const statDiamante = document.getElementById('statPkgDiamante');
+
+  if (statBronce) statBronce.innerText = `${Math.floor(pkgCounts.bronce / 50)} órdenes`;
+  if (statPlata) statPlata.innerText = `${Math.floor(pkgCounts.plata / 150)} órdenes`;
+  if (statOro) statOro.innerText = `${Math.floor(pkgCounts.oro / 250)} órdenes`;
+  if (statDiamante) statDiamante.innerText = `${Math.floor(pkgCounts.diamante / 500)} órdenes`;
 
   const btnValidarTab = document.querySelector('.tab-btn[data-tab="tabValidarPagos"]');
   if (btnValidarTab) {
@@ -230,6 +295,13 @@ function updateMetricsAndTables() {
   if (window.lucide) {
     window.lucide.createIcons();
   }
+}
+
+function getInitials(name) {
+  if (!name) return 'SR';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.substring(0, 2).toUpperCase();
 }
 
 /* ==========================================
@@ -275,7 +347,25 @@ function renderValidarPagosTable() {
     }
   });
 
-  const groupList = Object.values(groups);
+  let groupList = Object.values(groups);
+
+  // Apply Filter
+  if (currentFilter === 'pending') {
+    groupList = groupList.filter(g => g.estado === 'esperando_validacion' || g.estado === 'reservado');
+  } else if (currentFilter === 'paid') {
+    groupList = groupList.filter(g => g.estado === 'pagado');
+  }
+
+  // Apply Search Query
+  if (searchQuery) {
+    groupList = groupList.filter(g => {
+      const matchName = g.name.toLowerCase().includes(searchQuery);
+      const matchPhone = g.whatsapp.toLowerCase().includes(searchQuery);
+      const matchTicket = g.tickets.some(t => t.includes(searchQuery));
+      const matchPkg = g.paquete.toLowerCase().includes(searchQuery);
+      return matchName || matchPhone || matchTicket || matchPkg;
+    });
+  }
 
   groupList.sort((a, b) => {
     if (a.estado === 'esperando_validacion' && b.estado !== 'esperando_validacion') return -1;
@@ -286,67 +376,84 @@ function renderValidarPagosTable() {
   if (groupList.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align:center; color:var(--muted); padding:30px;">
-          <i data-lucide="check-circle" style="width:32px; height:32px; color:var(--green); display:block; margin:0 auto 10px;"></i>
-          No hay compras pendientes de validación en este momento.
+        <td colspan="7" style="text-align:center; color:var(--muted); padding:35px 20px;">
+          <i data-lucide="check-circle" style="width:36px; height:36px; color:var(--green); display:block; margin:0 auto 12px;"></i>
+          <span style="font-weight:700; color:#FFF; font-size:1rem; display:block;">No hay compras encontradas</span>
+          <span style="font-size:0.85rem; color:var(--muted);">No hay solicitudes que coincidan con la búsqueda o filtro activo.</span>
         </td>
       </tr>
     `;
     return;
   }
 
-  groupList.forEach((g) => {
+  if (!window.receiptsCache) window.receiptsCache = {};
+
+  groupList.forEach((g, idx) => {
     const tr = document.createElement('tr');
+    const groupKeyId = `receipt_group_${idx}`;
+    window.receiptsCache[groupKeyId] = g.comprobante;
 
     const totalMonto = g.tickets.length * TICKET_PRICE;
     const cleanPhone = g.whatsapp.replace(/\D/g, '');
     const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hola ${g.name}, confirmamos que tus boletos han sido validados con éxito!`)}` : '#';
 
-    let stateBadge = `<span style="background:rgba(255,215,0,0.15); color:var(--gold); padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.8rem;">⏳ Pendiente Validar</span>`;
+    let stateBadge = `<span style="background:rgba(255,215,0,0.15); color:var(--gold); border:1px solid rgba(255,215,0,0.3); padding:4px 10px; border-radius:8px; font-weight:800; font-size:0.78rem;">⏳ Pendiente Validar</span>`;
     if (g.estado === 'pagado') {
-      stateBadge = `<span style="background:rgba(0,230,118,0.15); color:var(--green); padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.8rem;">✅ Activo & Pagado</span>`;
+      stateBadge = `<span style="background:rgba(0,230,118,0.15); color:var(--green); border:1px solid rgba(0,230,118,0.3); padding:4px 10px; border-radius:8px; font-weight:800; font-size:0.78rem;">✅ Activo & Pagado</span>`;
     }
 
     let comprobanteBtn = `<span style="color:var(--muted); font-size:0.8rem;">Sin foto</span>`;
-    if (g.comprobante && typeof g.comprobante === 'string') {
+    if (g.comprobante && typeof g.comprobante === 'string' && g.comprobante.startsWith('data:image/')) {
       comprobanteBtn = `
-        <button class="btn btn-cyan" style="padding:4px 10px; font-size:0.75rem;" onclick="openReceiptModal('${g.comprobante}')">
-          <i data-lucide="image"></i> Ver Foto HD
+        <button class="btn btn-cyan" style="padding:6px 12px; font-size:0.78rem;" onclick="openReceiptFromCache('${groupKeyId}')">
+          <i data-lucide="image" style="width:14px;"></i> Ver Foto HD
         </button>
       `;
+    } else if (g.comprobante) {
+      comprobanteBtn = `<span style="color:var(--cyan); font-size:0.8rem; font-weight:700;">🖼️ Adjunto (WhatsApp)</span>`;
     }
 
     const ticketSummary = g.tickets.length > 5 
       ? `#${g.tickets[0]} al #${g.tickets[g.tickets.length - 1]} (${g.tickets.length} boletos)`
       : g.tickets.map(n => `#${n}`).join(', ');
 
+    const avatarInitials = getInitials(g.name);
+
     tr.innerHTML = `
-      <td><strong>${escapeHtml(g.name)}</strong></td>
       <td>
-        <a href="${waLink}" target="_blank" style="color:var(--green); text-decoration:none; font-family:var(--font-mono); font-weight:700;">
+        <div class="client-avatar-cell">
+          <div class="avatar-circle">${avatarInitials}</div>
+          <div>
+            <strong style="color:#FFF; font-size:0.95rem;">${escapeHtml(g.name)}</strong>
+            <div style="font-size:0.72rem; color:var(--muted); font-family:var(--font-mono);">${new Date(g.timestamp).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <a href="${waLink}" target="_blank" style="color:var(--green); text-decoration:none; font-family:var(--font-mono); font-weight:700; display:inline-flex; align-items:center; gap:4px;">
           📱 ${escapeHtml(g.whatsapp)}
         </a>
       </td>
       <td>
-        <div style="font-weight:700; color:#FFF;">${escapeHtml(g.paquete)}</div>
-        <div style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono);">${ticketSummary}</div>
+        <div style="font-weight:800; color:#FFF;">${escapeHtml(g.paquete)}</div>
+        <div style="font-size:0.75rem; color:var(--cyan); font-family:var(--font-mono); font-weight:700;">${ticketSummary}</div>
       </td>
-      <td style="font-family:var(--font-mono); font-weight:700; color:var(--green);">RD$ ${totalMonto.toLocaleString('es-DO')}</td>
+      <td style="font-family:var(--font-mono); font-weight:800; color:var(--green); font-size:1rem;">RD$ ${totalMonto.toLocaleString('es-DO')}</td>
       <td>${comprobanteBtn}</td>
       <td>${stateBadge}</td>
       <td>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           ${g.estado !== 'pagado' ? `
-            <button class="btn btn-green" style="padding:6px 12px; font-size:0.8rem;" onclick="approveGroup('${encodeURIComponent(JSON.stringify(g.tickets))}', '${escapeHtml(g.name)}', '${g.whatsapp}')">
-              <i data-lucide="check-square"></i> Aprobar y Activar
+            <button class="btn btn-green" style="padding:6px 14px; font-size:0.8rem;" onclick="approveGroup('${encodeURIComponent(JSON.stringify(g.tickets))}', '${escapeHtml(g.name)}', '${g.whatsapp}')">
+              <i data-lucide="check-square" style="width:14px;"></i> Aprobar y Activar
             </button>
           ` : `
             <a href="${waLink}" target="_blank" class="btn btn-cyan" style="padding:6px 12px; font-size:0.8rem;">
-              <i data-lucide="send"></i> Notificar Cliente
+              <i data-lucide="send" style="width:14px;"></i> Notificar Cliente
             </a>
           `}
-          <button class="btn btn-red" style="padding:6px 10px; font-size:0.8rem;" onclick="rejectGroup('${encodeURIComponent(JSON.stringify(g.tickets))}')">
-            <i data-lucide="trash-2"></i>
+          <button class="btn btn-red" style="padding:6px 10px; font-size:0.8rem;" title="Eliminar / Rechazar" onclick="rejectGroup('${encodeURIComponent(JSON.stringify(g.tickets))}')">
+            <i data-lucide="trash-2" style="width:14px;"></i>
           </button>
         </div>
       </td>
@@ -500,11 +607,20 @@ function initModal() {
   }
 }
 
+function openReceiptFromCache(key) {
+  if (window.receiptsCache && window.receiptsCache[key]) {
+    openReceiptModal(window.receiptsCache[key]);
+  }
+}
+
 function openReceiptModal(imgUrl) {
   const modal = document.getElementById('receiptModal');
   const img = document.getElementById('modalImg');
+  const openExternalBtn = document.getElementById('modalOpenExternalBtn');
+
   if (modal && img) {
     img.src = imgUrl;
+    if (openExternalBtn) openExternalBtn.href = imgUrl;
     modal.classList.add('active');
   }
 }
@@ -538,7 +654,7 @@ function renderChart() {
       datasets: [{
         data: [paidCount, pendingCount, availableCount],
         backgroundColor: ['#00E676', '#FFD700', '#122836'],
-        borderColor: '#071219',
+        borderColor: '#050c12',
         borderWidth: 3
       }]
     },

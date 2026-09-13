@@ -161,22 +161,6 @@ async function writeDb(db) {
     }
   }
 
-  if (UPSTASH_URL && UPSTASH_TOKEN) {
-    try {
-      const valStr = JSON.stringify(db);
-      await fetch(`${UPSTASH_URL}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${UPSTASH_TOKEN}`
-        },
-        body: JSON.stringify(['SET', 'suerterd_db', valStr])
-      });
-    } catch (e) {
-      console.error("Error writing to Upstash Redis:", e);
-    }
-  }
-
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
   } catch (e) {
@@ -589,12 +573,7 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
       };
 
       if (comprobante) {
-        // Safe check: If comprobante is a huge Base64 string, store boolean/preview to keep db under 50KB
-        if (typeof comprobante === 'string' && comprobante.startsWith('data:image/') && comprobante.length > 50000) {
-          ticketsObj[tNum].comprobante = comprobante.substring(0, 100) + '...'; // lightweight indicator
-        } else {
-          ticketsObj[tNum].comprobante = (index === 0) ? comprobante : true;
-        }
+        ticketsObj[tNum].comprobante = (index === 0) ? comprobante : true;
         ticketsObj[tNum].timestamp_comprobante = now;
       }
     });
