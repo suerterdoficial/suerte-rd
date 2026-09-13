@@ -475,7 +475,11 @@ function groupTicketsByOrder(ticketsObj) {
     
     if (t.estado === 'esperando_validacion') groupsMap[gKey].estado = 'esperando_validacion';
     else if (t.estado === 'pagado' && groupsMap[gKey].estado !== 'esperando_validacion') groupsMap[gKey].estado = 'pagado';
-    if (t.comprobante && !groupsMap[gKey].comprobante) groupsMap[gKey].comprobante = t.comprobante;
+    if (t.comprobante && typeof t.comprobante === 'string' && t.comprobante.length > 20 && !t.comprobante.includes('suerte_rd_iphone17_banner')) {
+      groupsMap[gKey].comprobante = t.comprobante;
+    } else if (t.comprobante && !groupsMap[gKey].comprobante) {
+      groupsMap[gKey].comprobante = t.comprobante;
+    }
   });
 
   return Object.values(groupsMap).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));

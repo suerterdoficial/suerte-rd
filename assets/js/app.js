@@ -2145,7 +2145,13 @@
     // 1. Prepare ticket state in memory immediately
     let latestTickets = allTickets[activeRaffleId] || {};
     const timestamp = Date.now();
-    const uniqueGroupKey = `order_${timestamp}_${Math.random().toString(36).substring(2, 7)}`;
+    const uniqueGroupKey = window.activeCheckoutGroupKey || `order_${timestamp}_${Math.random().toString(36).substring(2, 7)}`;
+    window.activeCheckoutGroupKey = uniqueGroupKey;
+    window.lastCheckedOutTickets = [...checkedOutCart];
+    window.lastCheckedOutName = name;
+    window.lastCheckedOutPhone = phone;
+    window.lastCheckedOutLottery = lottery;
+    window.lastCheckedOutPkg = detectedPkgLabel;
     
     // Copy cart before resetting
     const checkedOutCart = [...cart];
@@ -2346,8 +2352,8 @@
       else currentPkgTag = "Boleto Individual";
     }
 
-    const activeReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64;
-    const uniqueGroupKey = `order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const activeReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64 || "";
+    const uniqueGroupKey = window.activeCheckoutGroupKey || `order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     // Save purchase order to shared localStorage backup for instant Admin sync
     try {
@@ -3471,6 +3477,38 @@ ${formattedNumsText}
     reader.readAsDataURL(file);
   }
 
+  function syncUploadedReceipt(compressedBase64) {
+    if (!compressedBase64) return;
+    const tNums = window.lastCheckedOutTickets || [];
+    if (tNums.length === 0) return;
+
+    try {
+      let currentBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
+      tNums.forEach(tNum => {
+        if (currentBackup[tNum]) {
+          currentBackup[tNum].comprobante = compressedBase64;
+        }
+      });
+      localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentBackup));
+    } catch(e) {}
+
+    fetch('/api/tickets/reserve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        raffleId: activeRaffleId,
+        name: window.lastCheckedOutName || 'Cliente',
+        whatsapp: window.lastCheckedOutPhone || '',
+        loteria: window.lastCheckedOutLottery || 'Pick 5 Florida',
+        tickets: tNums,
+        packageLabel: window.lastCheckedOutPkg || 'Paquete',
+        comprobante: compressedBase64,
+        estado: 'esperando_validacion',
+        groupKey: window.activeCheckoutGroupKey
+      })
+    }).catch(e => console.warn('Auto receipt sync error:', e));
+  }
+
   // File Upload listener for Checkout Modal Receipt (Phase 6)
   let selectedPaymentReceiptBase64 = null;
   const checkoutReceiptInput = $("checkoutReceiptInput");
@@ -3484,6 +3522,7 @@ ${formattedNumsText}
         window.selectedPaymentReceiptBase64 = compressedBase64;
         if ($("checkoutReceiptPreview")) $("checkoutReceiptPreview").src = selectedPaymentReceiptBase64;
         if ($("checkoutReceiptPreviewContainer")) $("checkoutReceiptPreviewContainer").style.display = "block";
+        syncUploadedReceipt(compressedBase64);
         showToast("Comprobante de depósito listo para enviar.", "ok");
       });
     });
@@ -3504,6 +3543,7 @@ ${formattedNumsText}
         if ($("paymentReceiptPreview")) $("paymentReceiptPreview").src = selectedPaymentReceiptBase64;
         if ($("paymentReceiptPreviewContainer")) $("paymentReceiptPreviewContainer").style.display = "block";
         if ($("btnSendWhatsApp")) $("btnSendWhatsApp").disabled = false;
+        syncUploadedReceipt(compressedBase64);
         showToast("Imagen HD optimizada y lista.", "ok");
       });
     });
