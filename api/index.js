@@ -81,14 +81,22 @@ try {
 } catch(e) {}
 
 function getDiskDb() {
-  if (BUNDLED_DATA && Object.keys(BUNDLED_DATA).length > 0) {
-    return BUNDLED_DATA;
+  if (fs.existsSync(DATA_FILE)) {
+    try {
+      const raw = fs.readFileSync(DATA_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && Object.keys(parsed).length > 0) return parsed;
+    } catch (e) {}
   }
   if (fs.existsSync(ORIGINAL_DATA_FILE)) {
     try {
       const raw = fs.readFileSync(ORIGINAL_DATA_FILE, 'utf8');
-      return JSON.parse(raw) || {};
+      const parsed = JSON.parse(raw);
+      if (parsed && Object.keys(parsed).length > 0) return parsed;
     } catch (e) {}
+  }
+  if (BUNDLED_DATA && Object.keys(BUNDLED_DATA).length > 0) {
+    return BUNDLED_DATA;
   }
   return {};
 }
@@ -341,7 +349,10 @@ app.post(['/api/tickets/update-status', '/tickets/update-status'], async (req, r
   tickets.forEach(tNum => {
     if (action === 'delete' || newStatus === 'deleted') {
       delete ticketsObj[tNum];
-    } else if (ticketsObj[tNum]) {
+    } else {
+      if (!ticketsObj[tNum]) {
+        ticketsObj[tNum] = { name: 'Cliente', whatsapp: '', estado: newStatus, fecha: new Date(now).toISOString() };
+      }
       ticketsObj[tNum].estado = newStatus;
       if (newStatus === 'pagado') {
         ticketsObj[tNum].timestamp_pago = now;

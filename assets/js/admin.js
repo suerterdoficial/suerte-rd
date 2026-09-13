@@ -310,11 +310,23 @@ async function loadTicketsData() {
       backupTickets = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
     } catch(e) {}
 
-    const mergedTickets = { ...backupTickets, ...serverTickets };
+    const mergedTickets = { ...serverTickets };
+    Object.keys(backupTickets).forEach(tNum => {
+      if (!mergedTickets[tNum]) {
+        mergedTickets[tNum] = backupTickets[tNum];
+      } else {
+        // Preservar estado 'pagado' o 'rechazado' asignado por el admin si el servidor aún tenía estado antiguo
+        if (backupTickets[tNum].estado === 'pagado') {
+          mergedTickets[tNum] = { ...mergedTickets[tNum], ...backupTickets[tNum], estado: 'pagado' };
+        } else if (backupTickets[tNum].estado === 'rechazado' && mergedTickets[tNum].estado !== 'pagado') {
+          mergedTickets[tNum] = { ...mergedTickets[tNum], ...backupTickets[tNum], estado: 'rechazado' };
+        }
+      }
+    });
 
     const missingOnServer = [];
-    Object.keys(backupTickets).forEach(tNum => {
-      if (!serverTickets[tNum]) {
+    Object.keys(mergedTickets).forEach(tNum => {
+      if (!serverTickets[tNum] || serverTickets[tNum].estado !== mergedTickets[tNum].estado) {
         missingOnServer.push(tNum);
       }
     });
@@ -636,6 +648,15 @@ async function approveGroup(ticketsEncodedStr, name, whatsapp) {
   sendWhatsAppConfirmation(name, whatsapp, ticketsEncodedStr);
 
   try {
+    fetch('/api/set', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        key: `suerterd:tickets:v2:${RAFFLE_ID}`,
+        value: JSON.stringify(currentTickets)
+      })
+    }).catch(e => console.warn('Sync approve set error:', e));
+
     await fetch('/api/tickets/update-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -663,6 +684,17 @@ async function rejectGroup(ticketsEncodedStr) {
 
   try {
     localStorage.setItem('suerterd_admin_tickets_backup', JSON.stringify(currentTickets));
+  } catch(e) {}
+
+  try {
+    fetch('/api/set', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        key: `suerterd:tickets:v2:${RAFFLE_ID}`,
+        value: JSON.stringify(currentTickets)
+      })
+    }).catch(e => console.warn('Sync reject set error:', e));
   } catch(e) {}
 
   updateStatsCards();
