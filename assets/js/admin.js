@@ -366,12 +366,23 @@ function updateStatsCards() {
     }
   });
 
-  const disponibles = Math.max(0, TOTAL_BOLETOS - (totalVendidos + pendientesCount));
+  const groups = groupTicketsByOrder(currentTickets);
+  const pct = ((totalVendidos / TOTAL_BOLETOS) * 100).toFixed(1);
 
-  document.getElementById('statRecaudado').innerText = `RD$ ${totalRecaudado.toLocaleString()}`;
-  document.getElementById('statVendidos').innerText = totalVendidos.toLocaleString();
-  document.getElementById('statPendientes').innerText = pendientesCount.toLocaleString();
-  document.getElementById('statDisponibles').innerText = disponibles.toLocaleString();
+  const elRecaudado = document.getElementById('statRecaudado');
+  if (elRecaudado) elRecaudado.innerText = `RD$ ${totalRecaudado.toLocaleString()}`;
+
+  const elVendidos = document.getElementById('statVendidos');
+  if (elVendidos) elVendidos.innerText = `${totalVendidos.toLocaleString()} / ${TOTAL_BOLETOS.toLocaleString()}`;
+
+  const elPct = document.getElementById('statPct');
+  if (elPct) elPct.innerText = `${pct}% de la rifa completado`;
+
+  const elPendientes = document.getElementById('statPendientes');
+  if (elPendientes) elPendientes.innerText = pendientesCount.toLocaleString();
+
+  const elPaquetes = document.getElementById('statPaquetes');
+  if (elPaquetes) elPaquetes.innerText = groups.length.toLocaleString();
 }
 
 function groupTicketsByOrder(ticketsObj) {
@@ -396,7 +407,6 @@ function groupTicketsByOrder(ticketsObj) {
 
     groupsMap[gKey].tickets.push(numStr);
     
-    // El estado más urgente gana
     if (t.estado === 'esperando_validacion') groupsMap[gKey].estado = 'esperando_validacion';
     else if (t.estado === 'pagado' && groupsMap[gKey].estado !== 'esperando_validacion') groupsMap[gKey].estado = 'pagado';
     if (t.comprobante && !groupsMap[gKey].comprobante) groupsMap[gKey].comprobante = t.comprobante;
@@ -406,37 +416,35 @@ function groupTicketsByOrder(ticketsObj) {
 }
 
 function renderOrdersList() {
-  const ordersListEl = document.getElementById('ordersList');
-  if (!ordersListEl) return;
+  const tableBody = document.getElementById('ordersTableBody') || document.getElementById('ordersList');
+  if (!tableBody) return;
 
   const groups = groupTicketsByOrder(currentTickets);
 
-  // Filtrado por Estado y Búsqueda
   const filtered = groups.filter(g => {
-    // Filtro estado
     if (currentFilter === 'pending' && !(g.estado === 'esperando_validacion' || g.estado === 'reservado')) return false;
     if (currentFilter === 'paid' && g.estado !== 'pagado') return false;
     if (currentFilter === 'rejected' && g.estado !== 'rechazado') return false;
 
-    // Filtro búsqueda
     if (searchQuery) {
-      const matchName = g.name.toLowerCase().includes(searchQuery);
-      const matchWa = g.whatsapp.toLowerCase().includes(searchQuery);
+      const matchName = (g.name || '').toLowerCase().includes(searchQuery);
+      const matchWa = (g.whatsapp || '').toLowerCase().includes(searchQuery);
       const matchTicket = g.tickets.some(t => t.includes(searchQuery));
-      const matchPkg = g.paquete.toLowerCase().includes(searchQuery);
+      const matchPkg = (g.paquete || '').toLowerCase().includes(searchQuery);
       return matchName || matchWa || matchTicket || matchPkg;
     }
-
     return true;
   });
 
   if (filtered.length === 0) {
-    ordersListEl.innerHTML = `
-      <div style="background:var(--card-bg); border:1px solid var(--border-light); border-radius:18px; padding:40px 20px; text-align:center; color:var(--muted);">
-        <i data-lucide="inbox" style="width:48px; height:48px; margin-bottom:12px; opacity:0.4;"></i>
-        <h4 style="color:#FFF; font-size:1.1rem; font-weight:800;">No hay órdenes registradas</h4>
-        <p style="font-size:0.85rem; margin-top:4px;">Prueba cambiando los filtros de búsqueda o crea una orden manual.</p>
-      </div>
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center; padding:40px 20px; color:var(--muted);">
+          <i data-lucide="inbox" style="width:40px; height:40px; margin-bottom:8px; opacity:0.4;"></i>
+          <div style="color:#FFF; font-weight:800; font-size:1.05rem;">No hay órdenes registradas</div>
+          <div style="font-size:0.8rem; margin-top:4px;">Prueba cambiando los filtros o crea una nueva compra manual.</div>
+        </td>
+      </tr>
     `;
     if (window.lucide) window.lucide.createIcons();
     return;
@@ -444,83 +452,82 @@ function renderOrdersList() {
 
   window.receiptsCache = {};
 
-  ordersListEl.innerHTML = filtered.map((g, idx) => {
+  tableBody.innerHTML = filtered.map((g, idx) => {
     const keyId = `g_${idx}`;
     window.receiptsCache[keyId] = g;
 
-    let statusBadgeHTML = `<span style="background:rgba(255,215,0,0.15); color:var(--gold); border:1px solid var(--gold); padding:4px 12px; border-radius:12px; font-weight:800; font-size:0.8rem;">⏳ Pendiente de Validar</span>`;
-    let cardClass = 'pending';
+    let statusBadgeHTML = `<span style="background:rgba(255,215,0,0.15); color:var(--gold); border:1px solid var(--gold); padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.78rem;">⏳ Pendiente</span>`;
 
     if (g.estado === 'pagado') {
-      statusBadgeHTML = `<span style="background:rgba(0,230,118,0.15); color:var(--green); border:1px solid var(--green); padding:4px 12px; border-radius:12px; font-weight:800; font-size:0.8rem;">✅ Compra Activa (Pagada)</span>`;
-      cardClass = 'paid';
+      statusBadgeHTML = `<span style="background:rgba(0,230,118,0.15); color:var(--green); border:1px solid var(--green); padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.78rem;">✅ Validado</span>`;
     } else if (g.estado === 'rechazado') {
-      statusBadgeHTML = `<span style="background:rgba(255,77,94,0.15); color:var(--red); border:1px solid var(--red); padding:4px 12px; border-radius:12px; font-weight:800; font-size:0.8rem;">❌ Rechazado / Cancelado</span>`;
-      cardClass = 'rejected';
+      statusBadgeHTML = `<span style="background:rgba(255,77,94,0.15); color:var(--red); border:1px solid var(--red); padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.78rem;">❌ Rechazado</span>`;
     }
 
-    const cleanPhone = g.whatsapp.replace(/\D/g, '');
+    const cleanPhone = (g.whatsapp || '').replace(/\D/g, '');
     const waLink = cleanPhone ? `https://wa.me/${cleanPhone}` : '#';
     const ticketsJsonStr = encodeURIComponent(JSON.stringify(g.tickets));
+    const totalMonto = g.tickets.length * TICKET_PRICE;
+
+    const ticketsTagsHTML = g.tickets.slice(0, 8).map(t => `<span style="font-size:0.72rem; padding:2px 6px; background:rgba(0,229,255,0.1); color:var(--cyan); border:1px solid rgba(0,229,255,0.3); border-radius:6px; margin:2px; display:inline-block;">#${t}</span>`).join('');
+    const extraTicketsCount = g.tickets.length > 8 ? `<span style="font-size:0.7rem; color:var(--muted); font-weight:700; margin-left:4px;">+${g.tickets.length - 8} más</span>` : '';
 
     return `
-      <div class="order-card ${cardClass}">
-        <!-- INFO CLIENTE -->
-        <div class="order-client-info">
-          <h3>
-            <i data-lucide="user" style="color:var(--green); width:18px;"></i> ${escapeHtml(g.name)}
-          </h3>
-          <p>
-            <i data-lucide="phone" style="width:14px;"></i>
-            <a href="${waLink}" target="_blank" style="color:var(--green); font-family:var(--font-mono); font-weight:700; text-decoration:none;">${escapeHtml(g.whatsapp || 'Sin WhatsApp')}</a>
-          </p>
-          <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            ${getPackageBadgeHTML(g.paquete, g.tickets.length)}
-            ${statusBadgeHTML}
+      <tr style="border-bottom:1px solid var(--border-light);">
+        <td style="padding:14px 16px;">
+          <div style="font-weight:800; color:#FFF; font-size:0.95rem;">${escapeHtml(g.name)}</div>
+          <div style="font-size:0.75rem; color:var(--muted);">${new Date(g.fecha).toLocaleDateString("es-DO", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+        </td>
+        <td style="padding:14px 16px;">
+          <a href="${waLink}" target="_blank" style="color:var(--green); font-weight:800; font-family:var(--font-mono); text-decoration:none; display:flex; align-items:center; gap:4px; font-size:0.88rem;">
+            <i data-lucide="message-circle" style="width:14px;"></i> ${escapeHtml(g.whatsapp || 'Sin Teléfono')}
+          </a>
+        </td>
+        <td style="padding:14px 16px;">
+          <div style="font-weight:700; color:#FFF; font-size:0.85rem;">${escapeHtml(g.paquete)} (${g.tickets.length})</div>
+          <div style="display:flex; flex-wrap:wrap; gap:2px; margin-top:4px;">
+            ${ticketsTagsHTML} ${extraTicketsCount}
           </div>
-        </div>
-
-        <!-- BOLETOS ASIGNADOS -->
-        <div>
-          <span style="font-size:0.75rem; color:var(--muted); font-weight:700; text-transform:uppercase;">Boletos Adquiridos (${g.tickets.length})</span>
-          <div class="tickets-tags">
-            ${g.tickets.map(t => `<span class="ticket-badge">#${t}</span>`).join('')}
-          </div>
-        </div>
-
-        <!-- ACCIONES -->
-        <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+        </td>
+        <td style="padding:14px 16px;">
+          <div style="font-weight:900; color:var(--green); font-size:0.95rem; font-family:var(--font-mono);">RD$ ${totalMonto.toLocaleString()}</div>
+        </td>
+        <td style="padding:14px 16px;">
           ${g.comprobante ? `
-            <button class="btn btn-secondary" style="font-size:0.8rem; width:100%;" onclick="openReceiptFromCache('${keyId}')">
-              <i data-lucide="eye"></i> Ver Comprobante HD
+            <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="openReceiptFromCache('${keyId}')">
+              <i data-lucide="eye" style="width:13px;"></i> Ver Foto HD
             </button>
           ` : `
-            <button class="btn btn-secondary" style="font-size:0.8rem; width:100%; opacity:0.5;" onclick="openReceiptFromCache('${keyId}')">
-              <i data-lucide="image"></i> Sin Comprobante
-            </button>
+            <span style="color:var(--muted); font-size:0.75rem;">Sin Comprobante</span>
           `}
+        </td>
+        <td style="padding:14px 16px;">
+          ${statusBadgeHTML}
+        </td>
+        <td style="padding:14px 16px; text-align:right;">
+          <div style="display:flex; justify-content:flex-end; gap:6px; flex-wrap:wrap;">
+            ${g.estado !== 'pagado' ? `
+              <button class="btn btn-green" style="padding:5px 10px; font-size:0.78rem;" onclick="approveGroup('${ticketsJsonStr}', '${escapeHtml(g.name)}', '${g.whatsapp}')">
+                <i data-lucide="check-circle" style="width:14px;"></i> Aprobar
+              </button>
+            ` : `
+              <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.78rem; color:var(--green);" onclick="sendWhatsAppConfirmation('${escapeHtml(g.name)}', '${g.whatsapp}', '${ticketsJsonStr}')">
+                <i data-lucide="message-circle" style="width:14px;"></i> WhatsApp
+              </button>
+            `}
 
-          ${g.estado !== 'pagado' ? `
-            <button class="btn btn-green" style="font-size:0.82rem; width:100%;" onclick="approveGroup('${ticketsJsonStr}', '${escapeHtml(g.name)}', '${g.whatsapp}')">
-              <i data-lucide="check-circle"></i> Aprobar y Notificar
-            </button>
-          ` : `
-            <button class="btn btn-secondary" style="font-size:0.82rem; width:100%; color:var(--green);" onclick="sendWhatsAppConfirmation('${escapeHtml(g.name)}', '${g.whatsapp}', '${ticketsJsonStr}')">
-              <i data-lucide="message-circle"></i> Enviar Ticket por WhatsApp
-            </button>
-          `}
-
-          ${g.estado !== 'rechazado' ? `
-            <button class="btn btn-danger" style="font-size:0.78rem; padding:6px 12px;" onclick="rejectGroup('${ticketsJsonStr}')">
-              <i data-lucide="x-circle"></i> Rechazar
-            </button>
-          ` : `
-            <button class="btn btn-secondary" style="font-size:0.78rem; padding:6px 12px; color:var(--red);" onclick="deleteGroupRecord('${ticketsJsonStr}')">
-              <i data-lucide="trash-2"></i> Eliminar
-            </button>
-          `}
-        </div>
-      </div>
+            ${g.estado !== 'rechazado' ? `
+              <button class="btn btn-danger" style="padding:5px 10px; font-size:0.75rem;" onclick="rejectGroup('${ticketsJsonStr}')">
+                <i data-lucide="x-circle" style="width:13px;"></i> Rechazar
+              </button>
+            ` : `
+              <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.75rem; color:var(--red);" onclick="deleteGroupRecord('${ticketsJsonStr}')">
+                <i data-lucide="trash-2" style="width:13px;"></i> Eliminar
+              </button>
+            `}
+          </div>
+        </td>
+      </tr>
     `;
   }).join('');
 
