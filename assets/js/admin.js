@@ -577,14 +577,14 @@ function renderOrdersList() {
         <td style="padding:14px 16px;">
           ${(g.comprobante && g.comprobante.length > 20 && !g.comprobante.includes('suerte_rd_iphone17_banner')) ? `
             <div style="display:flex; align-items:center; gap:8px;">
-              <img src="${g.comprobante}" onclick="openReceiptFromCache('${keyId}')" style="width:38px; height:38px; object-fit:cover; border-radius:8px; cursor:pointer; border:1px solid var(--cyan);" title="Ver Foto HD">
-              <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="openReceiptFromCache('${keyId}')">
-                <i data-lucide="eye" style="width:13px;"></i> Ver HD
+              <img src="${g.comprobante}" onclick="openReceiptFromCache('${keyId}')" style="width:36px; height:36px; object-fit:cover; border-radius:8px; cursor:pointer; border:1px solid var(--cyan);" title="Ver Foto HD">
+              <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="openReceiptFromCache('${keyId}')">
+                <i data-lucide="eye" style="width:13px;"></i> Ver Comprobante
               </button>
             </div>
           ` : `
-            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; color:var(--muted);" onclick="openReceiptFromCache('${keyId}')">
-              <i data-lucide="file" style="width:13px;"></i> Detalle
+            <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem; color:var(--muted);" onclick="openReceiptFromCache('${keyId}')">
+              <i data-lucide="file-text" style="width:13px;"></i> Ver Comprobante
             </button>
           `}
         </td>
