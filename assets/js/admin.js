@@ -1,40 +1,37 @@
 (async function() {
   "use strict";
 
-  // --- CONFIGURACIÓN Y CONSTANTES ---
   const API_GET_URL = "/api/get";
   const API_SET_URL = "/api/set";
+  const TICKETS_KEY = "suerterd:tickets:v2";
+  const CFG_KEY = "suerterd:config:v2:florida5";
 
-  const TICKETS_KEY_PREFIX = "suerterd:tickets:v2";
-  const CFG_KEY_PREFIX = "suerterd:config:v2";
-  const RAFFLE_IDS = ["florida5"];
-
-  let activeRaffleId = "florida5";
-  let adminPin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin') || '123456';
+  let adminPin = sessionStorage.getItem('admin_pin') || '';
   let allTickets = {};
-  let lastPendingCount = 0;
-  let activeModalGroupKey = null;
 
-  // --- DOM HELPERS ---
   const $ = (id) => document.getElementById(id);
 
-  function safeAddListener(id, event, handler) {
-    const el = $(id);
-    if (el) el.addEventListener(event, handler);
+  // --- API ---
+  async function getStorageItem(key) {
+    try {
+      const res = await fetch(`${API_GET_URL}?key=${encodeURIComponent(key)}`, {
+        headers: { "x-admin-pin": adminPin || "123456" }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.value;
+    } catch(e) { return null; }
   }
 
-  function escapeHtml(s) {
-    if (!s) return "";
-    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-
-  function formatWhatsAppPhone(phoneStr) {
-    if (!phoneStr) return "";
-    let clean = String(phoneStr).replace(/\D/g, "");
-    if (clean.length === 10 && (clean.startsWith("809") || clean.startsWith("829") || clean.startsWith("849"))) {
-      clean = "1" + clean;
-    }
-    return clean;
+  async function setStorageItem(key, val) {
+    try {
+      const res = await fetch(API_SET_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-pin": adminPin || "123456" },
+        body: JSON.stringify({ key, value: val })
+      });
+      return res.ok;
+    } catch(e) { return false; }
   }
 
   function safeParse(val, fallback = null) {
@@ -43,196 +40,85 @@
     try { return JSON.parse(val); } catch(e) { return fallback; }
   }
 
-  // --- AUDIO SOUND NOTIFICATION ---
-  let audioCtx = null;
-  function playNotificationSound() {
-    try {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, now); // D5
-      osc.frequency.setValueAtTime(880, now + 0.12); // A5
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
-      osc.start(now);
-      osc.stop(now + 0.45);
-    } catch(e) {
-      console.warn("Audio Context block", e);
+  function formatPhone(phoneStr) {
+    if (!phoneStr) return "";
+    let clean = String(phoneStr).replace(/\D/g, "");
+    if (clean.length === 10 && (clean.startsWith("809") || clean.startsWith("829") || clean.startsWith("849"))) {
+      clean = "1" + clean;
     }
+    return clean;
   }
 
-  // --- VERCEL KV COMMUNICATION ---
-  async function getStorageItem(key) {
-    try {
-      const res = await fetch(`${API_GET_URL}?key=${encodeURIComponent(key)}`, {
-        headers: { "x-admin-pin": adminPin }
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      return data.value;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  async function setStorageItem(key, val) {
-    try {
-      const res = await fetch(API_SET_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-pin": adminPin },
-        body: JSON.stringify({ key, value: val })
-      });
-      return res.ok;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // --- INICIALIZACIÓN ---
+  // --- INICIO ---
   async function init() {
-    await fetchTicketsData();
-    setupEventListeners();
-    renderPendingPurchases();
+    await reloadData();
+    setupTabs();
+    setupListeners();
 
-    // Background polling every 4 seconds for real-time notifications
-    setInterval(pollUpdates, 4000);
+    // Polling cada 4s
+    setInterval(reloadData, 4000);
   }
 
-  async function fetchTicketsData() {
-    for (const rId of RAFFLE_IDS) {
-      const raw = await getStorageItem(`${TICKETS_KEY_PREFIX}:${rId}`);
-      allTickets[rId] = safeParse(raw, {});
-    }
+  async function reloadData() {
+    const raw = await getStorageItem(TICKETS_KEY);
+    allTickets = safeParse(raw, {});
+    renderAll();
   }
 
-  async function pollUpdates() {
-    await fetchTicketsData();
-    renderPendingPurchases();
+  function renderAll() {
+    renderMetrics();
+    renderValidarTable();
+    renderBoletosTable();
   }
 
-  function setupEventListeners() {
-    safeAddListener("globalRaffleSelect", "change", (e) => {
-      activeRaffleId = e.target.value;
-      renderPendingPurchases();
-    });
+  // --- METRICAS ---
+  function renderMetrics() {
+    const soldList = Object.values(allTickets);
+    const pendingList = soldList.filter(t => t && (t.estado === "esperando_validacion" || t.estado === "reservado"));
+    const paidList = soldList.filter(t => t && t.estado === "pagado");
 
-    safeAddListener("btnTestCreatePurchase", "click", createTestPurchase);
-    safeAddListener("btnBulkApprove", "click", bulkApprovePurchases);
+    const totalIncome = paidList.length * 3; // RD$3
 
-    safeAddListener("headerCheckbox", "change", (e) => {
-      const checked = e.target.checked;
-      document.querySelectorAll(".purchase-row-checkbox").forEach(chk => {
-        chk.checked = checked;
-      });
-    });
-
-    safeAddListener("closeReceiptModalBtn", "click", () => {
-      if ($("viewReceiptModal")) $("viewReceiptModal").classList.remove("active");
-    });
-
-    safeAddListener("btnModalApprove", "click", () => {
-      if (activeModalGroupKey) {
-        approvePurchaseGroup(activeModalGroupKey);
-        if ($("viewReceiptModal")) $("viewReceiptModal").classList.remove("active");
-      }
-    });
-
-    safeAddListener("btnModalReject", "click", () => {
-      if (activeModalGroupKey) {
-        rejectPurchaseGroup(activeModalGroupKey);
-        if ($("viewReceiptModal")) $("viewReceiptModal").classList.remove("active");
-      }
-    });
+    if ($("metricPending")) $("metricPending").textContent = pendingList.length;
+    if ($("metricIncome")) $("metricIncome").textContent = `RD$ ${totalIncome.toLocaleString("es-DO")}`;
+    if ($("metricSold")) $("metricSold").textContent = `${soldList.length.toLocaleString("es-DO")} / 100,000`;
   }
 
-  // --- RENDER PENDING PURCHASES & NOTIFICATIONS ---
-  function renderPendingPurchases() {
-    const tbody = $("pendingPurchasesTableBody");
-    if (!tbody) return;
+  // --- TAB 1: VALIDAR COMPRAS ---
+  function renderValidarTable() {
+    const body = $("validarTableBody");
+    if (!body) return;
 
-    const tickets = allTickets[activeRaffleId] || {};
-    
-    // Group tickets by client/timestamp
+    // Agrupar compras por cliente y timestamp
     const groups = {};
-    Object.keys(tickets).forEach(tNum => {
-      const t = tickets[tNum];
+    Object.keys(allTickets).forEach(num => {
+      const t = allTickets[num];
       if (t && (t.estado === "esperando_validacion" || t.estado === "reservado")) {
-        const groupKey = `${t.timestamp || 0}_${t.whatsapp || 'unknown'}`;
-        if (!groups[groupKey]) {
-          groups[groupKey] = {
-            key: groupKey,
+        const key = `${t.timestamp || 0}_${t.whatsapp || 'anon'}`;
+        if (!groups[key]) {
+          groups[key] = {
+            key: key,
             name: t.name || t.nombre || "Cliente",
             whatsapp: t.whatsapp || "",
-            loteria: t.loteria || "Pick 5 Florida",
             comprobante: t.comprobante || null,
-            timestamp: t.timestamp || Date.now(),
-            estado: t.estado,
             numbers: []
           };
         }
-        groups[groupKey].numbers.push(tNum);
-        if (t.estado === "esperando_validacion") groups[groupKey].estado = "esperando_validacion";
-        if (t.comprobante && !groups[groupKey].comprobante) groups[groupKey].comprobante = t.comprobante;
+        groups[key].numbers.push(num);
       }
     });
 
     const groupKeys = Object.keys(groups);
-    const pendingCount = groupKeys.length;
+    body.innerHTML = "";
 
-    // Real-Time Sound & Badge Notification Trigger
-    if (pendingCount > lastPendingCount) {
-      playNotificationSound();
-      const alertBanner = $("realtimeAlertBanner");
-      if (alertBanner) {
-        alertBanner.style.display = "flex";
-        if ($("bannerAlertTitle")) $("bannerAlertTitle").textContent = `¡Nuevas Compras Recibidas! (${pendingCount} Pendiente${pendingCount > 1 ? 's' : ''})`;
-      }
-    } else if (pendingCount === 0) {
-      const alertBanner = $("realtimeAlertBanner");
-      if (alertBanner) alertBanner.style.display = "none";
-    }
-    lastPendingCount = pendingCount;
-
-    // Update Sidebar & Metric Badges
-    const badge = $("sidebarNotifBadge");
-    if (badge) {
-      if (pendingCount > 0) {
-        badge.textContent = pendingCount;
-        badge.style.display = "inline-block";
-      } else {
-        badge.style.display = "none";
-      }
-    }
-
-    let totalPendingAmount = 0;
-    groupKeys.forEach(gKey => {
-      totalPendingAmount += groups[gKey].numbers.length * 3; // RD$3 por boleto
-    });
-
-    if ($("statPendingCount")) $("statPendingCount").textContent = pendingCount;
-    if ($("statPendingAmount")) $("statPendingAmount").textContent = `RD$ ${totalPendingAmount.toLocaleString("es-DO")}`;
-
-    // Render Table Rows
-    tbody.innerHTML = "";
-    if (pendingCount === 0) {
-      tbody.innerHTML = `
+    if (groupKeys.length === 0) {
+      body.innerHTML = `
         <tr>
-          <td colspan="10" style="text-align:center; padding:40px 20px; color:var(--text-muted);">
-            <i data-lucide="check-circle" style="width:32px; height:32px; color:var(--green); display:block; margin:0 auto 10px;"></i>
-            <div style="font-family:var(--font-heading); font-weight:700; font-size:1.1rem; color:#FFF; margin-bottom:4px;">No hay compras pendientes por activar</div>
-            <div style="font-size:0.85rem;">Cuando los clientes realicen pedidos de boletos, aparecerán aquí para tu validación en tiempo real.</div>
+          <td colspan="7" style="text-align:center; padding:30px; color:var(--muted);">
+            ✅ No hay compras pendientes por validar. ¡Todo está al día!
           </td>
         </tr>
       `;
-      if (typeof lucide !== 'undefined') lucide.createIcons();
       return;
     }
 
@@ -242,207 +128,270 @@
       const numsStr = g.numbers.join(",");
       const count = g.numbers.length;
       const amount = count * 3;
-      const dateStr = new Date(g.timestamp).toLocaleDateString("es-DO") + " " + new Date(g.timestamp).toLocaleTimeString("es-DO", {hour:'2-digit', minute:'2-digit'});
 
-      let packageBadge = `<span class="badge-tag badge-cyan">🎟️ Lote (${count} Boletos)</span>`;
-      if (count === 10) packageBadge = `<span class="badge-tag badge-gold">🥉 Paquete Bronce (10)</span>`;
-      else if (count === 25) packageBadge = `<span class="badge-tag badge-cyan">🥈 Paquete Plata (25)</span>`;
-      else if (count === 50) packageBadge = `<span class="badge-tag badge-gold">🥇 Paquete Oro (50)</span>`;
-      else if (count >= 100) packageBadge = `<span class="badge-tag badge-green">💎 Pack VIP Diamante (${count})</span>`;
-
-      let sampleNums = g.numbers.slice(0, 4).map(n => `#${n}`).join(", ");
-      if (count > 4) sampleNums += `... y ${count - 4} más`;
+      let numsDisplay = g.numbers.slice(0, 4).map(n => `#${n}`).join(", ");
+      if (count > 4) numsDisplay += `... y ${count - 4} más`;
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td style="text-align:center;">
-          <input type="checkbox" class="purchase-row-checkbox" data-key="${gKey}" style="width:18px; height:18px; cursor:pointer;">
-        </td>
-        <td><strong>Sorteo iPhone 17</strong></td>
-        <td>
-          ${packageBadge}
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; font-family:var(--font-mono);">${sampleNums}</div>
-        </td>
-        <td><strong style="color:var(--green); font-family:var(--font-mono); font-size:1rem;">RD$ ${amount.toLocaleString("es-DO")}</strong></td>
         <td><strong>${escapeHtml(g.name)}</strong></td>
         <td>
-          <a href="https://wa.me/${formatWhatsAppPhone(g.whatsapp)}" target="_blank" class="btn btn-cyan" style="padding:4px 10px; font-size:0.75rem;">
-            <i data-lucide="message-circle" style="width:12px;"></i> ${escapeHtml(g.whatsapp)}
+          <a href="https://wa.me/${formatPhone(g.whatsapp)}" target="_blank" style="color:var(--cyan); text-decoration:none; font-weight:700;">
+            📱 ${g.whatsapp || 'Sin WhatsApp'}
           </a>
         </td>
         <td>
-          ${g.comprobante ? `
-            <img src="${g.comprobante}" class="btn-zoom-receipt" data-key="${gKey}" style="width:65px; height:65px; object-fit:cover; border-radius:12px; border:2px solid var(--cyan); cursor:pointer; box-shadow:0 0 12px rgba(0,229,255,0.25);" title="Hacer clic para ver en HD">
-          ` : '<span style="color:var(--text-muted); font-size:0.8rem;">Sin recibo</span>'}
+          <span style="background:rgba(0,229,255,0.15); color:var(--cyan); padding:3px 8px; border-radius:6px; font-weight:700;">
+            🎟️ ${count} Boletos
+          </span>
+          <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">${numsDisplay}</div>
         </td>
-        <td><span class="badge-tag badge-gold">🟡 Esperando Validación</span></td>
-        <td style="font-size:0.8rem; color:var(--text-muted);">${dateStr}</td>
+        <td><strong style="color:var(--green); font-family:var(--font-mono);">RD$ ${amount}</strong></td>
+        <td>
+          ${g.comprobante ? `
+            <img src="${g.comprobante}" class="img-preview-btn" data-img="${g.comprobante}" style="width:55px; height:55px; object-fit:cover; border-radius:8px; border:2px solid var(--cyan); cursor:pointer;" title="Hacer clic para ver foto">
+          ` : '<span style="color:var(--muted); font-size:0.8rem;">Sin foto</span>'}
+        </td>
+        <td><span style="background:rgba(255,215,0,0.15); color:var(--gold); padding:3px 8px; border-radius:6px; font-weight:700; font-size:0.75rem;">Por Validar</span></td>
         <td>
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-green btn-activate-group" data-key="${gKey}" style="padding:6px 12px; font-size:0.78rem;">
-              <i data-lucide="check-circle" style="width:14px;"></i> Activar Boletos
+            <button class="btn btn-green btn-approve-group" data-key="${gKey}" style="padding:6px 12px; font-size:0.78rem;">
+              ✓ Aprobar y Activar
             </button>
             <button class="btn btn-red btn-reject-group" data-key="${gKey}" style="padding:6px 12px; font-size:0.78rem;">
-              <i data-lucide="x-circle" style="width:14px;"></i> Rechazar
+              ✗ Rechazar
             </button>
           </div>
         </td>
       `;
 
-      // Zoom Modal trigger
-      const imgZoom = tr.querySelector(".btn-zoom-receipt");
-      if (imgZoom) {
-        imgZoom.addEventListener("click", () => {
-          activeModalGroupKey = gKey;
-          if ($("modalMetaName")) $("modalMetaName").textContent = g.name;
-          if ($("modalMetaPhone")) $("modalMetaPhone").textContent = g.whatsapp;
-          if ($("modalMetaTickets")) $("modalMetaTickets").textContent = `${count} Boletos (${sampleNums})`;
-          if ($("modalReceiptImg")) $("modalReceiptImg").src = g.comprobante;
-          if ($("viewReceiptModal")) $("viewReceiptModal").classList.add("active");
-        });
+      // Zoom recibo
+      const imgBtn = tr.querySelector(".img-preview-btn");
+      if (imgBtn) {
+        imgBtn.onclick = () => {
+          $("modalImg").src = imgBtn.getAttribute("data-img");
+          $("receiptModal").classList.add("active");
+        };
       }
 
-      // Activate Button Handler
-      tr.querySelector(".btn-activate-group").addEventListener("click", () => approvePurchaseGroup(gKey));
-      tr.querySelector(".btn-reject-group").addEventListener("click", () => rejectPurchaseGroup(gKey));
+      // Aprobar / Rechazar
+      tr.querySelector(".btn-approve-group").onclick = () => approveGroup(gKey);
+      tr.querySelector(".btn-reject-group").onclick = () => rejectGroup(gKey);
 
-      tbody.appendChild(tr);
+      body.appendChild(tr);
     });
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
-  // --- ACTIONS: ACTIVATION & REJECTION ---
-  async function approvePurchaseGroup(gKey) {
-    const tickets = allTickets[activeRaffleId] || {};
+  async function approveGroup(gKey) {
     const groupNums = [];
+    let clientName = "Cliente";
+    let clientPhone = "";
 
-    Object.keys(tickets).forEach(tNum => {
-      const t = tickets[tNum];
-      const key = `${t.timestamp || 0}_${t.whatsapp || 'unknown'}`;
+    Object.keys(allTickets).forEach(num => {
+      const t = allTickets[num];
+      const key = `${t.timestamp || 0}_${t.whatsapp || 'anon'}`;
       if (key === gKey) {
-        tickets[tNum].estado = "pagado";
-        groupNums.push(tNum);
+        allTickets[num].estado = "pagado";
+        groupNums.push(num);
+        clientName = t.name || t.nombre || clientName;
+        clientPhone = t.whatsapp || clientPhone;
       }
     });
 
     if (groupNums.length === 0) return;
 
-    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
+    await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
 
-    // Open WhatsApp confirmation message for activation
-    const firstTicket = tickets[groupNums[0]];
-    const clientName = firstTicket ? (firstTicket.name || firstTicket.nombre || "Cliente") : "Cliente";
-    const clientPhone = firstTicket ? firstTicket.whatsapp : "";
-    const sampleDisplay = groupNums.length <= 5 ? groupNums.map(n => `#${n}`).join(", ") : groupNums.slice(0, 5).map(n => `#${n}`).join(", ") + `... y ${groupNums.length - 5} más`;
-
+    // Abrir WhatsApp con mensaje de confirmación
+    const sampleNums = groupNums.slice(0, 5).map(n => `#${n}`).join(", ");
     const textMsg = 
 `✅ *SUERTE RD* | *CONFIRMACIÓN DE BOLETOS ACTIVADOS* ✅
 ═════════════════════════════
-🎉 *¡TU PAGO HA SIDO VALIDADO CON ÉXITO POR EL ADMINISTRADOR!* 🎉
+🎉 *¡TU PAGO HA SIDO VALIDADO CON ÉXITO!* 🎉
 
 👤 *CLIENTE:* ${clientName}
-🏆 *SORTEO:* Sorteo Especial iPhone 17 Pro Max 1TB
-🎟️ *BOLETOS ACTIVOS (${groupNums.length}):* ${sampleDisplay}
+🎟️ *BOLETOS ACTIVOS (${groupNums.length}):* ${sampleNums}
 
-🟢 *ESTADO:* *PAGADOS Y OFICIALMENTE EN RIFA* 🟢
+🟢 *ESTADO:* *PAGADOS Y ACTIVOS EN RIFA* 🟢
 ═════════════════════════════
 ✨ ¡Muchas gracias por tu compra en Suerte RD! Te deseamos la mayor de las suertes. 🍀🔥`;
 
     if (clientPhone) {
-      window.open(`https://wa.me/${formatWhatsAppPhone(clientPhone)}?text=${encodeURIComponent(textMsg)}`, "_blank");
+      window.open(`https://wa.me/${formatPhone(clientPhone)}?text=${encodeURIComponent(textMsg)}`, "_blank");
     }
 
-    await fetchTicketsData();
-    renderPendingPurchases();
+    await reloadData();
   }
 
-  async function rejectPurchaseGroup(gKey) {
-    const reason = prompt("Introduce el motivo del rechazo para notificar al cliente:", "Comprobante no visible o transferencia no recibida");
+  async function rejectGroup(gKey) {
+    const reason = prompt("Motivo del rechazo:", "Comprobante ilegible o pago no recibido");
     if (reason === null) return;
 
-    const tickets = allTickets[activeRaffleId] || {};
-    const groupNums = [];
     let clientPhone = "";
-    let clientName = "";
-
-    Object.keys(tickets).forEach(tNum => {
-      const t = tickets[tNum];
-      const key = `${t.timestamp || 0}_${t.whatsapp || 'unknown'}`;
+    Object.keys(allTickets).forEach(num => {
+      const t = allTickets[num];
+      const key = `${t.timestamp || 0}_${t.whatsapp || 'anon'}`;
       if (key === gKey) {
-        groupNums.push(tNum);
         clientPhone = t.whatsapp;
-        clientName = t.name || t.nombre || "Cliente";
-        delete tickets[tNum]; // Release numbers
+        delete allTickets[num];
       }
     });
 
-    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
+    await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
 
     if (clientPhone) {
-      const textMsg = 
-`❌ *SUERTE RD* | *NOTIFICACIÓN DE RECHAZO* ❌
-═════════════════════════════
-👤 *CLIENTE:* ${clientName}
-📝 *MOTIVO:* ${reason}
-
-⚠️ Tu orden de boletos ha sido rechazada. Por favor ponte en contacto con soporte enviando un comprobante válido.`;
-      window.open(`https://wa.me/${formatWhatsAppPhone(clientPhone)}?text=${encodeURIComponent(textMsg)}`, "_blank");
+      const textMsg = `❌ *SUERTE RD* | Tu orden de boletos ha sido rechazada. Motivo: ${reason}. Por favor contacta con soporte.`;
+      window.open(`https://wa.me/${formatPhone(clientPhone)}?text=${encodeURIComponent(textMsg)}`, "_blank");
     }
 
-    await fetchTicketsData();
-    renderPendingPurchases();
+    await reloadData();
   }
 
-  async function bulkApprovePurchases() {
-    const checkedBoxes = document.querySelectorAll(".purchase-row-checkbox:checked");
-    if (checkedBoxes.length === 0) {
-      alert("Por favor selecciona al menos una compra en la lista para aprobar.");
-      return;
-    }
-
-    if (!confirm(`¿Estás seguro de que deseas ACTIVAR las ${checkedBoxes.length} compras seleccionadas?`)) return;
-
-    const tickets = allTickets[activeRaffleId] || {};
-    checkedBoxes.forEach(chk => {
-      const keyTarget = chk.getAttribute("data-key");
-      Object.keys(tickets).forEach(tNum => {
-        const t = tickets[tNum];
-        const key = `${t.timestamp || 0}_${t.whatsapp || 'unknown'}`;
-        if (key === keyTarget) {
-          tickets[tNum].estado = "pagado";
-        }
-      });
-    });
-
-    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
-    await fetchTicketsData();
-    renderPendingPurchases();
-  }
-
-  async function createTestPurchase() {
-    const tickets = allTickets[activeRaffleId] || {};
+  async function createTestOrder() {
+    const testNums = ["00001", "00002", "00003", "00004", "00005", "00006", "00007", "00008", "00009", "00010"];
     const timestamp = Date.now();
-    const testNums = ["00001", "00002", "00003", "00004", "00005", "00006", "00007", "00008", "00009", "00010", "00011", "00012", "00013", "00014", "00015", "00016", "00017", "00018", "00019", "00020", "00021", "00022", "00023", "00024", "00025"];
 
     testNums.forEach(num => {
-      tickets[num] = {
-        name: "Carlos Mendoza (Compra de Prueba)",
-        nombre: "Carlos Mendoza (Compra de Prueba)",
+      allTickets[num] = {
+        name: "Juan Pérez (Cliente de Prueba)",
         whatsapp: "18099838626",
-        loteria: "Pick 5 Florida",
         estado: "esperando_validacion",
         comprobante: "./assets/suerte_rd_iphone17_banner.png",
         timestamp: timestamp
       };
     });
 
-    await setStorageItem(`${TICKETS_KEY_PREFIX}:${activeRaffleId}`, JSON.stringify(tickets));
-    await fetchTicketsData();
-    renderPendingPurchases();
+    await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
+    await reloadData();
   }
 
-  // Run on startup
-  init();
+  // --- TAB 2: BOLETOS ---
+  function renderBoletosTable() {
+    const body = $("boletosTableBody");
+    if (!body) return;
+
+    const query = $("ticketSearch") ? $("ticketSearch").value.trim().toLowerCase() : "";
+    const ticketNums = Object.keys(allTickets).sort();
+
+    body.innerHTML = "";
+    let count = 0;
+
+    for (const num of ticketNums) {
+      const t = allTickets[num];
+      const name = t.name || t.nombre || "";
+      const phone = t.whatsapp || "";
+      const state = t.estado || "reservado";
+
+      if (query && !num.includes(query) && !name.toLowerCase().includes(query) && !phone.includes(query)) continue;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="font-family:var(--font-mono); font-weight:700; color:var(--cyan);">#${num}</td>
+        <td><strong>${escapeHtml(name || 'Sin nombre')}</strong></td>
+        <td>${phone ? `<a href="https://wa.me/${formatPhone(phone)}" target="_blank" style="color:var(--cyan); text-decoration:none;">${phone}</a>` : 'N/A'}</td>
+        <td>
+          <span style="background:${state === 'pagado' ? 'rgba(0,230,118,0.15)' : 'rgba(255,215,0,0.15)'}; color:${state === 'pagado' ? 'var(--green)' : 'var(--gold)'}; padding:3px 8px; border-radius:6px; font-weight:700; font-size:0.75rem;">
+            ${state === 'pagado' ? 'Pagado' : 'Reservado'}
+          </span>
+        </td>
+        <td>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-green btn-pay" data-num="${num}" style="padding:4px 8px; font-size:0.75rem;">
+              ${state === 'pagado' ? 'Marcar Reservado' : 'Marcar Pagado'}
+            </button>
+            <button class="btn btn-red btn-del" data-num="${num}" style="padding:4px 8px; font-size:0.75rem;">
+              Liberar
+            </button>
+          </div>
+        </td>
+      `;
+
+      tr.querySelector(".btn-pay").onclick = async () => {
+        allTickets[num].estado = (state === "pagado") ? "reservado" : "pagado";
+        await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
+        reloadData();
+      };
+
+      tr.querySelector(".btn-del").onclick = async () => {
+        delete allTickets[num];
+        await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
+        reloadData();
+      };
+
+      body.appendChild(tr);
+      count++;
+      if (!query && count >= 200) break;
+    }
+
+    if (count === 0) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--muted);">No hay boletos que coincidan.</td></tr>`;
+    }
+  }
+
+  // --- TABS Y LISTENERS ---
+  function setupTabs() {
+    const btns = document.querySelectorAll(".tab-btn");
+    btns.forEach(btn => {
+      btn.onclick = () => {
+        btns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const target = btn.getAttribute("data-tab");
+        document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+        if ($(target)) $(target).classList.add("active");
+      };
+    });
+  }
+
+  function setupListeners() {
+    safeAddListener("btnCreateTest", "click", createTestOrder);
+    safeAddListener("ticketSearch", "input", renderBoletosTable);
+
+    safeAddListener("btnSaveConfig", "click", async () => {
+      const title = $("cfgTitle").value.trim();
+      const prize = $("cfgPrize").value.trim();
+      await setStorageItem(CFG_KEY, JSON.stringify({ id: "florida5", title, prize, price: "RD$3", total: 100000 }));
+      alert("¡Configuración guardada!");
+    });
+
+    safeAddListener("btnLogout", "click", () => {
+      sessionStorage.removeItem("admin_pin");
+      window.location.reload();
+    });
+  }
+
+  // --- AUTH LOGIN ---
+  function checkAuth() {
+    const overlay = $("loginOverlay");
+    const pin = sessionStorage.getItem("admin_pin");
+
+    if (pin === "123456" || pin === "SoyArte(20251975)" || pin === "SuerteRD2026") {
+      adminPin = pin;
+      if (overlay) overlay.style.display = "none";
+      init();
+    } else {
+      if (overlay) overlay.style.display = "flex";
+      const submitBtn = $("btnLoginSubmit");
+      const pinInput = $("pinInput");
+
+      const doLogin = () => {
+        const val = pinInput.value.trim();
+        if (val === "123456" || val === "SoyArte(20251975)" || val === "SuerteRD2026") {
+          adminPin = val;
+          sessionStorage.setItem("admin_pin", val);
+          if (overlay) overlay.style.display = "none";
+          init();
+        } else {
+          $("loginErr").style.display = "block";
+          $("loginErr").textContent = "Contraseña de seguridad incorrecta.";
+        }
+      };
+
+      if (submitBtn) submitBtn.onclick = doLogin;
+      if (pinInput) pinInput.onkeydown = (e) => { if (e.key === "Enter") doLogin(); };
+    }
+  }
+
+  checkAuth();
 
 })();
