@@ -73,7 +73,7 @@ async function readDb(forceFresh = false) {
 
   let db = null;
 
-  // 1. Check Upstash Redis / Vercel KV first (Primary source of truth)
+  // Primary: Vercel KV / Upstash Redis (100% atomic)
   if (useKV) {
     try {
       const data = await kv.get('suerterd_db');
@@ -96,25 +96,6 @@ async function readDb(forceFresh = false) {
       }
     } catch (e) {
       console.error("Error reading from Upstash Redis:", e);
-    }
-  }
-
-  // 2. Fallback to Vercel Blob if KV is empty
-  if (!db && BLOB_TOKEN) {
-    try {
-      const { blobs } = await list({ prefix: 'suerterd_db.json', token: BLOB_TOKEN });
-      if (blobs && blobs.length > 0) {
-        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
-        const res = await fetch(sorted[0].url, {
-          headers: { 'Authorization': `Bearer ${BLOB_TOKEN}` }
-        });
-        if (res.ok) {
-          const text = await res.text();
-          db = JSON.parse(text);
-        }
-      }
-    } catch (e) {
-      console.error("Error reading from Vercel Blob:", e);
     }
   }
 
@@ -161,7 +142,6 @@ async function readDb(forceFresh = false) {
       db[key] = JSON.stringify(DEFAULT_CONFIGS[id]);
       changed = true;
     }
-    // Also ensure tickets databases are initialized empty if not present
     const tKey = `suerterd:tickets:v2:${id}`;
     if (!db[tKey]) {
       db[tKey] = "{}";
@@ -182,19 +162,6 @@ async function readDb(forceFresh = false) {
 async function writeDb(db) {
   cachedDb = db;
   lastDbFetchTime = Date.now();
-
-  if (BLOB_TOKEN) {
-    try {
-      await put('suerterd_db.json', JSON.stringify(db), {
-        access: 'public',
-        addRandomSuffix: false,
-        allowOverwrite: true,
-        token: BLOB_TOKEN
-      });
-    } catch (e) {
-      console.error("Error writing to Vercel Blob:", e);
-    }
-  }
 
   if (useKV) {
     try {
