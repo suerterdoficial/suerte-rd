@@ -470,12 +470,24 @@ function renderOrdersList() {
     const keyId = `g_${idx}`;
     window.receiptsCache[keyId] = g;
 
-    let statusBadgeHTML = `<span style="background:rgba(255,215,0,0.15); color:var(--gold); border:1px solid var(--gold); padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.78rem;">⏳ Pendiente</span>`;
+    let statusBadgeHTML = `
+      <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,193,7,0.14); color:#FFC107; border:1px solid rgba(255,193,7,0.4); padding:5px 12px; border-radius:20px; font-weight:800; font-size:0.78rem; white-space:nowrap; line-height:1.2;">
+        ⏳ Pendiente
+      </span>
+    `;
 
     if (g.estado === 'pagado') {
-      statusBadgeHTML = `<span style="background:rgba(0,230,118,0.15); color:var(--green); border:1px solid var(--green); padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.78rem;">✅ Validado</span>`;
+      statusBadgeHTML = `
+        <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(0,230,118,0.14); color:#00E676; border:1px solid rgba(0,230,118,0.4); padding:5px 12px; border-radius:20px; font-weight:800; font-size:0.78rem; white-space:nowrap; line-height:1.2;">
+          ✅ Validado
+        </span>
+      `;
     } else if (g.estado === 'rechazado') {
-      statusBadgeHTML = `<span style="background:rgba(255,77,94,0.15); color:var(--red); border:1px solid var(--red); padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.78rem;">❌ Rechazado</span>`;
+      statusBadgeHTML = `
+        <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,77,94,0.14); color:#FF4D5E; border:1px solid rgba(255,77,94,0.4); padding:5px 12px; border-radius:20px; font-weight:800; font-size:0.78rem; white-space:nowrap; line-height:1.2;">
+          ❌ Rechazado
+        </span>
+      `;
     }
 
     const cleanPhone = (g.whatsapp || '').replace(/\D/g, '');
@@ -552,17 +564,33 @@ function renderOrdersList() {
    ACCIONES EN LOTE: APROBAR / RECHAZAR
    ========================================== */
 async function approveGroup(ticketsEncodedStr, name, whatsapp) {
-  const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr));
-  if (!ticketsArr || !ticketsArr.length) return;
+  const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr)) || [];
+  if (!ticketsArr.length) return;
 
-  const btn = event ? event.target.closest('button') : null;
-  if (btn) {
-    btn.innerText = 'Activando...';
-    btn.disabled = true;
-  }
+  // 1. Actualización instantánea en memoria a 0ms
+  ticketsArr.forEach(tNum => {
+    if (currentTickets[tNum]) {
+      currentTickets[tNum].estado = 'pagado';
+      currentTickets[tNum].timestamp_pago = Date.now();
+    }
+  });
 
+  // Re-renderizado instantáneo del UI
+  updateStatsCards();
+  renderOrdersList();
+
+  showToastNotification(
+    '✅ Compra Aprobada',
+    `Se activaron ${ticketsArr.length} boletos para ${name}.`,
+    'check-circle'
+  );
+
+  // 2. Desplegar modal personalizable de WhatsApp
+  sendWhatsAppConfirmation(name, whatsapp, ticketsEncodedStr);
+
+  // 3. Sincronización en segundo plano sin congelar la pantalla
   try {
-    const res = await fetch('/api/tickets/update-status', {
+    await fetch('/api/tickets/update-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -571,49 +599,26 @@ async function approveGroup(ticketsEncodedStr, name, whatsapp) {
         status: 'pagado'
       })
     });
-
-    let success = false;
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success) success = true;
-    }
-
-    // Fallback directo si endpoint seguro no responde
-    if (!success) {
-      ticketsArr.forEach(tNum => {
-        if (currentTickets[tNum]) {
-          currentTickets[tNum].estado = 'pagado';
-        }
-      });
-      await fetch('/api/set', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          key: TICKET_KEY,
-          value: JSON.stringify(currentTickets)
-        })
-      });
-    }
-
-    showToastNotification(
-      '✅ Compra Aprobada',
-      `Se activaron ${ticketsArr.length} boletos para ${name}.`,
-      'check-circle'
-    );
-
-    sendWhatsAppConfirmation(name, whatsapp, ticketsEncodedStr);
-    await loadTicketsData();
   } catch (e) {
-    alert('Error al aprobar compra: ' + e.message);
-  } finally {
-    if (btn) btn.disabled = false;
+    console.warn('Error syncing status update:', e);
   }
 }
 
 async function rejectGroup(ticketsEncodedStr) {
   if (!confirm('¿Estás seguro de rechazar esta orden?')) return;
-  const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr));
-  
+  const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr)) || [];
+  if (!ticketsArr.length) return;
+
+  ticketsArr.forEach(tNum => {
+    if (currentTickets[tNum]) {
+      currentTickets[tNum].estado = 'rechazado';
+    }
+  });
+
+  updateStatsCards();
+  renderOrdersList();
+  showToastNotification('❌ Compra Rechazada', 'La orden fue marcada como rechazada.', 'x-circle');
+
   try {
     await fetch('/api/tickets/update-status', {
       method: 'POST',
@@ -624,21 +629,39 @@ async function rejectGroup(ticketsEncodedStr) {
         status: 'rechazado'
       })
     });
-
-    showToastNotification('❌ Compra Rechazada', 'La orden fue marcada como rechazada.', 'x-circle');
-    await loadTicketsData();
   } catch (e) {
-    console.error('Error al rechazar:', e);
+    console.warn('Error syncing reject status:', e);
   }
 }
 
 async function deleteGroupRecord(ticketsEncodedStr) {
   if (!confirm('¿Eliminar permanentemente estos registros de la base de datos?')) return;
-  const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr));
+  const ticketsArr = JSON.parse(decodeURIComponent(ticketsEncodedStr)) || [];
+  if (!ticketsArr.length) return;
 
   ticketsArr.forEach(tNum => {
     delete currentTickets[tNum];
   });
+
+  updateStatsCards();
+  renderOrdersList();
+  showToastNotification('🗑️ Registro Eliminado', 'Los boletos se eliminaron de la base de datos.', 'trash');
+
+  try {
+    await fetch('/api/tickets/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        raffleId: RAFFLE_ID,
+        tickets: ticketsArr,
+        action: 'delete',
+        status: 'deleted'
+      })
+    });
+  } catch (e) {
+    console.warn('Error syncing delete status:', e);
+  }
+}
 
   try {
     await fetch('/api/set', {
