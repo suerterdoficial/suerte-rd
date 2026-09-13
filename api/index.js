@@ -29,6 +29,7 @@ app.get('/assets/js/admin.js', (req, res) => {
 });
 
 const ORIGINAL_DATA_FILE = path.join(__dirname, '..', 'data.json');
+const DATA_FILE = process.env.VERCEL ? path.join('/tmp', 'suerterd_data.json') : ORIGINAL_DATA_FILE;
 const UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || null;
 const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || null;
 const useKV = !!(UPSTASH_URL && UPSTASH_TOKEN);
