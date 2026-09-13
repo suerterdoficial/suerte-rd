@@ -663,22 +663,7 @@ async function deleteGroupRecord(ticketsEncodedStr) {
   }
 }
 
-  try {
-    await fetch('/api/set', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        key: TICKET_KEY,
-        value: JSON.stringify(currentTickets)
-      })
-    });
 
-    showToastNotification('🗑️ Registro Eliminado', 'Se eliminaron los registros seleccionados.', 'trash-2');
-    await loadTicketsData();
-  } catch (e) {
-    console.error('Error al eliminar:', e);
-  }
-}
 
 let currentWaTargetPhone = '';
 
