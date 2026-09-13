@@ -5,7 +5,7 @@
 
 const RAFFLE_ID = 'florida5';
 const TICKET_KEY = `suerterd:tickets:v2:${RAFFLE_ID}`;
-const TICKET_PRICE = 3; // RD$3 por boleto
+const TICKET_PRICE = 20; // RD$20 por boleto
 const TOTAL_BOLETOS = 100000;
 
 let currentTickets = {};
