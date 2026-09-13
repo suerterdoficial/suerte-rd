@@ -10,24 +10,24 @@ const TOTAL_BOLETOS = 100000;
 
 let currentTickets = {};
 let statsChartInstance = null;
+let lastPendingCount = -1;
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initTabs();
   initModal();
   
-  // Refresh button handlers
   const btnCreateTest = document.getElementById('btnCreateTest');
   if (btnCreateTest) {
     btnCreateTest.addEventListener('click', handleCreateTestOrder);
   }
 
-  // Periodic polling every 10 seconds
+  // Polling rápido cada 3 segundos para recibir notificaciones al instante
   setInterval(() => {
     if (isAuthenticated()) {
       loadTicketsData();
     }
-  }, 10000);
+  }, 3000);
 });
 
 /* ==========================================
@@ -80,7 +80,6 @@ function initAuth() {
         showLoginError('Contraseña incorrecta');
       }
     } catch (e) {
-      // Fallback network/offline verify check
       if (pin === '123456' || pin === 'SoyArte(20251975)' || pin === 'SuerteRD2026') {
         sessionStorage.setItem('suerte_admin_pin', pin);
         overlay.style.display = 'none';
@@ -162,6 +161,23 @@ async function loadTicketsData() {
   }
 }
 
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  } catch (e) {}
+}
+
 function updateMetricsAndTables() {
   const ticketEntries = Object.entries(currentTickets);
   let totalPaidTickets = 0;
@@ -177,6 +193,12 @@ function updateMetricsAndTables() {
     }
   });
 
+  // Reproducir sonido si hay nuevos pagos pendientes
+  if (lastPendingCount >= 0 && totalPendingTickets > lastPendingCount) {
+    playNotificationSound();
+  }
+  lastPendingCount = totalPendingTickets;
+
   // Actualizar Elementos DOM Métricas
   const metricIncome = document.getElementById('metricIncome');
   const metricSold = document.getElementById('metricSold');
@@ -185,6 +207,16 @@ function updateMetricsAndTables() {
   if (metricIncome) metricIncome.innerText = `RD$ ${totalIncome.toLocaleString('es-DO')}`;
   if (metricSold) metricSold.innerText = `${totalPaidTickets.toLocaleString('es-DO')} / ${TOTAL_BOLETOS.toLocaleString('es-DO')}`;
   if (metricPending) metricPending.innerText = `${totalPendingTickets.toLocaleString('es-DO')}`;
+
+  // Actualizar Badge en Botón de la Pestaña "Validar Pagos"
+  const btnValidarTab = document.querySelector('.tab-btn[data-tab="tabValidarPagos"]');
+  if (btnValidarTab) {
+    if (totalPendingTickets > 0) {
+      btnValidarTab.innerHTML = `<i data-lucide="wallet"></i> 🏦 Validar Pagos <span style="background:var(--gold); color:#000; padding:2px 8px; border-radius:10px; font-size:0.75rem; margin-left:6px; font-weight:800;">${totalPendingTickets} NUEVOS</span>`;
+    } else {
+      btnValidarTab.innerHTML = `<i data-lucide="wallet"></i> 🏦 Validar Pagos`;
+    }
+  }
 
   // Actualizar Tabla Validar Pagos
   renderValidarPagosTable();
@@ -210,7 +242,6 @@ function renderValidarPagosTable() {
   const groups = {};
 
   Object.entries(currentTickets).forEach(([tNum, t]) => {
-    // Un solo grupo si pertenecen a la misma transacción/cliente
     const groupKey = `${t.whatsapp || 'unknown'}_${t.timestamp_comprobante || t.timestamp || '0'}`;
     if (!groups[groupKey]) {
       groups[groupKey] = {
@@ -225,7 +256,6 @@ function renderValidarPagosTable() {
     }
     groups[groupKey].tickets.push(tNum);
     
-    // Mantener estado 'esperando_validacion' como prioridad visual si existe
     if (t.estado === 'esperando_validacion') {
       groups[groupKey].estado = 'esperando_validacion';
     }
@@ -236,7 +266,6 @@ function renderValidarPagosTable() {
 
   const groupList = Object.values(groups);
   
-  // Ordenar para mostrar primero los 'esperando_validacion'
   groupList.sort((a, b) => {
     if (a.estado === 'esperando_validacion' && b.estado !== 'esperando_validacion') return -1;
     if (a.estado !== 'esperando_validacion' && b.estado === 'esperando_validacion') return 1;
@@ -248,7 +277,7 @@ function renderValidarPagosTable() {
       <tr>
         <td colspan="7" style="text-align:center; color:var(--muted); padding:30px;">
           <i data-lucide="check-circle" style="width:32px; height:32px; color:var(--green); display:block; margin:0 auto 10px;"></i>
-          No hay compras o reservas registradas en este momento.
+          No hay compras o reservas pendientes de validación en este momento.
         </td>
       </tr>
     `;
@@ -260,25 +289,22 @@ function renderValidarPagosTable() {
 
     const totalMonto = g.tickets.length * TICKET_PRICE;
     const cleanPhone = g.whatsapp.replace(/\D/g, '');
-    const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hola ${g.name}, confirmamos la activación de tus boletos en Suerte RD!`)}` : '#';
+    const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hola ${g.name}, confirmamos que tus boletos han sido validados con éxito!`)}` : '#';
 
-    // Formato de badge estado
     let stateBadge = `<span style="background:rgba(255,215,0,0.15); color:var(--gold); padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.8rem;">⏳ Pendiente Validar</span>`;
     if (g.estado === 'pagado') {
       stateBadge = `<span style="background:rgba(0,230,118,0.15); color:var(--green); padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.8rem;">✅ Activo & Pagado</span>`;
     }
 
-    // Comprobante visual
-    let comprobanteBtn = `<span style="color:var(--muted); font-size:0.8rem;">Sin imagen</span>`;
+    let comprobanteBtn = `<span style="color:var(--muted); font-size:0.8rem;">Sin foto</span>`;
     if (g.comprobante && typeof g.comprobante === 'string') {
       comprobanteBtn = `
         <button class="btn btn-cyan" style="padding:4px 10px; font-size:0.75rem;" onclick="openReceiptModal('${g.comprobante}')">
-          <i data-lucide="image"></i> Ver Fotos HD
+          <i data-lucide="image"></i> Ver Foto HD
         </button>
       `;
     }
 
-    // Rango o lista abreviada de números
     const ticketSummary = g.tickets.length > 5 
       ? `#${g.tickets[0]} al #${g.tickets[g.tickets.length - 1]} (${g.tickets.length} boletos)`
       : g.tickets.map(n => `#${n}`).join(', ');
@@ -292,7 +318,7 @@ function renderValidarPagosTable() {
       </td>
       <td>
         <div style="font-weight:700; color:#FFF;">${escapeHtml(g.paquete)}</div>
-        <div style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono); mt-1;">${ticketSummary}</div>
+        <div style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono);">${ticketSummary}</div>
       </td>
       <td style="font-family:var(--font-mono); font-weight:700; color:var(--green);">RD$ ${totalMonto.toLocaleString('es-DO')}</td>
       <td>${comprobanteBtn}</td>
@@ -406,7 +432,6 @@ async function handleCreateTestOrder() {
     btn.disabled = true;
   }
 
-  // Generar 25 números de prueba aleatorios
   const testTickets = [];
   while (testTickets.length < 25) {
     const rand = String(Math.floor(Math.random() * TOTAL_BOLETOS)).padStart(5, '0');
