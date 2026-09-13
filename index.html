@@ -48,13 +48,10 @@
 <!-- Navbar Top -->
 <nav class="navbar">
   <div class="brand" id="navBrandLogo" style="display:flex; align-items:center; gap:10px;">
-    <a href="admin.html" title="Acceso Administrador Directo" style="display:inline-block; cursor:pointer; text-decoration:none;">
-      <img class="brand-logo" src="./suerte_rd_logo.png" alt="Suerte RD Logo" style="transition:transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.08)'; this.style.boxShadow='0 0 15px rgba(0,229,255,0.5)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-    </a>
-    <span onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="cursor:pointer;">Suerte RD</span>
-    <a href="admin.html" class="admin-access-btn" title="Acceso Administrador" style="display:inline-flex; align-items:center; gap:6px; background:rgba(0, 229, 255, 0.12); border:1px solid rgba(0, 229, 255, 0.4); color:#00E5FF; padding:5px 12px; border-radius:20px; font-family:'Outfit', sans-serif; font-size:0.75rem; font-weight:800; text-decoration:none; margin-left:6px; transition:all 0.25s ease;" onmouseover="this.style.background='rgba(0,229,255,0.25)'; this.style.boxShadow='0 0 15px rgba(0,229,255,0.4)'" onmouseout="this.style.background='rgba(0,229,255,0.12)'; this.style.boxShadow='none'">
-      <i data-lucide="shield-check" style="width:14px; height:14px; color:#00E5FF;"></i> Admin
-    </a>
+    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">
+      <img class="brand-logo" id="secretAdminLogoIcon" src="./suerte_rd_logo.png" alt="Suerte RD Logo" style="cursor:pointer; user-select:none; transition:transform 0.15s ease;" title="Suerte RD">
+      <span>Suerte RD</span>
+    </div>
   </div>
   <div class="nav-links-desktop">
     <a href="#" id="navHome" class="nav-link-btn"><i data-lucide="home" style="width:16px;"></i> Inicio</a>
@@ -965,6 +962,35 @@
 </footer>
 
 
+<script>
+  (function() {
+    let secretClicks = 0;
+    let secretTimer = null;
+    document.addEventListener("DOMContentLoaded", function() {
+      const logoIcon = document.getElementById("secretAdminLogoIcon");
+      if (logoIcon) {
+        logoIcon.addEventListener("click", function(e) {
+          e.stopPropagation();
+          secretClicks++;
+          clearTimeout(secretTimer);
+          
+          // Visual click feedback
+          logoIcon.style.transform = "scale(0.85)";
+          setTimeout(() => logoIcon.style.transform = "scale(1)", 150);
+
+          if (secretClicks >= 5) {
+            secretClicks = 0;
+            window.location.href = "admin.html";
+          } else {
+            secretTimer = setTimeout(() => {
+              secretClicks = 0;
+            }, 2500);
+          }
+        });
+      }
+    });
+  })();
+</script>
 <script src="assets/js/app.js?v=20260910_18099838626_v4"></script>
 </body>
 </html>
