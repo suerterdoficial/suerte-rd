@@ -1,397 +1,529 @@
-(async function() {
-  "use strict";
+/**
+ * SUERTE RD - Panel de Administración Oficial
+ * Secciones: 📊 Estadísticas | 🏦 Validar Pagos
+ */
 
-  const API_GET_URL = "/api/get";
-  const API_SET_URL = "/api/set";
-  const TICKETS_KEY = "suerterd:tickets:v2";
-  const CFG_KEY = "suerterd:config:v2:florida5";
+const RAFFLE_ID = 'florida5';
+const TICKET_KEY = `suerterd:tickets:v2:${RAFFLE_ID}`;
+const TICKET_PRICE = 3; // RD$3 por boleto
+const TOTAL_BOLETOS = 100000;
 
-  let adminPin = sessionStorage.getItem('admin_pin') || '';
-  let allTickets = {};
+let currentTickets = {};
+let statsChartInstance = null;
 
-  const $ = (id) => document.getElementById(id);
-
-  // --- API ---
-  async function getStorageItem(key) {
-    try {
-      const res = await fetch(`${API_GET_URL}?key=${encodeURIComponent(key)}`, {
-        headers: { "x-admin-pin": adminPin || "123456" }
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      return data.value;
-    } catch(e) { return null; }
+document.addEventListener('DOMContentLoaded', () => {
+  initAuth();
+  initTabs();
+  initModal();
+  
+  // Refresh button handlers
+  const btnCreateTest = document.getElementById('btnCreateTest');
+  if (btnCreateTest) {
+    btnCreateTest.addEventListener('click', handleCreateTestOrder);
   }
 
-  async function setStorageItem(key, val) {
-    try {
-      const res = await fetch(API_SET_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-pin": adminPin || "123456" },
-        body: JSON.stringify({ key, value: val })
-      });
-      return res.ok;
-    } catch(e) { return false; }
-  }
-
-  function safeParse(val, fallback = null) {
-    if (!val) return fallback;
-    if (typeof val === 'object') return val;
-    try { return JSON.parse(val); } catch(e) { return fallback; }
-  }
-
-  function formatPhone(phoneStr) {
-    if (!phoneStr) return "";
-    let clean = String(phoneStr).replace(/\D/g, "");
-    if (clean.length === 10 && (clean.startsWith("809") || clean.startsWith("829") || clean.startsWith("849"))) {
-      clean = "1" + clean;
+  // Periodic polling every 10 seconds
+  setInterval(() => {
+    if (isAuthenticated()) {
+      loadTicketsData();
     }
-    return clean;
+  }, 10000);
+});
+
+/* ==========================================
+   AUTENTICACIÓN & SESIÓN
+   ========================================== */
+function isAuthenticated() {
+  const pin = sessionStorage.getItem('suerte_admin_pin');
+  return !!pin;
+}
+
+function initAuth() {
+  const overlay = document.getElementById('loginOverlay');
+  const pinInput = document.getElementById('pinInput');
+  const btnSubmit = document.getElementById('btnLoginSubmit');
+  const btnLogout = document.getElementById('btnLogout');
+  const loginErr = document.getElementById('loginErr');
+
+  if (isAuthenticated()) {
+    overlay.style.display = 'none';
+    loadTicketsData();
+  } else {
+    overlay.style.display = 'flex';
   }
 
-  // --- INICIO ---
-  async function init() {
-    await reloadData();
-    setupTabs();
-    setupListeners();
-
-    // Polling cada 4s
-    setInterval(reloadData, 4000);
-  }
-
-  async function reloadData() {
-    const raw = await getStorageItem(TICKETS_KEY);
-    allTickets = safeParse(raw, {});
-    renderAll();
-  }
-
-  function renderAll() {
-    renderMetrics();
-    renderValidarTable();
-    renderBoletosTable();
-  }
-
-  // --- METRICAS ---
-  function renderMetrics() {
-    const soldList = Object.values(allTickets);
-    const pendingList = soldList.filter(t => t && (t.estado === "esperando_validacion" || t.estado === "reservado"));
-    const paidList = soldList.filter(t => t && t.estado === "pagado");
-
-    const totalIncome = paidList.length * 3; // RD$3
-
-    if ($("metricPending")) $("metricPending").textContent = pendingList.length;
-    if ($("metricIncome")) $("metricIncome").textContent = `RD$ ${totalIncome.toLocaleString("es-DO")}`;
-    if ($("metricSold")) $("metricSold").textContent = `${soldList.length.toLocaleString("es-DO")} / 100,000`;
-  }
-
-  // --- TAB 1: VALIDAR COMPRAS ---
-  function renderValidarTable() {
-    const body = $("validarTableBody");
-    if (!body) return;
-
-    // Agrupar compras por cliente y timestamp
-    const groups = {};
-    Object.keys(allTickets).forEach(num => {
-      const t = allTickets[num];
-      if (t && (t.estado === "esperando_validacion" || t.estado === "reservado")) {
-        const key = `${t.timestamp || 0}_${t.whatsapp || 'anon'}`;
-        if (!groups[key]) {
-          groups[key] = {
-            key: key,
-            name: t.name || t.nombre || "Cliente",
-            whatsapp: t.whatsapp || "",
-            comprobante: t.comprobante || null,
-            numbers: []
-          };
-        }
-        groups[key].numbers.push(num);
-      }
-    });
-
-    const groupKeys = Object.keys(groups);
-    body.innerHTML = "";
-
-    if (groupKeys.length === 0) {
-      body.innerHTML = `
-        <tr>
-          <td colspan="7" style="text-align:center; padding:30px; color:var(--muted);">
-            ✅ No hay compras pendientes por validar. ¡Todo está al día!
-          </td>
-        </tr>
-      `;
+  btnSubmit.addEventListener('click', async () => {
+    const pin = pinInput.value.trim();
+    if (!pin) {
+      showLoginError('Ingresa una contraseña');
       return;
     }
 
-    groupKeys.forEach(gKey => {
-      const g = groups[gKey];
-      g.numbers.sort();
-      const numsStr = g.numbers.join(",");
-      const count = g.numbers.length;
-      const amount = count * 3;
+    btnSubmit.innerText = 'Verificando...';
+    btnSubmit.disabled = true;
 
-      let numsDisplay = g.numbers.slice(0, 4).map(n => `#${n}`).join(", ");
-      if (count > 4) numsDisplay += `... y ${count - 4} más`;
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+      const data = await res.json();
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><strong>${escapeHtml(g.name)}</strong></td>
-        <td>
-          <a href="https://wa.me/${formatPhone(g.whatsapp)}" target="_blank" style="color:var(--cyan); text-decoration:none; font-weight:700;">
-            📱 ${g.whatsapp || 'Sin WhatsApp'}
-          </a>
-        </td>
-        <td>
-          <span style="background:rgba(0,229,255,0.15); color:var(--cyan); padding:3px 8px; border-radius:6px; font-weight:700;">
-            🎟️ ${count} Boletos
-          </span>
-          <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">${numsDisplay}</div>
-        </td>
-        <td><strong style="color:var(--green); font-family:var(--font-mono);">RD$ ${amount}</strong></td>
-        <td>
-          ${g.comprobante ? `
-            <img src="${g.comprobante}" class="img-preview-btn" data-img="${g.comprobante}" style="width:55px; height:55px; object-fit:cover; border-radius:8px; border:2px solid var(--cyan); cursor:pointer;" title="Hacer clic para ver foto">
-          ` : '<span style="color:var(--muted); font-size:0.8rem;">Sin foto</span>'}
-        </td>
-        <td><span style="background:rgba(255,215,0,0.15); color:var(--gold); padding:3px 8px; border-radius:6px; font-weight:700; font-size:0.75rem;">Por Validar</span></td>
-        <td>
-          <div style="display:flex; gap:6px;">
-            <button class="btn btn-green btn-approve-group" data-key="${gKey}" style="padding:6px 12px; font-size:0.78rem;">
-              ✓ Aprobar y Activar
-            </button>
-            <button class="btn btn-red btn-reject-group" data-key="${gKey}" style="padding:6px 12px; font-size:0.78rem;">
-              ✗ Rechazar
-            </button>
-          </div>
-        </td>
-      `;
-
-      // Zoom recibo
-      const imgBtn = tr.querySelector(".img-preview-btn");
-      if (imgBtn) {
-        imgBtn.onclick = () => {
-          $("modalImg").src = imgBtn.getAttribute("data-img");
-          $("receiptModal").classList.add("active");
-        };
+      if (data.success || pin === '123456' || pin === 'SoyArte(20251975)' || pin === 'SuerteRD2026') {
+        sessionStorage.setItem('suerte_admin_pin', pin);
+        overlay.style.display = 'none';
+        pinInput.value = '';
+        loginErr.style.display = 'none';
+        loadTicketsData();
+      } else {
+        showLoginError('Contraseña incorrecta');
       }
-
-      // Aprobar / Rechazar
-      tr.querySelector(".btn-approve-group").onclick = () => approveGroup(gKey);
-      tr.querySelector(".btn-reject-group").onclick = () => rejectGroup(gKey);
-
-      body.appendChild(tr);
-    });
-  }
-
-  async function approveGroup(gKey) {
-    const groupNums = [];
-    let clientName = "Cliente";
-    let clientPhone = "";
-
-    Object.keys(allTickets).forEach(num => {
-      const t = allTickets[num];
-      const key = `${t.timestamp || 0}_${t.whatsapp || 'anon'}`;
-      if (key === gKey) {
-        allTickets[num].estado = "pagado";
-        groupNums.push(num);
-        clientName = t.name || t.nombre || clientName;
-        clientPhone = t.whatsapp || clientPhone;
+    } catch (e) {
+      // Fallback network/offline verify check
+      if (pin === '123456' || pin === 'SoyArte(20251975)' || pin === 'SuerteRD2026') {
+        sessionStorage.setItem('suerte_admin_pin', pin);
+        overlay.style.display = 'none';
+        pinInput.value = '';
+        loginErr.style.display = 'none';
+        loadTicketsData();
+      } else {
+        showLoginError('Error al conectar con el servidor');
       }
-    });
-
-    if (groupNums.length === 0) return;
-
-    await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
-
-    // Abrir WhatsApp con mensaje de confirmación
-    const sampleNums = groupNums.slice(0, 5).map(n => `#${n}`).join(", ");
-    const textMsg = 
-`✅ *SUERTE RD* | *CONFIRMACIÓN DE BOLETOS ACTIVADOS* ✅
-═════════════════════════════
-🎉 *¡TU PAGO HA SIDO VALIDADO CON ÉXITO!* 🎉
-
-👤 *CLIENTE:* ${clientName}
-🎟️ *BOLETOS ACTIVOS (${groupNums.length}):* ${sampleNums}
-
-🟢 *ESTADO:* *PAGADOS Y ACTIVOS EN RIFA* 🟢
-═════════════════════════════
-✨ ¡Muchas gracias por tu compra en Suerte RD! Te deseamos la mayor de las suertes. 🍀🔥`;
-
-    if (clientPhone) {
-      window.open(`https://wa.me/${formatPhone(clientPhone)}?text=${encodeURIComponent(textMsg)}`, "_blank");
+    } finally {
+      btnSubmit.innerText = 'Entrar al Admin';
+      btnSubmit.disabled = false;
     }
+  });
 
-    await reloadData();
+  pinInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') btnSubmit.click();
+  });
+
+  btnLogout.addEventListener('click', () => {
+    sessionStorage.removeItem('suerte_admin_pin');
+    overlay.style.display = 'flex';
+  });
+}
+
+function showLoginError(msg) {
+  const loginErr = document.getElementById('loginErr');
+  if (loginErr) {
+    loginErr.innerText = msg;
+    loginErr.style.display = 'block';
   }
+}
 
-  async function rejectGroup(gKey) {
-    const reason = prompt("Motivo del rechazo:", "Comprobante ilegible o pago no recibido");
-    if (reason === null) return;
+/* ==========================================
+   NAVEGACIÓN DE PESTAÑAS (TABS)
+   ========================================== */
+function initTabs() {
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const panes = document.querySelectorAll('.pane');
 
-    let clientPhone = "";
-    Object.keys(allTickets).forEach(num => {
-      const t = allTickets[num];
-      const key = `${t.timestamp || 0}_${t.whatsapp || 'anon'}`;
-      if (key === gKey) {
-        clientPhone = t.whatsapp;
-        delete allTickets[num];
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-tab');
+
+      tabBtns.forEach(b => b.classList.remove('active'));
+      panes.forEach(p => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      const targetPane = document.getElementById(targetId);
+      if (targetPane) targetPane.classList.add('active');
+
+      if (targetId === 'tabEstadisticas') {
+        renderChart();
       }
     });
+  });
+}
 
-    await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
-
-    if (clientPhone) {
-      const textMsg = `❌ *SUERTE RD* | Tu orden de boletos ha sido rechazada. Motivo: ${reason}. Por favor contacta con soporte.`;
-      window.open(`https://wa.me/${formatPhone(clientPhone)}?text=${encodeURIComponent(textMsg)}`, "_blank");
-    }
-
-    await reloadData();
-  }
-
-  async function createTestOrder() {
-    const testNums = ["00001", "00002", "00003", "00004", "00005", "00006", "00007", "00008", "00009", "00010"];
-    const timestamp = Date.now();
-
-    testNums.forEach(num => {
-      allTickets[num] = {
-        name: "Juan Pérez (Cliente de Prueba)",
-        whatsapp: "18099838626",
-        estado: "esperando_validacion",
-        comprobante: "./assets/suerte_rd_iphone17_banner.png",
-        timestamp: timestamp
-      };
+/* ==========================================
+   CARGA DE DATOS & METRICAS DE VERCEL KV
+   ========================================== */
+async function loadTicketsData() {
+  const pin = sessionStorage.getItem('suerte_admin_pin') || '';
+  try {
+    const res = await fetch(`/api/get?key=${TICKET_KEY}`, {
+      headers: { 'x-admin-pin': pin }
     });
+    const data = await res.json();
 
-    await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
-    await reloadData();
-  }
-
-  // --- TAB 2: BOLETOS ---
-  function renderBoletosTable() {
-    const body = $("boletosTableBody");
-    if (!body) return;
-
-    const query = $("ticketSearch") ? $("ticketSearch").value.trim().toLowerCase() : "";
-    const ticketNums = Object.keys(allTickets).sort();
-
-    body.innerHTML = "";
-    let count = 0;
-
-    for (const num of ticketNums) {
-      const t = allTickets[num];
-      const name = t.name || t.nombre || "";
-      const phone = t.whatsapp || "";
-      const state = t.estado || "reservado";
-
-      if (query && !num.includes(query) && !name.toLowerCase().includes(query) && !phone.includes(query)) continue;
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td style="font-family:var(--font-mono); font-weight:700; color:var(--cyan);">#${num}</td>
-        <td><strong>${escapeHtml(name || 'Sin nombre')}</strong></td>
-        <td>${phone ? `<a href="https://wa.me/${formatPhone(phone)}" target="_blank" style="color:var(--cyan); text-decoration:none;">${phone}</a>` : 'N/A'}</td>
-        <td>
-          <span style="background:${state === 'pagado' ? 'rgba(0,230,118,0.15)' : 'rgba(255,215,0,0.15)'}; color:${state === 'pagado' ? 'var(--green)' : 'var(--gold)'}; padding:3px 8px; border-radius:6px; font-weight:700; font-size:0.75rem;">
-            ${state === 'pagado' ? 'Pagado' : 'Reservado'}
-          </span>
-        </td>
-        <td>
-          <div style="display:flex; gap:6px;">
-            <button class="btn btn-green btn-pay" data-num="${num}" style="padding:4px 8px; font-size:0.75rem;">
-              ${state === 'pagado' ? 'Marcar Reservado' : 'Marcar Pagado'}
-            </button>
-            <button class="btn btn-red btn-del" data-num="${num}" style="padding:4px 8px; font-size:0.75rem;">
-              Liberar
-            </button>
-          </div>
-        </td>
-      `;
-
-      tr.querySelector(".btn-pay").onclick = async () => {
-        allTickets[num].estado = (state === "pagado") ? "reservado" : "pagado";
-        await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
-        reloadData();
-      };
-
-      tr.querySelector(".btn-del").onclick = async () => {
-        delete allTickets[num];
-        await setStorageItem(TICKETS_KEY, JSON.stringify(allTickets));
-        reloadData();
-      };
-
-      body.appendChild(tr);
-      count++;
-      if (!query && count >= 200) break;
-    }
-
-    if (count === 0) {
-      body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--muted);">No hay boletos que coincidan.</td></tr>`;
-    }
-  }
-
-  // --- TABS Y LISTENERS ---
-  function setupTabs() {
-    const btns = document.querySelectorAll(".tab-btn");
-    btns.forEach(btn => {
-      btn.onclick = () => {
-        btns.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-
-        const target = btn.getAttribute("data-tab");
-        document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
-        if ($(target)) $(target).classList.add("active");
-      };
-    });
-  }
-
-  function setupListeners() {
-    safeAddListener("btnCreateTest", "click", createTestOrder);
-    safeAddListener("ticketSearch", "input", renderBoletosTable);
-
-    safeAddListener("btnSaveConfig", "click", async () => {
-      const title = $("cfgTitle").value.trim();
-      const prize = $("cfgPrize").value.trim();
-      await setStorageItem(CFG_KEY, JSON.stringify({ id: "florida5", title, prize, price: "RD$3", total: 100000 }));
-      alert("¡Configuración guardada!");
-    });
-
-    safeAddListener("btnLogout", "click", () => {
-      sessionStorage.removeItem("admin_pin");
-      window.location.reload();
-    });
-  }
-
-  // --- AUTH LOGIN ---
-  function checkAuth() {
-    const overlay = $("loginOverlay");
-    const pin = sessionStorage.getItem("admin_pin");
-
-    if (pin === "123456" || pin === "SoyArte(20251975)" || pin === "SuerteRD2026") {
-      adminPin = pin;
-      if (overlay) overlay.style.display = "none";
-      init();
+    if (data && data.value) {
+      currentTickets = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
     } else {
-      if (overlay) overlay.style.display = "flex";
-      const submitBtn = $("btnLoginSubmit");
-      const pinInput = $("pinInput");
+      currentTickets = {};
+    }
 
-      const doLogin = () => {
-        const val = pinInput.value.trim();
-        if (val === "123456" || val === "SoyArte(20251975)" || val === "SuerteRD2026") {
-          adminPin = val;
-          sessionStorage.setItem("admin_pin", val);
-          if (overlay) overlay.style.display = "none";
-          init();
-        } else {
-          $("loginErr").style.display = "block";
-          $("loginErr").textContent = "Contraseña de seguridad incorrecta.";
-        }
+    updateMetricsAndTables();
+  } catch (e) {
+    console.error('Error al cargar datos de boletos:', e);
+  }
+}
+
+function updateMetricsAndTables() {
+  const ticketEntries = Object.entries(currentTickets);
+  let totalPaidTickets = 0;
+  let totalPendingTickets = 0;
+  let totalIncome = 0;
+
+  ticketEntries.forEach(([num, t]) => {
+    if (t.estado === 'pagado') {
+      totalPaidTickets++;
+      totalIncome += TICKET_PRICE;
+    } else if (t.estado === 'esperando_validacion') {
+      totalPendingTickets++;
+    }
+  });
+
+  // Actualizar Elementos DOM Métricas
+  const metricIncome = document.getElementById('metricIncome');
+  const metricSold = document.getElementById('metricSold');
+  const metricPending = document.getElementById('metricPending');
+
+  if (metricIncome) metricIncome.innerText = `RD$ ${totalIncome.toLocaleString('es-DO')}`;
+  if (metricSold) metricSold.innerText = `${totalPaidTickets.toLocaleString('es-DO')} / ${TOTAL_BOLETOS.toLocaleString('es-DO')}`;
+  if (metricPending) metricPending.innerText = `${totalPendingTickets.toLocaleString('es-DO')}`;
+
+  // Actualizar Tabla Validar Pagos
+  renderValidarPagosTable();
+
+  // Actualizar Gráfico
+  renderChart();
+
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+}
+
+/* ==========================================
+   TABLA: VALIDAR PAGOS Y ACTIVAR
+   ========================================== */
+function renderValidarPagosTable() {
+  const tbody = document.getElementById('validarTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+
+  // Agrupar boletos por cliente y comprobante
+  const groups = {};
+
+  Object.entries(currentTickets).forEach(([tNum, t]) => {
+    // Un solo grupo si pertenecen a la misma transacción/cliente
+    const groupKey = `${t.whatsapp || 'unknown'}_${t.timestamp_comprobante || t.timestamp || '0'}`;
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        name: t.name || t.nombre || 'Cliente',
+        whatsapp: t.whatsapp || '',
+        paquete: t.paquete || `${t.estado === 'esperando_validacion' ? 'Pago Pendiente' : 'Boleto'}`,
+        tickets: [],
+        comprobante: t.comprobante || null,
+        estado: t.estado || 'reservado',
+        timestamp: t.timestamp_comprobante || t.timestamp || Date.now()
       };
+    }
+    groups[groupKey].tickets.push(tNum);
+    
+    // Mantener estado 'esperando_validacion' como prioridad visual si existe
+    if (t.estado === 'esperando_validacion') {
+      groups[groupKey].estado = 'esperando_validacion';
+    }
+    if (t.comprobante && !groups[groupKey].comprobante) {
+      groups[groupKey].comprobante = t.comprobante;
+    }
+  });
 
-      if (submitBtn) submitBtn.onclick = doLogin;
-      if (pinInput) pinInput.onkeydown = (e) => { if (e.key === "Enter") doLogin(); };
+  const groupList = Object.values(groups);
+  
+  // Ordenar para mostrar primero los 'esperando_validacion'
+  groupList.sort((a, b) => {
+    if (a.estado === 'esperando_validacion' && b.estado !== 'esperando_validacion') return -1;
+    if (a.estado !== 'esperando_validacion' && b.estado === 'esperando_validacion') return 1;
+    return b.timestamp - a.timestamp;
+  });
+
+  if (groupList.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center; color:var(--muted); padding:30px;">
+          <i data-lucide="check-circle" style="width:32px; height:32px; color:var(--green); display:block; margin:0 auto 10px;"></i>
+          No hay compras o reservas registradas en este momento.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  groupList.forEach((g) => {
+    const tr = document.createElement('tr');
+
+    const totalMonto = g.tickets.length * TICKET_PRICE;
+    const cleanPhone = g.whatsapp.replace(/\D/g, '');
+    const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hola ${g.name}, confirmamos la activación de tus boletos en Suerte RD!`)}` : '#';
+
+    // Formato de badge estado
+    let stateBadge = `<span style="background:rgba(255,215,0,0.15); color:var(--gold); padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.8rem;">⏳ Pendiente Validar</span>`;
+    if (g.estado === 'pagado') {
+      stateBadge = `<span style="background:rgba(0,230,118,0.15); color:var(--green); padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.8rem;">✅ Activo & Pagado</span>`;
+    }
+
+    // Comprobante visual
+    let comprobanteBtn = `<span style="color:var(--muted); font-size:0.8rem;">Sin imagen</span>`;
+    if (g.comprobante && typeof g.comprobante === 'string') {
+      comprobanteBtn = `
+        <button class="btn btn-cyan" style="padding:4px 10px; font-size:0.75rem;" onclick="openReceiptModal('${g.comprobante}')">
+          <i data-lucide="image"></i> Ver Fotos HD
+        </button>
+      `;
+    }
+
+    // Rango o lista abreviada de números
+    const ticketSummary = g.tickets.length > 5 
+      ? `#${g.tickets[0]} al #${g.tickets[g.tickets.length - 1]} (${g.tickets.length} boletos)`
+      : g.tickets.map(n => `#${n}`).join(', ');
+
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(g.name)}</strong></td>
+      <td>
+        <a href="${waLink}" target="_blank" style="color:var(--green); text-decoration:none; font-family:var(--font-mono); font-weight:700;">
+          📱 ${escapeHtml(g.whatsapp)}
+        </a>
+      </td>
+      <td>
+        <div style="font-weight:700; color:#FFF;">${escapeHtml(g.paquete)}</div>
+        <div style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono); mt-1;">${ticketSummary}</div>
+      </td>
+      <td style="font-family:var(--font-mono); font-weight:700; color:var(--green);">RD$ ${totalMonto.toLocaleString('es-DO')}</td>
+      <td>${comprobanteBtn}</td>
+      <td>${stateBadge}</td>
+      <td>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          ${g.estado !== 'pagado' ? `
+            <button class="btn btn-green" style="padding:6px 12px; font-size:0.8rem;" onclick="approveGroup('${encodeURIComponent(JSON.stringify(g.tickets))}', '${escapeHtml(g.name)}', '${g.whatsapp}')">
+              <i data-lucide="check-square"></i> Aprobar y Activar
+            </button>
+          ` : `
+            <a href="${waLink}" target="_blank" class="btn btn-cyan" style="padding:6px 12px; font-size:0.8rem;">
+              <i data-lucide="send"></i> Notificar Cliente
+            </a>
+          `}
+          <button class="btn btn-red" style="padding:6px 10px; font-size:0.8rem;" onclick="rejectGroup('${encodeURIComponent(JSON.stringify(g.tickets))}')">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+/* ==========================================
+   ACCIONES: APROBAR & RECHAZAR PAGOS
+   ========================================== */
+async function approveGroup(encodedTickets, name, whatsapp) {
+  const tickets = JSON.parse(decodeURIComponent(encodedTickets));
+  const pin = sessionStorage.getItem('suerte_admin_pin') || '';
+
+  tickets.forEach(num => {
+    if (currentTickets[num]) {
+      currentTickets[num].estado = 'pagado';
+      currentTickets[num].timestamp_pago = Date.now();
+    }
+  });
+
+  try {
+    const res = await fetch('/api/set', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-pin': pin
+      },
+      body: JSON.stringify({
+        key: TICKET_KEY,
+        value: JSON.stringify(currentTickets)
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      updateMetricsAndTables();
+      const cleanPhone = whatsapp.replace(/\D/g, '');
+      const msg = `🎉 ¡Felicidades ${name}! Tu pago de ${tickets.length} boleto(s) para el Sorteo del iPhone 17 Pro Max ha sido VALIDADO Y ACTIVADO con éxito en Suerte RD! 🍀 Boletos: ${tickets.join(', ')}`;
+      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank');
+    } else {
+      alert('Error al aprobar: ' + (data.error || 'Respuesta no válida del servidor'));
+    }
+  } catch (e) {
+    alert('Error al conectar con la base de datos');
+  }
+}
+
+async function rejectGroup(encodedTickets) {
+  if (!confirm('¿Estás seguro de rechazar y liberar estos boletos?')) return;
+
+  const tickets = JSON.parse(decodeURIComponent(encodedTickets));
+  const pin = sessionStorage.getItem('suerte_admin_pin') || '';
+
+  tickets.forEach(num => {
+    delete currentTickets[num];
+  });
+
+  try {
+    const res = await fetch('/api/set', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-pin': pin
+      },
+      body: JSON.stringify({
+        key: TICKET_KEY,
+        value: JSON.stringify(currentTickets)
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      updateMetricsAndTables();
+    } else {
+      alert('Error al rechazar boletos');
+    }
+  } catch (e) {
+    alert('Error de conexión al servidor');
+  }
+}
+
+/* ==========================================
+   CREAR COMPRA DE PRUEBA
+   ========================================== */
+async function handleCreateTestOrder() {
+  const btn = document.getElementById('btnCreateTest');
+  if (btn) {
+    btn.innerText = 'Creando...';
+    btn.disabled = true;
+  }
+
+  // Generar 25 números de prueba aleatorios
+  const testTickets = [];
+  while (testTickets.length < 25) {
+    const rand = String(Math.floor(Math.random() * TOTAL_BOLETOS)).padStart(5, '0');
+    if (!currentTickets[rand] && !testTickets.includes(rand)) {
+      testTickets.push(rand);
     }
   }
 
-  checkAuth();
+  const testPayload = {
+    raffleId: RAFFLE_ID,
+    name: 'Cliente de Prueba Admin',
+    whatsapp: '18099838626',
+    loteria: 'Pick 5 Florida',
+    tickets: testTickets,
+    packageLabel: 'Paquete Oro (25 Boletos)',
+    comprobante: './assets/suerte_rd_iphone17_banner.png',
+    estado: 'esperando_validacion'
+  };
 
-})();
+  try {
+    const res = await fetch('/api/tickets/reserve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testPayload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      await loadTicketsData();
+    } else {
+      alert('Error al crear compra de prueba: ' + (data.error || ''));
+    }
+  } catch (e) {
+    alert('Error al generar orden de prueba');
+  } finally {
+    if (btn) {
+      btn.innerHTML = `<i data-lucide="plus-circle"></i> Crear Compra de Prueba`;
+      btn.disabled = false;
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
+}
+
+/* ==========================================
+   MODAL COMPROBANTE HD
+   ========================================== */
+function initModal() {
+  const modal = document.getElementById('receiptModal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+  }
+}
+
+function openReceiptModal(imgUrl) {
+  const modal = document.getElementById('receiptModal');
+  const img = document.getElementById('modalImg');
+  if (modal && img) {
+    img.src = imgUrl;
+    modal.classList.add('active');
+  }
+}
+
+/* ==========================================
+   GRÁFICO: CHART.JS (DOUGHNUT)
+   ========================================== */
+function renderChart() {
+  const ctx = document.getElementById('statsChart');
+  if (!ctx) return;
+
+  let paidCount = 0;
+  let pendingCount = 0;
+
+  Object.values(currentTickets).forEach(t => {
+    if (t.estado === 'pagado') paidCount++;
+    else if (t.estado === 'esperando_validacion') pendingCount++;
+  });
+
+  const availableCount = Math.max(0, TOTAL_BOLETOS - (paidCount + pendingCount));
+
+  if (statsChartInstance) {
+    statsChartInstance.destroy();
+  }
+
+  statsChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Boletos Activos (Pagados)', 'Pendientes de Validación', 'Boletos Libres Disponibles'],
+      datasets: [{
+        data: [paidCount, pendingCount, availableCount],
+        backgroundColor: ['#00E676', '#FFD700', '#122836'],
+        borderColor: '#071219',
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#94A3B8',
+            font: { family: 'Outfit', size: 13, weight: '700' }
+          }
+        }
+      }
+    }
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
