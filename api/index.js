@@ -326,6 +326,16 @@ app.get(['/api/tickets', '/tickets'], async (req, res) => {
   } catch (e) {
     tickets = {};
   }
+
+  // Vincular comprobante desde db.receipts a los boletos si no lo tienen de forma directa
+  if (db.receipts && typeof db.receipts === 'object') {
+    Object.values(tickets).forEach(t => {
+      if (t && t.groupKey && db.receipts[t.groupKey] && (!t.comprobante || t.comprobante.length < 20 || t.comprobante.includes('suerte_rd_iphone17_banner'))) {
+        t.comprobante = db.receipts[t.groupKey];
+      }
+    });
+  }
+
   res.json({ success: true, value: tickets });
 });
 
@@ -346,10 +356,10 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
   const newStatus = estado || 'esperando_validacion';
   const uniqueGroupKey = groupKey || `order_${now}_${Math.random().toString(36).substring(2, 7)}`;
 
-  // Find any existing receipt image for this group or ticket
+  // Encontrar comprobante existente para este grupo o boletos
   const firstTicketNum = tickets[0];
   let groupExistingComp = (ticketsObj[firstTicketNum] && ticketsObj[firstTicketNum].comprobante) ? ticketsObj[firstTicketNum].comprobante : '';
-  if (!groupExistingComp || groupExistingComp.length < 20) {
+  if (!groupExistingComp || groupExistingComp.length < 20 || groupExistingComp.includes('suerte_rd_iphone17_banner')) {
     for (const tNum of tickets) {
       if (ticketsObj[tNum] && ticketsObj[tNum].comprobante && ticketsObj[tNum].comprobante.length > 20 && !ticketsObj[tNum].comprobante.includes('suerte_rd_iphone17_banner')) {
         groupExistingComp = ticketsObj[tNum].comprobante;
@@ -358,38 +368,50 @@ app.post(['/api/tickets/reserve', '/tickets/reserve'], async (req, res) => {
     }
   }
 
+  if (!groupExistingComp && db.receipts && db.receipts[uniqueGroupKey]) {
+    groupExistingComp = db.receipts[uniqueGroupKey];
+  }
+
   const finalComp = (comprobante && typeof comprobante === 'string' && comprobante.length > 20 && !comprobante.includes('suerte_rd_iphone17_banner'))
     ? comprobante
     : groupExistingComp;
 
-  tickets.forEach((tNum, index) => {
-    // Only store full base64 image on the primary ticket (index 0) to avoid duplicating 100KB x 500 = 50MB payload
-    const ticketComp = (index === 0) ? finalComp : '';
+  tickets.forEach((tNum) => {
+    const existingFecha = (ticketsObj[tNum] && ticketsObj[tNum].fecha)
+      ? ticketsObj[tNum].fecha
+      : (ticketsObj[tNum] && ticketsObj[tNum].timestamp_reserva)
+        ? new Date(ticketsObj[tNum].timestamp_reserva).toISOString()
+        : new Date(now).toISOString();
+
+    const existingResTime = (ticketsObj[tNum] && ticketsObj[tNum].timestamp_reserva)
+      ? ticketsObj[tNum].timestamp_reserva
+      : now;
 
     ticketsObj[tNum] = {
       name: name,
       whatsapp: whatsapp,
       packageLabel: packageLabel || (ticketsObj[tNum] && ticketsObj[tNum].packageLabel) || 'Personalizado',
       estado: newStatus,
-      comprobante: ticketComp,
-      fecha: (ticketsObj[tNum] && ticketsObj[tNum].fecha) ? ticketsObj[tNum].fecha : new Date(now).toISOString(),
-      timestamp_reserva: now,
-      timestamp_pago: newStatus === 'pagado' ? now : null,
+      comprobante: finalComp || '',
+      fecha: existingFecha,
+      timestamp_reserva: existingResTime,
+      timestamp_pago: newStatus === 'pagado' ? ((ticketsObj[tNum] && ticketsObj[tNum].timestamp_pago) || now) : null,
       groupKey: uniqueGroupKey,
       orderId: uniqueGroupKey
     };
   });
+
+  // Guardar comprobante en el almacén db.receipts por grupo
+  if (finalComp && finalComp.length > 20) {
+    if (!db.receipts) db.receipts = {};
+    db.receipts[uniqueGroupKey] = finalComp;
+  }
 
   // Auto-trigger countdown if 80% sold
   checkAutoCountdown(db, raffleId, ticketsObj);
 
   const newValueStr = JSON.stringify(ticketsObj);
   db[key] = newValueStr;
-
-  if (finalComp && finalComp.length > 20) {
-    if (!db.receipts) db.receipts = {};
-    db.receipts[uniqueGroupKey] = finalComp;
-  }
 
   // Registrar notificación
   if (!db.notifications) db.notifications = [];
@@ -425,11 +447,24 @@ app.post(['/api/tickets/update-status', '/tickets/update-status'], async (req, r
       delete ticketsObj[tNum];
     } else {
       if (!ticketsObj[tNum]) {
-        ticketsObj[tNum] = { name: 'Cliente', whatsapp: '', estado: newStatus, fecha: new Date(now).toISOString() };
+        ticketsObj[tNum] = {
+          name: 'Cliente',
+          whatsapp: '',
+          estado: newStatus,
+          fecha: new Date(now).toISOString(),
+          timestamp_reserva: now,
+          groupKey: `order_${now}_${tNum}`
+        };
       }
       ticketsObj[tNum].estado = newStatus;
       if (newStatus === 'pagado') {
-        ticketsObj[tNum].timestamp_pago = now;
+        ticketsObj[tNum].timestamp_pago = ticketsObj[tNum].timestamp_pago || now;
+      }
+      if (!ticketsObj[tNum].fecha) {
+        ticketsObj[tNum].fecha = new Date(now).toISOString();
+      }
+      if (ticketsObj[tNum].groupKey && db.receipts && db.receipts[ticketsObj[tNum].groupKey] && !ticketsObj[tNum].comprobante) {
+        ticketsObj[tNum].comprobante = db.receipts[ticketsObj[tNum].groupKey];
       }
     }
   });

@@ -102,6 +102,15 @@ function isAuthenticated() {
   return true;
 }
 
+let adminPollingTimer = null;
+function startAutoPolling() {
+  if (!adminPollingTimer) {
+    adminPollingTimer = setInterval(() => {
+      loadTicketsData(true);
+    }, 5000);
+  }
+}
+
 function initAuth() {
   const overlay = document.getElementById('loginOverlay');
   const pinInput = document.getElementById('pinInput');
@@ -111,6 +120,7 @@ function initAuth() {
 
   overlay.style.display = 'none';
   loadTicketsData();
+  startAutoPolling();
 
   if (pinInput) {
     pinInput.addEventListener('keypress', (e) => {
@@ -142,6 +152,7 @@ function initAuth() {
         pinInput.value = '';
         loginErr.style.display = 'none';
         loadTicketsData();
+        startAutoPolling();
       } else {
         showLoginError('Contraseña incorrecta');
       }
@@ -152,6 +163,7 @@ function initAuth() {
         pinInput.value = '';
         loginErr.style.display = 'none';
         loadTicketsData();
+        startAutoPolling();
       } else {
         showLoginError('Error al conectar con el servidor');
       }
@@ -321,13 +333,25 @@ function initFiltersAndSearch() {
 /* ==========================================
    CARGA & RENDERIZADO DE BOLETOS
    ========================================== */
-async function loadTicketsData() {
+async function loadTicketsData(isSilent = false) {
   try {
-    const res = await fetch(`/api/tickets?raffleId=${currentRaffleId}`);
+    const res = await fetch(`/api/tickets?raffleId=${currentRaffleId}&_t=${Date.now()}`);
     let serverTickets = {};
     if (res.ok) {
       const data = await res.json();
       serverTickets = data.value || {};
+    }
+
+    // Fusionar con respaldo local si existe para no perder compras offline
+    let localBackup = {};
+    try {
+      localBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
+    } catch(e) {}
+
+    for (const tNum in localBackup) {
+      if (!serverTickets[tNum] && localBackup[tNum]) {
+        serverTickets[tNum] = localBackup[tNum];
+      }
     }
 
     currentTickets = serverTickets;
@@ -340,18 +364,20 @@ async function loadTicketsData() {
       renderChart();
     }
   } catch (e) {
-    console.error('Error cargando datos de boletos:', e);
+    if (!isSilent) console.error('Error cargando datos de boletos:', e);
   }
 }
 
 function getGroupKeyForTicket(t) {
   if (t.groupKey) return t.groupKey;
+  if (t.orderId) return t.orderId;
   const cleanPhone = (t.whatsapp || t.phone || '').replace(/\D/g, '');
-  const phoneKey = cleanPhone || (t.name || 'anon').toLowerCase().replace(/\s+/g, '');
+  const phoneKey = cleanPhone || (t.name || t.nombre || 'anon').toLowerCase().replace(/\s+/g, '');
   
   let timeKey = '0';
-  if (t.fecha) {
-    const d = new Date(t.fecha);
+  const rawDate = t.fecha || t.timestamp_reserva || t.timestamp;
+  if (rawDate) {
+    const d = new Date(rawDate);
     if (!isNaN(d.getTime())) {
       timeKey = Math.floor(d.getTime() / (10 * 60 * 1000)); // ventanas de 10 minutos
     }
@@ -443,6 +469,17 @@ function groupTicketsByOrder(ticketsObj) {
     if (!t) return;
     const gKey = getGroupKeyForTicket(t);
 
+    let ticketDateIso = t.fecha;
+    if (!ticketDateIso && t.timestamp_reserva) {
+      ticketDateIso = new Date(t.timestamp_reserva).toISOString();
+    }
+    if (!ticketDateIso && t.timestamp) {
+      ticketDateIso = new Date(t.timestamp).toISOString();
+    }
+    if (!ticketDateIso) {
+      ticketDateIso = new Date().toISOString();
+    }
+
     if (!groupsMap[gKey]) {
       groupsMap[gKey] = {
         groupKey: gKey,
@@ -451,13 +488,18 @@ function groupTicketsByOrder(ticketsObj) {
         paquete: t.packageLabel || t.paquete || 'Personalizado',
         estado: t.estado || 'reservado',
         comprobante: t.comprobante || '',
-        fecha: t.fecha || new Date().toISOString(),
+        fecha: ticketDateIso,
         tickets: []
       };
     }
 
     groupsMap[gKey].tickets.push(numStr);
     
+    // Mantener la fecha más antigua de reserva si difieren
+    if (new Date(ticketDateIso) < new Date(groupsMap[gKey].fecha)) {
+      groupsMap[gKey].fecha = ticketDateIso;
+    }
+
     if (t.estado === 'esperando_validacion') groupsMap[gKey].estado = 'esperando_validacion';
     else if (t.estado === 'pagado' && groupsMap[gKey].estado !== 'esperando_validacion') groupsMap[gKey].estado = 'pagado';
     if (t.comprobante && typeof t.comprobante === 'string' && t.comprobante.length > 20 && !t.comprobante.includes('suerte_rd_iphone17_banner')) {
@@ -1095,6 +1137,23 @@ function openReceiptModal(groupData) {
     if (ticketsListEl && groupData.tickets) {
       ticketsListEl.innerText = groupData.tickets.map(t => `#${t}`).join(', ');
     }
+
+    // Poblar vista de recibo digital pass cuando no hay foto de transferencia adjunta
+    const formattedDate = groupData.fecha ? new Date(groupData.fecha).toLocaleDateString("es-DO", { day: 'numeric', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString("es-DO");
+    const totalAmount = (groupData.tickets ? groupData.tickets.length : 0) * TICKET_PRICE;
+    const barcodeText = groupData.groupKey || `SRD-${groupData.tickets ? groupData.tickets[0] : '00000'}`;
+
+    if (document.getElementById('digitalReceiptDate')) document.getElementById('digitalReceiptDate').innerText = formattedDate;
+    if (document.getElementById('digitalReceiptName')) document.getElementById('digitalReceiptName').innerText = groupData.name || 'Cliente';
+    if (document.getElementById('digitalReceiptPhone')) document.getElementById('digitalReceiptPhone').innerText = groupData.whatsapp || '-';
+    if (document.getElementById('digitalReceiptPkg')) document.getElementById('digitalReceiptPkg').innerText = groupData.paquete || '-';
+    if (document.getElementById('digitalReceiptAmount')) document.getElementById('digitalReceiptAmount').innerText = `RD$ ${totalAmount.toLocaleString()}`;
+    if (document.getElementById('digitalReceiptCount')) document.getElementById('digitalReceiptCount').innerText = groupData.tickets ? groupData.tickets.length : '0';
+    if (document.getElementById('digitalReceiptTicketsChips')) {
+      document.getElementById('digitalReceiptTicketsChips').innerText = groupData.tickets ? groupData.tickets.map(t => `#${t}`).join(', ') : '-';
+    }
+    if (document.getElementById('digitalReceiptBarcode')) document.getElementById('digitalReceiptBarcode').innerText = barcodeText;
+
     if (approveBtnEl) {
       if (groupData.estado === 'pagado') {
         approveBtnEl.style.display = 'none';

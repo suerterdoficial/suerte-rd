@@ -2173,6 +2173,9 @@
       return;
     }
     
+    // Generar un groupKey único para esta nueva sesión de compra
+    window.activeCheckoutGroupKey = `order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    
     const displayEl = $("reserveConfirmNumberDisplay");
     const rawString = cart.join(", ");
     displayEl.setAttribute("data-tickets", rawString);
@@ -2235,9 +2238,11 @@
 
     const currentReceiptImg = window.selectedPaymentReceiptBase64 || selectedPaymentReceiptBase64 || "";
 
+    const nowIso = new Date(timestamp).toISOString();
+
     checkedOutCart.forEach((num, index) => {
       const existingComp = (latestTickets[num] && latestTickets[num].comprobante) ? latestTickets[num].comprobante : '';
-      const finalComp = (currentReceiptImg && currentReceiptImg.length > 20) ? currentReceiptImg : (index === 0 ? existingComp : '');
+      const finalComp = (currentReceiptImg && currentReceiptImg.length > 20) ? currentReceiptImg : existingComp;
 
       latestTickets[num] = {
         name,
@@ -2247,8 +2252,10 @@
         paquete: detectedPkgLabel,
         packageLabel: detectedPkgLabel,
         estado: "esperando_validacion",
-        comprobante: (index === 0) ? finalComp : '',
+        comprobante: finalComp,
+        fecha: nowIso,
         timestamp: timestamp,
+        timestamp_reserva: timestamp,
         groupKey: uniqueGroupKey
       };
     });
@@ -2262,10 +2269,9 @@
     // Save purchase order to shared localStorage backup for instant Admin sync
     try {
       let currentBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
-      const nowIso = new Date().toISOString();
       checkedOutCart.forEach((tNum, index) => {
         const existingComp = (currentBackup[tNum] && currentBackup[tNum].comprobante) ? currentBackup[tNum].comprobante : '';
-        const finalComp = (currentReceiptImg && currentReceiptImg.length > 20) ? currentReceiptImg : (index === 0 ? existingComp : '');
+        const finalComp = (currentReceiptImg && currentReceiptImg.length > 20) ? currentReceiptImg : existingComp;
 
         currentBackup[tNum] = {
           name: name,
@@ -2276,9 +2282,10 @@
           paquete: detectedPkgLabel,
           packageLabel: detectedPkgLabel,
           estado: 'esperando_validacion',
-          comprobante: (index === 0) ? finalComp : '',
+          comprobante: finalComp,
           fecha: nowIso,
           timestamp: timestamp,
+          timestamp_reserva: timestamp,
           groupKey: uniqueGroupKey
         };
       });
@@ -2553,6 +2560,7 @@ ${formattedNumsText}
   }
 
   function clearTicketSelection() {
+    window.activeCheckoutGroupKey = null;
     currentNumber = null;
     currentStatus = null;
     updateDigitsRow("", null);
