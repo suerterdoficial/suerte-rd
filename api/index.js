@@ -1,7 +1,13 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { kv } = require('@vercel/kv');
+
+let kv = null;
+if (process.env.ENABLE_VERCEL_KV === 'true') {
+  try {
+    kv = require('@vercel/kv').kv;
+  } catch (e) {}
+}
 const { put, list } = require('@vercel/blob');
 const app = express();
 const PORT = process.env.PORT || 8000;
