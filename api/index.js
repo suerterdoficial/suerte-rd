@@ -32,11 +32,11 @@ app.get('/assets/js/admin.js', (req, res) => {
 });
 
 const ORIGINAL_DATA_FILE = path.join(__dirname, '..', 'data.json');
-const DEFAULT_UPSTASH_URL = "https://obliging-racer-128583.upstash.io";
-const DEFAULT_UPSTASH_TOKEN = "gQAAAAAAAfZHAQIgcDI3M2I5NWYwNmU1MjU0YzUwODk4MTE1ZDY5YWM2MjkyZg";
+const DEFAULT_UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
+const DEFAULT_UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
 
-const UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || DEFAULT_UPSTASH_URL;
-const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || DEFAULT_UPSTASH_TOKEN;
+const UPSTASH_URL = DEFAULT_UPSTASH_URL;
+const UPSTASH_TOKEN = DEFAULT_UPSTASH_TOKEN;
 const useKV = !!(UPSTASH_URL && UPSTASH_TOKEN);
 
 let cachedDb = null;
@@ -119,7 +119,8 @@ async function readDb(forceFresh = false) {
   if (!db && UPSTASH_URL && UPSTASH_TOKEN) {
     try {
       const res = await fetch(`${UPSTASH_URL}/get/suerterd_db`, {
-        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
+        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+        signal: AbortSignal.timeout(1200)
       });
       const data = await res.json();
       if (data.result) {
@@ -236,7 +237,8 @@ async function writeDb(db) {
           Authorization: `Bearer ${UPSTASH_TOKEN}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ value: typeof db === 'string' ? db : JSON.stringify(db) })
+        body: JSON.stringify({ value: typeof db === 'string' ? db : JSON.stringify(db) }),
+        signal: AbortSignal.timeout(1200)
       });
     } catch (e) {
       console.error("Error writing to Upstash Redis:", e);
@@ -505,7 +507,7 @@ app.get(['/admin', '/admin.', '/admin.html', '/admin/'], (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'admin.html'));
 });
 
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && require.main === module) {
   app.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(` Servidor de Suerte RD corriendo en http://localhost:${PORT}`);

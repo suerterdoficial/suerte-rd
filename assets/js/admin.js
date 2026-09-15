@@ -374,15 +374,15 @@ function getGroupKeyForTicket(t) {
   const cleanPhone = (t.whatsapp || t.phone || '').replace(/\D/g, '');
   const phoneKey = cleanPhone || (t.name || t.nombre || 'anon').toLowerCase().replace(/\s+/g, '');
   
-  let timeKey = '0';
+  let exactTime = '0';
   const rawDate = t.fecha || t.timestamp_reserva || t.timestamp;
   if (rawDate) {
     const d = new Date(rawDate);
     if (!isNaN(d.getTime())) {
-      timeKey = Math.floor(d.getTime() / (10 * 60 * 1000)); // ventanas de 10 minutos
+      exactTime = d.getTime();
     }
   }
-  return `${phoneKey}_${timeKey}`;
+  return `legacy_${phoneKey}_${exactTime}`;
 }
 
 function detectNewPendingPurchases() {
