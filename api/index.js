@@ -101,7 +101,7 @@ function getDiskDb() {
   return {};
 }
 
-function withTimeout(promise, ms = 1000) {
+function withTimeout(promise, ms = 800) {
   return Promise.race([
     promise,
     new Promise((_, reject) => setTimeout(() => reject(new Error('KV_TIMEOUT')), ms))
@@ -117,24 +117,9 @@ async function readDb(forceFresh = false) {
   let db = null;
   if (useKV) {
     try {
-      db = await withTimeout(kv.get('suerterd_db'), 1000);
+      db = await withTimeout(kv.get('suerterd_db'), 800);
     } catch (e) {
-      console.error("Error reading Vercel KV:", e.message);
-    }
-  }
-
-  if (!db && UPSTASH_URL && UPSTASH_TOKEN) {
-    try {
-      const res = await fetch(`${UPSTASH_URL}/get/suerterd_db`, {
-        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
-        signal: AbortSignal.timeout(1200)
-      });
-      const data = await res.json();
-      if (data.result) {
-        db = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
-      }
-    } catch (e) {
-      console.error("Error reading Upstash Redis:", e);
+      console.warn("KV read bypassed/timed out:", e.message);
     }
   }
 
@@ -228,34 +213,18 @@ async function writeDb(db) {
   cachedDb = db;
   lastDbFetchTime = Date.now();
 
-  if (useKV) {
-    try {
-      await withTimeout(kv.set('suerterd_db', db), 1000);
-    } catch (e) {
-      console.error("Error writing to Vercel KV:", e.message);
-    }
-  }
-
-  if (UPSTASH_URL && UPSTASH_TOKEN) {
-    try {
-      await fetch(`${UPSTASH_URL}/set/suerterd_db`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${UPSTASH_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ value: typeof db === 'string' ? db : JSON.stringify(db) }),
-        signal: AbortSignal.timeout(1200)
-      });
-    } catch (e) {
-      console.error("Error writing to Upstash Redis:", e);
-    }
-  }
-
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
   } catch (e) {
     console.error("Error writing DATA_FILE:", e);
+  }
+
+  if (useKV) {
+    try {
+      await withTimeout(kv.set('suerterd_db', db), 800);
+    } catch (e) {
+      console.warn("KV write bypassed/timed out:", e.message);
+    }
   }
   return true;
 }
