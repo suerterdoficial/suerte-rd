@@ -32,9 +32,11 @@ app.get('/assets/js/admin.js', (req, res) => {
 });
 
 const ORIGINAL_DATA_FILE = path.join(__dirname, '..', 'data.json');
-const DATA_FILE = process.env.VERCEL ? path.join('/tmp', 'suerterd_data.json') : ORIGINAL_DATA_FILE;
-const UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || null;
-const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || null;
+const DEFAULT_UPSTASH_URL = "https://obliging-racer-128583.upstash.io";
+const DEFAULT_UPSTASH_TOKEN = "gQAAAAAAAfZHAQIgcDI3M2I5NWYwNmU1MjU0YzUwODk4MTE1ZDY5YWM2MjkyZg";
+
+const UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || DEFAULT_UPSTASH_URL;
+const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || DEFAULT_UPSTASH_TOKEN;
 const useKV = !!(UPSTASH_URL && UPSTASH_TOKEN);
 
 let cachedDb = null;
