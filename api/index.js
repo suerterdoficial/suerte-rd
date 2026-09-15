@@ -31,6 +31,7 @@ app.get('/assets/js/admin.js', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'assets', 'js', 'admin.js'));
 });
 
+const DATA_FILE = path.join('/tmp', 'data.json');
 const ORIGINAL_DATA_FILE = path.join(__dirname, '..', 'data.json');
 const DEFAULT_UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
 const DEFAULT_UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
