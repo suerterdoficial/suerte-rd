@@ -38,7 +38,7 @@ const DEFAULT_UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTA
 
 const UPSTASH_URL = DEFAULT_UPSTASH_URL;
 const UPSTASH_TOKEN = DEFAULT_UPSTASH_TOKEN;
-const useKV = !!(UPSTASH_URL && UPSTASH_TOKEN);
+const useKV = process.env.ENABLE_VERCEL_KV === 'true';
 
 let cachedDb = null;
 let lastDbFetchTime = 0;
