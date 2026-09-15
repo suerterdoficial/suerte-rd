@@ -101,6 +101,13 @@ function getDiskDb() {
   return {};
 }
 
+function withTimeout(promise, ms = 1000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('KV_TIMEOUT')), ms))
+  ]);
+}
+
 // Helper to read database (combining Vercel KV / Upstash / Local File)
 async function readDb(forceFresh = false) {
   if (cachedDb && !forceFresh && (Date.now() - lastDbFetchTime < CACHE_TTL_MS)) {
@@ -110,9 +117,9 @@ async function readDb(forceFresh = false) {
   let db = null;
   if (useKV) {
     try {
-      db = await kv.get('suerterd_db');
+      db = await withTimeout(kv.get('suerterd_db'), 1000);
     } catch (e) {
-      console.error("Error reading Vercel KV:", e);
+      console.error("Error reading Vercel KV:", e.message);
     }
   }
 
@@ -223,9 +230,9 @@ async function writeDb(db) {
 
   if (useKV) {
     try {
-      await kv.set('suerterd_db', db);
+      await withTimeout(kv.set('suerterd_db', db), 1000);
     } catch (e) {
-      console.error("Error writing to Vercel KV:", e);
+      console.error("Error writing to Vercel KV:", e.message);
     }
   }
 
