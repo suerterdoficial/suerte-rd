@@ -534,6 +534,31 @@ app.post(['/api/tickets/update-status', '/tickets/update-status'], async (req, r
 app.get(['/api/get', '/get'], async (req, res) => {
   const { key } = req.query;
   if (!key) return res.status(400).json({ error: "Falta parámetro key" });
+  if (key === 'debug_status') {
+    const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
+    const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
+    let pingResult = null;
+    let pingError = null;
+    try {
+      if (url && token) {
+        const r = await fetch(`${url}/ping`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        pingResult = { status: r.status, text: await r.text() };
+      }
+    } catch(e) {
+      pingError = e.message;
+    }
+    return res.json({
+      useKV,
+      hasUrl: !!url,
+      urlHost: url ? url.replace(/https?:\/\//, '').split('/')[0] : '',
+      hasToken: !!token,
+      enableKvEnv: process.env.ENABLE_VERCEL_KV,
+      pingResult,
+      pingError
+    });
+  }
   const db = await readDb(true);
   res.json({ value: db[key] || null });
 });
