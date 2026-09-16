@@ -2318,12 +2318,11 @@
     // Open receipt modal INSTANTLY (Zero delay)
     showReceipt(checkedOutCart.join(", "), name, phone, lottery, checkedOutCart.length);
 
-    // 3. Send network sync to server with keepalive for guaranteed delivery across mobile networks
+    // 3. Send network sync to server for guaranteed cloud DB persistence
     try {
-      fetch('/api/tickets/reserve', {
+      await fetch('/api/tickets/reserve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        keepalive: true,
         body: JSON.stringify({
           raffleId: activeRaffleId,
           name,
@@ -2335,7 +2334,7 @@
           comprobante: currentReceiptImg,
           groupKey: uniqueGroupKey
         })
-      }).catch(e => console.warn("Background ticket sync error:", e));
+      });
     } catch (e) {
       console.warn("Background ticket sync error:", e);
     }
@@ -2464,12 +2463,11 @@
       console.warn("localStorage backup error:", e);
     }
 
-    // 1. Send reserve & receipt API call in background with keepalive
+    // 1. Send reserve & receipt API call to cloud DB before opening WhatsApp
     try {
-      fetch('/api/tickets/reserve', {
+      await fetch('/api/tickets/reserve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        keepalive: true,
         body: JSON.stringify({
           raffleId: activeRaffleId,
           name,
@@ -2481,7 +2479,7 @@
           estado: "esperando_validacion",
           groupKey: uniqueGroupKey
         })
-      }).catch(e => console.warn("Background receipt upload notice:", e));
+      });
     } catch (e) {
       console.warn("Background receipt upload notice:", e);
     }
