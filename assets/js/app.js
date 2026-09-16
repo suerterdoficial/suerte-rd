@@ -470,10 +470,10 @@
         const key = `${TICKETS_KEY_PREFIX}:${rId}`;
         const raw = await getStorageItem(key);
         if (raw) {
-          const freshTickets = JSON.parse(raw);
-          const oldKeys = Object.keys(allTickets[rId] || {}).length;
-          const newKeys = Object.keys(freshTickets).length;
-          if (oldKeys !== newKeys) {
+          const freshTickets = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          const oldStr = JSON.stringify(allTickets[rId] || {});
+          const newStr = JSON.stringify(freshTickets);
+          if (oldStr !== newStr) {
             changed = true;
           }
           allTickets[rId] = freshTickets;
@@ -482,6 +482,7 @@
       if (changed) {
         renderProgress();
         renderRaffleSelector();
+        renderBlessedNumbers();
         if (mode === 'explore') {
           renderExplorerGrid();
         }

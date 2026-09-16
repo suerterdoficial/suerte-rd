@@ -166,7 +166,9 @@ async function writeDbToBlob(db) {
     if (blob && blob.url) {
       cachedBlobUrl = blob.url;
       if (oldUrls.length > 0) {
-        del(oldUrls).catch(e => console.warn("Error deleting old blobs:", e));
+        setTimeout(() => {
+          del(oldUrls).catch(e => console.warn("Error deleting old blobs:", e));
+        }, 3000);
       }
     }
     return true;
@@ -184,20 +186,17 @@ async function readDb(forceFresh = false) {
 
   let db = await readDbFromBlob();
 
+  // If blob read failed/null, reuse cachedDb if available before resorting to disk
+  if (!db && cachedDb && Object.keys(cachedDb).length > 0) {
+    db = cachedDb;
+  }
+
   if (!db) {
     db = getDiskDb();
   }
 
   if (!db) {
     db = {};
-  }
-
-  const diskDb = getDiskDb();
-
-  for (const k in diskDb) {
-    if (!db[k]) {
-      db[k] = diskDb[k];
-    }
   }
 
   if (!db['suerterd:raffle:ids']) {
@@ -238,27 +237,6 @@ async function readDb(forceFresh = false) {
       } catch(e) {}
     }
     const tKey = `suerterd:tickets:v2:${id}`;
-    
-    const diskTicketsStr = diskDb[tKey];
-    if (diskTicketsStr && diskTicketsStr !== "{}") {
-      let currentObj = {};
-      try { currentObj = typeof db[tKey] === 'string' ? JSON.parse(db[tKey] || "{}") : (db[tKey] || {}); } catch(e){}
-      let diskObj = {};
-      try { diskObj = typeof diskTicketsStr === 'string' ? JSON.parse(diskTicketsStr) : (diskTicketsStr || {}); } catch(e){}
-
-      let hasChanges = false;
-      for (const numStr in diskObj) {
-        if (!currentObj[numStr]) {
-          currentObj[numStr] = diskObj[numStr];
-          hasChanges = true;
-        }
-      }
-      db[tKey] = JSON.stringify(currentObj);
-      if (hasChanges) {
-        writeDb(db).catch(err => console.error("Error persisting merged db:", err));
-      }
-    }
-
     if (!db[tKey]) {
       db[tKey] = "{}";
     }

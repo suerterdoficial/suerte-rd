@@ -342,18 +342,6 @@ async function loadTicketsData(isSilent = false) {
       serverTickets = data.value || {};
     }
 
-    // Fusionar con respaldo local si existe para no perder compras offline
-    let localBackup = {};
-    try {
-      localBackup = JSON.parse(localStorage.getItem('suerterd_admin_tickets_backup') || '{}');
-    } catch(e) {}
-
-    for (const tNum in localBackup) {
-      if (!serverTickets[tNum] && localBackup[tNum]) {
-        serverTickets[tNum] = localBackup[tNum];
-      }
-    }
-
     currentTickets = serverTickets;
 
     updateStatsCards();
