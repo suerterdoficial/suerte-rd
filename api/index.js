@@ -44,11 +44,34 @@ const DEFAULT_UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTA
 
 const UPSTASH_URL = DEFAULT_UPSTASH_URL;
 const UPSTASH_TOKEN = DEFAULT_UPSTASH_TOKEN;
-const useKV = process.env.ENABLE_VERCEL_KV === 'true';
+const useKV = process.env.ENABLE_VERCEL_KV === 'true' || !!(UPSTASH_URL && UPSTASH_TOKEN);
 
 let cachedDb = null;
 let lastDbFetchTime = 0;
 const CACHE_TTL_MS = 1000;
+
+// Timeout helper functions
+function withTimeout(promise, ms = 3000) {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+}
+
+async function fetchWithTimeout(resource, options = {}, ms = 3000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
+}
 
 const DEFAULT_CONFIGS = {
   florida5: {
@@ -121,7 +144,10 @@ async function readDb(forceFresh = false) {
     }
     if (kv) {
       try {
-        db = await withTimeout(kv.get('suerterd_db'), 1000);
+        db = await withTimeout(kv.get('suerterd_db'), 3000);
+        if (typeof db === 'string') {
+          try { db = JSON.parse(db); } catch(e){}
+        }
       } catch (e) {
         console.warn("KV read bypassed/timed out:", e.message);
       }
@@ -132,11 +158,15 @@ async function readDb(forceFresh = false) {
     try {
       const res = await fetchWithTimeout(`${UPSTASH_URL}/get/suerterd_db`, {
         headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
-      }, 1000);
+      }, 3000);
       if (res.ok) {
         const data = await res.json();
         if (data.result) {
-          db = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+          let raw = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+          if (raw && raw.value) {
+            try { raw = typeof raw.value === 'string' ? JSON.parse(raw.value) : raw.value; } catch(e){}
+          }
+          db = raw;
         }
       }
     } catch (e) {
@@ -246,7 +276,7 @@ async function writeDb(db) {
     }
     if (kv) {
       try {
-        await withTimeout(kv.set('suerterd_db', db), 1000);
+        await withTimeout(kv.set('suerterd_db', db), 3000);
       } catch (e) {
         console.warn("KV write bypassed/timed out:", e.message);
       }
@@ -261,8 +291,8 @@ async function writeDb(db) {
           Authorization: `Bearer ${UPSTASH_TOKEN}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ value: typeof db === 'string' ? db : JSON.stringify(db) })
-      }, 1000);
+        body: typeof db === 'string' ? db : JSON.stringify(db)
+      }, 3000);
     } catch (e) {
       console.warn("REST write bypassed/timed out:", e.message);
     }
@@ -339,7 +369,7 @@ app.get(['/api/tickets', '/tickets'], async (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   const raffleId = req.query.raffleId || 'florida5';
   const key = `suerterd:tickets:v2:${raffleId}`;
-  const db = await readDb();
+  const db = await readDb(true);
   const rawValue = db[key] || "{}";
   let tickets = {};
   try {
