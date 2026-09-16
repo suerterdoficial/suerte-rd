@@ -537,6 +537,7 @@ app.get(['/api/get', '/get'], async (req, res) => {
   if (key === 'debug_status') {
     const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
     const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN || "";
     let pingResult = null;
     let pingError = null;
     try {
@@ -554,6 +555,7 @@ app.get(['/api/get', '/get'], async (req, res) => {
       hasUrl: !!url,
       urlHost: url ? url.replace(/https?:\/\//, '').split('/')[0] : '',
       hasToken: !!token,
+      hasBlobToken: !!blobToken,
       enableKvEnv: process.env.ENABLE_VERCEL_KV,
       pingResult,
       pingError
