@@ -44,7 +44,7 @@ const DEFAULT_UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTA
 
 const UPSTASH_URL = DEFAULT_UPSTASH_URL;
 const UPSTASH_TOKEN = DEFAULT_UPSTASH_TOKEN;
-const useKV = process.env.ENABLE_VERCEL_KV === 'true' || !!(UPSTASH_URL && UPSTASH_TOKEN);
+const useKV = false;
 
 let cachedDb = null;
 let lastDbFetchTime = 0;
@@ -148,7 +148,7 @@ async function readDbFromBlob() {
       }
     }
   } catch (e) {
-    console.warn("Vercel Blob read error:", e.message);
+    console.error("Vercel Blob read error:", e.message);
   }
   return null;
 }
@@ -171,7 +171,7 @@ async function writeDbToBlob(db) {
     }
     return true;
   } catch (e) {
-    console.warn("Vercel Blob write error:", e.message);
+    console.error("Vercel Blob write error:", e.message);
     return false;
   }
 }
