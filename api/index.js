@@ -270,6 +270,7 @@ async function writeDb(db) {
     console.error("Error writing DATA_FILE:", e);
   }
 
+  let kvWritten = false;
   if (useKV) {
     if (!kv) {
       try { kv = require('@vercel/kv').kv; } catch(e){}
@@ -277,13 +278,14 @@ async function writeDb(db) {
     if (kv) {
       try {
         await withTimeout(kv.set('suerterd_db', db), 3000);
+        kvWritten = true;
       } catch (e) {
         console.warn("KV write bypassed/timed out:", e.message);
       }
     }
   }
 
-  if (UPSTASH_URL && UPSTASH_TOKEN) {
+  if (!kvWritten && UPSTASH_URL && UPSTASH_TOKEN) {
     try {
       await fetchWithTimeout(`${UPSTASH_URL}/set/suerterd_db`, {
         method: 'POST',
