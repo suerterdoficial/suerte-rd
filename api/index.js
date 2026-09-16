@@ -556,6 +556,34 @@ app.get(['/admin', '/admin.', '/admin.html', '/admin/'], (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'admin.html'));
 });
 
+app.get('/api/debug-kv-env', async (req, res) => {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
+  const enableKv = process.env.ENABLE_VERCEL_KV;
+
+  let pingRes = null;
+  let pingErr = null;
+  if (url && token) {
+    try {
+      const r = await fetch(`${url}/ping`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      pingRes = { status: r.status, text: await r.text() };
+    } catch(e) {
+      pingErr = e.message;
+    }
+  }
+
+  res.json({
+    hasUrl: !!url,
+    urlPrefix: url ? url.substring(0, 25) : '',
+    hasToken: !!token,
+    enableKv: enableKv,
+    pingRes,
+    pingErr
+  });
+});
+
 if (!process.env.VERCEL && require.main === module) {
   app.listen(PORT, () => {
     console.log(`====================================================`);
