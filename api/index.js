@@ -132,7 +132,7 @@ let cachedBlobUrl = null;
 
 async function readDbFromBlob() {
   try {
-    const result = await list({ prefix: 'suerterd_db.json' });
+    const result = await list({ prefix: 'suerterd_db' });
     console.log("Blob list count:", result && result.blobs ? result.blobs.length : 0);
     if (result && result.blobs && result.blobs.length > 0) {
       const sorted = result.blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
@@ -155,6 +155,9 @@ async function readDbFromBlob() {
 async function writeDbToBlob(db) {
   try {
     const payload = typeof db === 'string' ? db : JSON.stringify(db, null, 2);
+    const result = await list({ prefix: 'suerterd_db' });
+    const oldUrls = (result && result.blobs) ? result.blobs.map(b => b.url) : [];
+
     const blob = await put('suerterd_db.json', payload, {
       access: 'public',
       addRandomSuffix: true
@@ -162,6 +165,9 @@ async function writeDbToBlob(db) {
     console.log("Vercel Blob put URL success:", blob ? blob.url : null);
     if (blob && blob.url) {
       cachedBlobUrl = blob.url;
+      if (oldUrls.length > 0) {
+        del(oldUrls).catch(e => console.warn("Error deleting old blobs:", e));
+      }
     }
     return true;
   } catch (e) {
