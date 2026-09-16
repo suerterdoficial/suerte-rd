@@ -39,11 +39,8 @@ app.get('/assets/js/admin.js', (req, res) => {
 
 const DATA_FILE = path.join('/tmp', 'data.json');
 const ORIGINAL_DATA_FILE = path.join(__dirname, '..', 'data.json');
-const DEFAULT_UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
-const DEFAULT_UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
-
-const UPSTASH_URL = DEFAULT_UPSTASH_URL;
-const UPSTASH_TOKEN = DEFAULT_UPSTASH_TOKEN;
+const UPSTASH_URL = null;
+const UPSTASH_TOKEN = null;
 const useKV = false;
 
 let cachedDb = null;
@@ -136,9 +133,11 @@ let cachedBlobUrl = null;
 async function readDbFromBlob() {
   try {
     const result = await list({ prefix: 'suerterd_db.json' });
+    console.log("Blob list count:", result && result.blobs ? result.blobs.length : 0);
     if (result && result.blobs && result.blobs.length > 0) {
       const sorted = result.blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
       cachedBlobUrl = sorted[0].url;
+      console.log("Reading blob URL:", cachedBlobUrl);
       const res = await fetch(`${cachedBlobUrl}?_t=${Date.now()}`);
       if (res.ok) {
         const raw = await res.json();
@@ -148,7 +147,7 @@ async function readDbFromBlob() {
       }
     }
   } catch (e) {
-    console.error("Vercel Blob read error:", e.message);
+    console.error("Vercel Blob read error:", e.message, e.stack);
   }
   return null;
 }
@@ -156,69 +155,28 @@ async function readDbFromBlob() {
 async function writeDbToBlob(db) {
   try {
     const payload = typeof db === 'string' ? db : JSON.stringify(db, null, 2);
-    const result = await list({ prefix: 'suerterd_db.json' });
-    const oldUrls = (result && result.blobs) ? result.blobs.map(b => b.url) : [];
-
     const blob = await put('suerterd_db.json', payload, {
       access: 'public',
       addRandomSuffix: true
     });
+    console.log("Vercel Blob put URL success:", blob ? blob.url : null);
     if (blob && blob.url) {
       cachedBlobUrl = blob.url;
-      if (oldUrls.length > 0) {
-        del(oldUrls).catch(e => console.warn("Error deleting old blobs:", e));
-      }
     }
     return true;
   } catch (e) {
-    console.error("Vercel Blob write error:", e.message);
+    console.error("Vercel Blob write error:", e.message, e.stack);
     return false;
   }
 }
 
-// Helper to read database (combining Vercel Blob / Vercel KV / Local File)
+// Helper to read database (combining Vercel Blob / Local File)
 async function readDb(forceFresh = false) {
   if (cachedDb && !forceFresh && (Date.now() - lastDbFetchTime < CACHE_TTL_MS)) {
     return cachedDb;
   }
 
   let db = await readDbFromBlob();
-
-  if (!db && useKV) {
-    if (!kv) {
-      try { kv = require('@vercel/kv').kv; } catch(e){}
-    }
-    if (kv) {
-      try {
-        db = await withTimeout(kv.get('suerterd_db'), 3000);
-        if (typeof db === 'string') {
-          try { db = JSON.parse(db); } catch(e){}
-        }
-      } catch (e) {
-        console.warn("KV read bypassed/timed out:", e.message);
-      }
-    }
-  }
-
-  if (!db && UPSTASH_URL && UPSTASH_TOKEN) {
-    try {
-      const res = await fetchWithTimeout(`${UPSTASH_URL}/get/suerterd_db`, {
-        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
-      }, 3000);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.result) {
-          let raw = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
-          if (raw && raw.value) {
-            try { raw = typeof raw.value === 'string' ? JSON.parse(raw.value) : raw.value; } catch(e){}
-          }
-          db = raw;
-        }
-      }
-    } catch (e) {
-      console.warn("REST read bypassed/timed out:", e.message);
-    }
-  }
 
   if (!db) {
     db = getDiskDb();
@@ -290,7 +248,7 @@ async function readDb(forceFresh = false) {
         }
       }
       db[tKey] = JSON.stringify(currentObj);
-      if (hasChanges && useKV) {
+      if (hasChanges) {
         writeDb(db).catch(err => console.error("Error persisting merged db:", err));
       }
     }
@@ -318,36 +276,6 @@ async function writeDb(db) {
 
   // Persistir en Vercel Blob Cloud Storage (100% permanente e instantáneo)
   await writeDbToBlob(db);
-
-  let kvWritten = false;
-  if (useKV) {
-    if (!kv) {
-      try { kv = require('@vercel/kv').kv; } catch(e){}
-    }
-    if (kv) {
-      try {
-        await withTimeout(kv.set('suerterd_db', db), 3000);
-        kvWritten = true;
-      } catch (e) {
-        console.warn("KV write bypassed/timed out:", e.message);
-      }
-    }
-  }
-
-  if (!kvWritten && UPSTASH_URL && UPSTASH_TOKEN) {
-    try {
-      await fetchWithTimeout(`${UPSTASH_URL}/set/suerterd_db`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${UPSTASH_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: typeof db === 'string' ? db : JSON.stringify(db)
-      }, 3000);
-    } catch (e) {
-      console.warn("REST write bypassed/timed out:", e.message);
-    }
-  }
   return true;
 }
 
