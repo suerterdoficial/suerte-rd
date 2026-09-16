@@ -2318,26 +2318,24 @@
     // Open receipt modal INSTANTLY (Zero delay)
     showReceipt(checkedOutCart.join(", "), name, phone, lottery, checkedOutCart.length);
 
-    // 3. Send network sync to server
+    // 3. Send network sync to server with keepalive for guaranteed delivery across mobile networks
     try {
-      await Promise.race([
-        fetch('/api/tickets/reserve', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            raffleId: activeRaffleId,
-            name,
-            whatsapp: phone,
-            loteria: lottery,
-            tickets: checkedOutCart,
-            estado: 'esperando_validacion',
-            packageLabel: detectedPkgLabel,
-            comprobante: currentReceiptImg,
-            groupKey: uniqueGroupKey
-          })
-        }),
-        new Promise(resolve => setTimeout(resolve, 2500))
-      ]);
+      fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          raffleId: activeRaffleId,
+          name,
+          whatsapp: phone,
+          loteria: lottery,
+          tickets: checkedOutCart,
+          estado: 'esperando_validacion',
+          packageLabel: detectedPkgLabel,
+          comprobante: currentReceiptImg,
+          groupKey: uniqueGroupKey
+        })
+      }).catch(e => console.warn("Background ticket sync error:", e));
     } catch (e) {
       console.warn("Background ticket sync error:", e);
     }
@@ -2466,27 +2464,24 @@
       console.warn("localStorage backup error:", e);
     }
 
-    // 1. Send reserve & receipt API call synchronously
+    // 1. Send reserve & receipt API call in background with keepalive
     try {
-      await Promise.race([
-        fetch('/api/tickets/reserve', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          keepalive: true,
-          body: JSON.stringify({
-            raffleId: activeRaffleId,
-            name,
-            whatsapp: phone,
-            loteria: lottery,
-            tickets: ticketNums,
-            packageLabel: currentPkgTag,
-            comprobante: activeReceiptImg || "",
-            estado: "esperando_validacion",
-            groupKey: uniqueGroupKey
-          })
-        }),
-        new Promise(resolve => setTimeout(resolve, 2500))
-      ]);
+      fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          raffleId: activeRaffleId,
+          name,
+          whatsapp: phone,
+          loteria: lottery,
+          tickets: ticketNums,
+          packageLabel: currentPkgTag,
+          comprobante: activeReceiptImg || "",
+          estado: "esperando_validacion",
+          groupKey: uniqueGroupKey
+        })
+      }).catch(e => console.warn("Background receipt upload notice:", e));
     } catch (e) {
       console.warn("Background receipt upload notice:", e);
     }

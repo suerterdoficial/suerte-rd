@@ -108,13 +108,6 @@ function getDiskDb() {
   return {};
 }
 
-function withTimeout(promise, ms = 800) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('KV_TIMEOUT')), ms))
-  ]);
-}
-
 // Helper to read database (combining Vercel KV / Upstash / Local File)
 async function readDb(forceFresh = false) {
   if (cachedDb && !forceFresh && (Date.now() - lastDbFetchTime < CACHE_TTL_MS)) {
@@ -123,10 +116,31 @@ async function readDb(forceFresh = false) {
 
   let db = null;
   if (useKV) {
+    if (!kv) {
+      try { kv = require('@vercel/kv').kv; } catch(e){}
+    }
+    if (kv) {
+      try {
+        db = await withTimeout(kv.get('suerterd_db'), 1000);
+      } catch (e) {
+        console.warn("KV read bypassed/timed out:", e.message);
+      }
+    }
+  }
+
+  if (!db && UPSTASH_URL && UPSTASH_TOKEN) {
     try {
-      db = await withTimeout(kv.get('suerterd_db'), 800);
+      const res = await fetchWithTimeout(`${UPSTASH_URL}/get/suerterd_db`, {
+        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
+      }, 1000);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.result) {
+          db = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+        }
+      }
     } catch (e) {
-      console.warn("KV read bypassed/timed out:", e.message);
+      console.warn("REST read bypassed/timed out:", e.message);
     }
   }
 
@@ -227,10 +241,30 @@ async function writeDb(db) {
   }
 
   if (useKV) {
+    if (!kv) {
+      try { kv = require('@vercel/kv').kv; } catch(e){}
+    }
+    if (kv) {
+      try {
+        await withTimeout(kv.set('suerterd_db', db), 1000);
+      } catch (e) {
+        console.warn("KV write bypassed/timed out:", e.message);
+      }
+    }
+  }
+
+  if (UPSTASH_URL && UPSTASH_TOKEN) {
     try {
-      await withTimeout(kv.set('suerterd_db', db), 800);
+      await fetchWithTimeout(`${UPSTASH_URL}/set/suerterd_db`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${UPSTASH_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ value: typeof db === 'string' ? db : JSON.stringify(db) })
+      }, 1000);
     } catch (e) {
-      console.warn("KV write bypassed/timed out:", e.message);
+      console.warn("REST write bypassed/timed out:", e.message);
     }
   }
   return true;
