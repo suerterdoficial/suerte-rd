@@ -8,7 +8,7 @@ if (process.env.ENABLE_VERCEL_KV === 'true') {
     kv = require('@vercel/kv').kv;
   } catch (e) {}
 }
-const { put, list } = require('@vercel/blob');
+const { put, list, del } = require('@vercel/blob');
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -135,13 +135,10 @@ let cachedBlobUrl = null;
 
 async function readDbFromBlob() {
   try {
-    if (!cachedBlobUrl) {
-      const result = await list({ prefix: 'suerterd_db.json' });
-      if (result && result.blobs && result.blobs.length > 0) {
-        cachedBlobUrl = result.blobs[0].url;
-      }
-    }
-    if (cachedBlobUrl) {
+    const result = await list({ prefix: 'suerterd_db.json' });
+    if (result && result.blobs && result.blobs.length > 0) {
+      const sorted = result.blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+      cachedBlobUrl = sorted[0].url;
       const res = await fetch(`${cachedBlobUrl}?_t=${Date.now()}`);
       if (res.ok) {
         const raw = await res.json();
@@ -159,12 +156,18 @@ async function readDbFromBlob() {
 async function writeDbToBlob(db) {
   try {
     const payload = typeof db === 'string' ? db : JSON.stringify(db, null, 2);
+    const result = await list({ prefix: 'suerterd_db.json' });
+    const oldUrls = (result && result.blobs) ? result.blobs.map(b => b.url) : [];
+
     const blob = await put('suerterd_db.json', payload, {
       access: 'public',
-      addRandomSuffix: false
+      addRandomSuffix: true
     });
     if (blob && blob.url) {
       cachedBlobUrl = blob.url;
+      if (oldUrls.length > 0) {
+        del(oldUrls).catch(e => console.warn("Error deleting old blobs:", e));
+      }
     }
     return true;
   } catch (e) {
